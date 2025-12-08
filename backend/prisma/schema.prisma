@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  password         String
+  name             String?
+  role             Role     @default(USER)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  failedLoginCount Int      @default(0)
+  lockedUntil      DateTime?
+  codeLogs         CodeUseLog[]
+  refreshTokens    RefreshToken[]
+  pushSubscriptions PushSubscription[]
+}
+
+model Manufacturer {
+  id               String    @id @default(uuid())
+  name             String
+  companyName      String
+  email            String    @unique
+  password         String
+  nafdaNumber      String?
+  certificatePath  String?
+  aiScore          Float?    @default(0)
+  aiStatus         AIStatus  @default(PENDING)
+  status           MStatus   @default(PENDING)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  products         Product[]
+  refreshTokens    RefreshToken[]
+  pushSubscriptions PushSubscription[]
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  manufacturerId String
+  name           String
+  category       String
+  description    String?
+  imagePath      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
+  batches        Batch[]
+}
+
+model Batch {
+  id            String   @id @default(uuid())
+  productId     String
+  batchNumber   String
+  manufacturedAt DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+
+  product       Product  @relation(fields: [productId], references: [id])
+  codes         VerificationCode[]
+}
+
+model VerificationCode {
+  id         String   @id @default(uuid())
+  batchId    String
+  code       String   @unique
+  qrPath     String?
+  createdAt  DateTime @default(now())
+  usedCount  Int      @default(0)
+
+  batch      Batch    @relation(fields: [batchId], references: [id])
+  uses       CodeUseLog[]
+}
+
+model CodeUseLog {
+  id               String   @id @default(uuid())
+  codeId           String
+  userId           String?
+  lat              Float?
+  lng              Float?
+  ip               String?
+  locationConsent  Boolean @default(false)
+  createdAt        DateTime @default(now())
+  hotspotId        String?
+
+  code             VerificationCode @relation(fields: [codeId], references: [id])
+  user             User?            @relation(fields: [userId], references: [id])
+  hotspot          Hotspot?         @relation(fields: [hotspotId], references: [id])
+}
+
+model Hotspot {
+  id        String   @id @default(uuid())
+  label     String
+  lat       Float
+  lng       Float
+  density   Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id           String   @id @default(uuid())
+  tokenHash    String
+  userId       String?  @default(null)
+  manufacturerId String? @default(null)
+  revoked      Boolean  @default(false)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user         User?         @relation(fields: [userId], references: [id])
+  manufacturer Manufacturer? @relation(fields: [manufacturerId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?  // user or manufacturer id
+  actorRole Role?
+  action    String
+  meta      Json?
+  createdAt DateTime @default(now())
+}
+
+model PushSubscription {
+  id            String   @id @default(uuid())
+  endpoint      String   @unique
+  p256dh        String
+  auth          String
+  userId        String?
+  manufacturerId String?
+  createdAt     DateTime @default(now())
+
+  user          User?         @relation(fields: [userId], references: [id])
+  manufacturer  Manufacturer? @relation(fields: [manufacturerId], references: [id])
+}
+
+model PasswordResetToken {
+  id            String   @id @default(uuid())
+  tokenHash     String
+  userId        String?
+  manufacturerId String?
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+}
+
+enum Role {
+  USER
+  MANUFACTURER
+  ADMIN
+}
+
+enum AIStatus {
+  CLEAN
+  SUSPICIOUS
+  FAKE
+  PENDING
+}
+
+enum MStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}

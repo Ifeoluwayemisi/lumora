@@ -1,0 +1,2 @@
+-- Initial migration (placeholder)
+-- Run `npx prisma migrate dev --name init` to generate real migration SQL
