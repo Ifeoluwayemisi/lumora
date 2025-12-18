@@ -1,152 +1,117 @@
 "use client";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { signUpSchema, SignUpInput } from "../../../libs/validations/auth";
-import { useState } from "react";
-import { Building2, User, AlertCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+import Link from "next/link";
+import { User, Factory, ShieldCheck, ArrowRight } from "lucide-react";
 
-export default function SignUpPage() {
-  const router = useRouter();
-  const [role, setRole] = useState<"CONSUMER" | "MANUFACTURER">("CONSUMER");
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<SignUpInput>({
-    resolver: zodResolver(signUpSchema),
-    defaultValues: { role: "CONSUMER" },
-  });
-
-  const onSubmit = async (data: SignUpInput) => {
-    // Sync role with form data
-    data.role = role;
-
-    // Mock backend delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    console.log("Signup submitted:", data);
-
-    // Redirect after signup
-    if (role === "MANUFACTURER") router.push("/onboarding/manufacturer");
-    else router.push("/dashboard");
-  };
+export default function SignupPage() {
+  const [role, setRole] = useState<"user" | "manufacturer" | null>(null);
 
   return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white/5 border border-white/10 p-8 rounded-3xl backdrop-blur-xl shadow-2xl">
-        <h2 className="text-3xl font-bold text-white mb-2 text-center">
-          Join Lumora
-        </h2>
-        <p className="text-gray-400 text-center mb-8">
-          Select your account type to continue.
-        </p>
+    <div className="min-h-screen pt-32 pb-20 px-6 flex flex-col items-center">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-black italic uppercase tracking-tighter">
+            Initialize Account
+          </h1>
+          <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
+            Select your access level to the protocol
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* Hidden input for role */}
-          <input type="hidden" {...register("role")} value={role} />
-
-          {/* Role Selection Toggle */}
-          <div className="flex gap-4 mb-6">
-            <button
-              type="button"
-              onClick={() => setRole("CONSUMER")}
-              className={`flex-1 p-4 rounded-2xl border transition flex flex-col items-center gap-2 ${
-                role === "CONSUMER"
-                  ? "border-green-500 bg-green-500/10"
-                  : "border-white/10 bg-white/5 text-gray-500"
-              } hover:scale-[1.02]`}
+        <div className="grid grid-cols-1 gap-4">
+          {/* Consumer Option */}
+          <button
+            onClick={() => setRole("user")}
+            className={`p-8 rounded-[2.5rem] border-2 transition-all text-left flex items-center gap-6 ${
+              role === "user"
+                ? "border-green-500 bg-green-500/5"
+                : "border-white/5 bg-white/5 hover:border-white/20"
+            }`}
+          >
+            <div
+              className={`p-4 rounded-2xl ${
+                role === "user"
+                  ? "bg-green-500 text-black"
+                  : "bg-black text-white"
+              }`}
             >
-              <User size={24} />{" "}
-              <span className="text-xs font-bold uppercase">Consumer</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("MANUFACTURER")}
-              className={`flex-1 p-4 rounded-2xl border transition flex flex-col items-center gap-2 ${
-                role === "MANUFACTURER"
-                  ? "border-green-500 bg-green-500/10"
-                  : "border-white/10 bg-white/5 text-gray-500"
-              } hover:scale-[1.02]`}
-            >
-              <Building2 size={24} />{" "}
-              <span className="text-xs font-bold uppercase">Manufacturer</span>
-            </button>
-          </div>
-
-          {/* Standard Fields */}
-          <div>
-            <input
-              {...register("email")}
-              className={`w-full bg-black/50 border ${
-                errors.email ? "border-red-500" : "border-white/10"
-              } p-4 rounded-xl outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500 text-white transition`}
-              placeholder="Email Address"
-            />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                <AlertCircle size={12} /> {errors.email.message}
+              <User size={24} />
+            </div>
+            <div>
+              <h3 className="font-black uppercase italic tracking-tighter">
+                Consumer
+              </h3>
+              <p className="text-[10px] text-gray-500 font-bold uppercase">
+                Verify meds & track history
               </p>
-            )}
-          </div>
+            </div>
+          </button>
 
-          <div>
+          {/* Manufacturer Option */}
+          <button
+            onClick={() => setRole("manufacturer")}
+            className={`p-8 rounded-[2.5rem] border-2 transition-all text-left flex items-center gap-6 ${
+              role === "manufacturer"
+                ? "border-green-500 bg-green-500/5"
+                : "border-white/5 bg-white/5 hover:border-white/20"
+            }`}
+          >
+            <div
+              className={`p-4 rounded-2xl ${
+                role === "manufacturer"
+                  ? "bg-green-500 text-black"
+                  : "bg-black text-white"
+              }`}
+            >
+              <Factory size={24} />
+            </div>
+            <div>
+              <h3 className="font-black uppercase italic tracking-tighter">
+                Manufacturer
+              </h3>
+              <p className="text-[10px] text-gray-500 font-bold uppercase">
+                Generate codes & protect brand
+              </p>
+            </div>
+          </button>
+        </div>
+
+        {role && (
+          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
+            <input
+              type="email"
+              placeholder="EMAIL ADDRESS"
+              className="w-full bg-black border border-white/10 p-5 rounded-2xl outline-none focus:border-green-500 font-bold text-xs"
+            />
             <input
               type="password"
-              {...register("password")}
-              className={`w-full bg-black/50 border ${
-                errors.password ? "border-red-500" : "border-white/10"
-              } p-4 rounded-xl outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500 text-white transition`}
-              placeholder="Password"
+              placeholder="SECURE PASSWORD"
+              className="w-full bg-black border border-white/10 p-5 rounded-2xl outline-none focus:border-green-500 font-bold text-xs"
             />
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                <AlertCircle size={12} /> {errors.password.message}
-              </p>
+            {role === "manufacturer" && (
+              <input
+                type="text"
+                placeholder="COMPANY / PHARMA NAME"
+                className="w-full bg-black border border-white/10 p-5 rounded-2xl outline-none focus:border-green-500 font-bold text-xs"
+              />
             )}
+            <Link
+              href={
+                role === "user" ? "/dashboard/user" : "/dashboard/manufacturer"
+              }
+              className="w-full py-5 bg-white text-black rounded-2xl font-black uppercase text-xs tracking-widest flex items-center justify-center gap-2 hover:bg-green-500 transition-all"
+            >
+              Create Account <ArrowRight size={16} />
+            </Link>
           </div>
+        )}
 
-          {/* Conditional Manufacturer Fields */}
-          {role === "MANUFACTURER" && (
-            <div className="space-y-5 animate-in fade-in slide-in-from-top-2">
-              <input
-                {...register("companyName")}
-                className={`w-full bg-black/50 border ${
-                  errors.companyName ? "border-red-500" : "border-white/10"
-                } p-4 rounded-xl outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500 text-white transition`}
-                placeholder="Registered Company Name"
-              />
-              {errors.companyName && (
-                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                  <AlertCircle size={12} /> {errors.companyName.message}
-                </p>
-              )}
-
-              <input
-                {...register("nafdacNumber")}
-                className={`w-full bg-black/50 border ${
-                  errors.nafdacNumber ? "border-red-500" : "border-white/10"
-                } p-4 rounded-xl outline-none focus:border-green-500 focus-visible:ring-2 focus-visible:ring-green-500 text-white transition`}
-                placeholder="NAFDAC / Reg Number"
-              />
-              {errors.nafdacNumber && (
-                <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                  <AlertCircle size={12} /> {errors.nafdacNumber.message}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-green-600 hover:bg-green-500 text-white py-4 rounded-xl font-bold transition shadow-lg active:scale-[0.97] disabled:opacity-50"
-          >
-            {isSubmitting ? "Creating Account..." : "Sign Up"}
-          </button>
-        </form>
+        <p className="text-center text-[10px] font-black text-gray-600 uppercase">
+          Already have an account?{" "}
+          <Link href="/auth/login" className="text-white hover:text-green-500">
+            Login
+          </Link>
+        </p>
       </div>
     </div>
   );

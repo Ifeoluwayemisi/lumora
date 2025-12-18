@@ -6,48 +6,36 @@ import {
   ShieldCheck,
   MapPin,
   Activity,
-  Search,
   AlertTriangle,
   CheckCircle2,
   History,
+  Info,
 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
-
-// Mock authentication check (replace with real auth state)
-const isAuthenticated = false;
 
 export default function VerificationHub() {
-  const router = useRouter();
-  const [method, setMethod] = useState<"manual" | "qr">("manual"); // Manual first
+  const [method, setMethod] = useState<"qr" | "manual">("manual"); // manual first
   const [viewState, setViewState] = useState<"idle" | "verifying" | "result">(
     "idle"
   );
   const [scanResult, setScanResult] = useState<
     "GENUINE" | "USED" | "INVALID" | null
   >(null);
-  const [loginModal, setLoginModal] = useState(false);
+  const [consentModal, setConsentModal] = useState(false);
 
   const triggerVerify = () => {
     setViewState("verifying");
     setTimeout(() => {
-      setScanResult("USED"); // demo
+      setScanResult("USED");
       setViewState("result");
-    }, 2000);
+      if ("USED" === "USED") setConsentModal(true);
+    }, 2500);
   };
-
-  const handleMethodChange = (selected: "manual" | "qr") => {
-    if (selected === "qr" && !isAuthenticated) {
-      setLoginModal(true);
-      return;
-    }
-    setMethod(selected);
-  };
-  
 
   return (
     <div className="min-h-screen bg-[#050505] p-6 lg:p-12">
       <div className="max-w-xl mx-auto space-y-8">
+        {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-black italic tracking-tighter uppercase text-white">
             Digital Forensic
@@ -62,7 +50,7 @@ export default function VerificationHub() {
             {/* Method Selector */}
             <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
               <button
-                onClick={() => handleMethodChange("manual")}
+                onClick={() => setMethod("manual")}
                 className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl text-[10px] font-black uppercase transition ${
                   method === "manual"
                     ? "bg-green-500 text-black shadow-xl shadow-green-500/20"
@@ -72,7 +60,7 @@ export default function VerificationHub() {
                 <Keyboard size={16} /> Manual Input
               </button>
               <button
-                onClick={() => handleMethodChange("qr")}
+                onClick={() => setMethod("qr")}
                 className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl text-[10px] font-black uppercase transition ${
                   method === "qr"
                     ? "bg-green-500 text-black shadow-xl shadow-green-500/20"
@@ -83,8 +71,8 @@ export default function VerificationHub() {
               </button>
             </div>
 
-            {/* Manual Verification */}
-            {method === "manual" && (
+            {/* Manual Input */}
+            {method === "manual" ? (
               <div className="bg-white/5 p-8 rounded-[3rem] border border-white/10 space-y-4">
                 <input
                   maxLength={12}
@@ -97,11 +85,15 @@ export default function VerificationHub() {
                 >
                   Verify Unit
                 </button>
+                <div className="p-6 bg-white/5 border border-white/5 rounded-3xl flex gap-4 items-start mt-4">
+                  <Info className="text-gray-500 shrink-0" size={18} />
+                  <p className="text-[10px] leading-relaxed text-gray-500 uppercase font-bold tracking-wider">
+                    Codes are case-sensitive. If the code is scratched or
+                    unreadable, please contact the manufacturer directly.
+                  </p>
+                </div>
               </div>
-            )}
-
-            {/* QR Scanner */}
-            {method === "qr" && isAuthenticated && (
+            ) : (
               <div className="relative aspect-square rounded-[3rem] border-2 border-white/10 bg-white/5 flex flex-col items-center justify-center group overflow-hidden">
                 <div className="absolute inset-0 border-[40px] border-black/60 z-10" />
                 <div className="w-full h-0.5 bg-green-400 shadow-[0_0_15px_#4ade80] absolute top-0 animate-[scan_3s_ease-in-out_infinite]" />
@@ -135,53 +127,47 @@ export default function VerificationHub() {
         )}
 
         {viewState === "result" && scanResult && (
-          <div className="animate-in zoom-in duration-500 space-y-6">
-            <ResultDisplay
-              type={scanResult}
-              onReset={() => setViewState("idle")}
-            />
-          </div>
+          <ResultDisplay
+            type={scanResult}
+            onReset={() => setViewState("idle")}
+          />
         )}
       </div>
 
-      {/* Login Modal */}
+      {/* Consent Popup with Exit */}
       <AnimatePresence>
-        {loginModal && (
+        {consentModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
             <div className="bg-[#0A0A0A] border border-white/10 p-8 md:p-12 rounded-[3rem] max-w-sm w-full space-y-6 text-center shadow-2xl relative">
-              {/* Exit Button */}
               <button
-                onClick={() => setLoginModal(false)}
+                onClick={() => setConsentModal(false)}
                 className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
               >
                 ✕
               </button>
-
+              <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto border border-amber-500/20">
+                <MapPin size={28} />
+              </div>
               <h2 className="text-xl font-black uppercase italic">
-                Login Required
+                Anomaly Detected
               </h2>
               <p className="text-xs text-gray-500 leading-relaxed font-medium">
-                You must be logged in to use the QR scanner. Please login or
-                continue with Manual Verification.
+                This code has been scanned in multiple locations. Do you consent
+                to sharing your GPS data to help us track this counterfeit
+                cluster?
               </p>
               <div className="flex flex-col gap-3">
                 <button
-                  onClick={() => {
-                    setLoginModal(false);
-                    router.push("/auth/login");
-                  }}
-                  className="w-full py-4 bg-green-500 text-black rounded-2xl font-black text-xs uppercase tracking-widest"
+                  onClick={() => setConsentModal(false)}
+                  className="w-full py-4 bg-amber-500 text-black rounded-2xl font-black text-xs uppercase tracking-widest"
                 >
-                  Login
+                  Share Location Data
                 </button>
                 <button
-                  onClick={() => {
-                    setLoginModal(false);
-                    setMethod("manual");
-                  }}
+                  onClick={() => setConsentModal(false)}
                   className="w-full py-4 text-gray-600 font-bold text-[10px] uppercase"
                 >
-                  Use Manual Verification
+                  Deny & View Result
                 </button>
               </div>
             </div>
@@ -192,7 +178,7 @@ export default function VerificationHub() {
   );
 }
 
-// ResultDisplay remains the same as your previous implementation
+// Result Component
 function ResultDisplay({ type, onReset }: any) {
   const isGenuine = type === "GENUINE";
   const isUsed = type === "USED";

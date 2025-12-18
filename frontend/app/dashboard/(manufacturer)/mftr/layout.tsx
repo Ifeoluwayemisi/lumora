@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "@/components/Dashboard/Sidebar";
+import Sidebar from "@/components/dashboard/Sidebar";
 
 // Mock function — replace with real API call
 async function fetchUser() {

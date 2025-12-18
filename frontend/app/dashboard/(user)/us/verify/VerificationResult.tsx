@@ -1,5 +1,5 @@
 import { ShieldAlert, CheckCircle2 } from "lucide-react";
-import { VerificationResult } from "../../libs/type";
+import { VerificationResult } from "../../../../../libs/type";
 
 export default function ResultCard({
   result,

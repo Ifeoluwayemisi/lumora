@@ -1,4 +1,3 @@
-// app/(admin)/layout.tsx
 import AdminSidebar from "@/components/dashboard/AdminSidebar";
 import "leaflet/dist/leaflet.css";
 
