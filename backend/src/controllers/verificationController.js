@@ -1,10 +1,8 @@
 import { verifyCode } from "../services/verificationService.js";
 import { checkRateLimit } from "../services/rateLimitService.js";
-import { decodeQRcode } from "../utils/qrDecoder.js"; // utility to decode content
-import { error } from "console";
+import { decodeQRcode } from "../utils/qrDecoder.js";
 
-/*  Helpers  */
-
+/* Helpers */
 function normalizeLocation(latitude, longitude) {
   if (
     typeof latitude === "number" &&
@@ -16,7 +14,7 @@ function normalizeLocation(latitude, longitude) {
   ) {
     return { latitude, longitude };
   }
-  return null;
+  return { latitude: null, longitude: null };
 }
 
 async function handleVerification({
@@ -28,11 +26,14 @@ async function handleVerification({
 }) {
   await checkRateLimit(userId, ip);
 
-  return verifyCode(
-    codeValue.trim(),
+  const location = normalizeLocation(latitude, longitude);
+
+  return verifyCode({
+    codeValue: codeValue.trim(),
     userId,
-    normalizeLocation(latitude, longitude)
-  );
+    latitude: location.latitude,
+    longitude: location.longitude,
+  });
 }
 
 /*  Controllers  */
@@ -53,33 +54,26 @@ export async function verifyManual(req, res) {
       longitude,
     });
 
-    return res.status(200).json(result);
+    res.status(200).json(result);
   } catch (err) {
     if (err.message === "Rate limit exceeded") {
       return res.status(429).json({ error: err.message });
     }
 
     console.error("Manual verification error:", err);
-    return res.status(500).json({ error: "Verification failed" });
+    res.status(500).json({ error: "Verification failed" });
   }
 }
 
 export async function verifyQR(req, res) {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res
-        .status(401)
-        .json({ error: "Authentication required for QR verification" });
-    }
+    const userId = req.user?.id || null;
 
     const { qrData, latitude, longitude } = req.body;
-
     if (!qrData) {
       return res.status(400).json({ error: "QR data is required" });
     }
 
-    // Decode QR → actual product code
     const codeValue = decodeQRcode(qrData);
     if (!codeValue) {
       return res.status(400).json({ error: "Invalid QR data" });
@@ -93,13 +87,13 @@ export async function verifyQR(req, res) {
       longitude,
     });
 
-    return res.status(200).json(result);
+    res.status(200).json(result);
   } catch (err) {
     if (err.message === "Rate limit exceeded") {
       return res.status(429).json({ error: err.message });
     }
 
     console.error("QR verification error:", err);
-    return res.status(500).json({ error: "QR verification failed" });
+    res.status(500).json({ error: "QR verification failed" });
   }
 }

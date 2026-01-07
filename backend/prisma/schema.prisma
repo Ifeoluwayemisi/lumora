@@ -36,16 +36,16 @@ model Manufacturer {
   user      User     @relation(fields: [userId], references: [id])
   drugs     Drug[]
   batches   Batch[]
+  Code      Code[]
 }
 
 model Drug {
-  id             String   @id @default(uuid())
+  id             String       @id @default(uuid())
   name           String
   category       String
   manufacturerId String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  batches        Batch[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
   batches        Batch[]
 
@@ -65,6 +65,7 @@ model Batch {
   updatedAt      DateTime     @updatedAt
   manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
   drug           Drug         @relation(fields: [drugId], references: [id])
+  Product        Product      @relation(fields: [productId], references: [id])
 
   @@index([batchNumber])
   @@index([expirationDate])
@@ -75,8 +76,8 @@ model Code {
   codeValue        String            @unique
   isUsed           Boolean           @default(false)
   usedAt           DateTime?
-  qrCodeImage      String            // base64
-  qrImagePath      String 
+  qrCodeImage      String // base64
+  qrImagePath      String
   batchId          String
   manufacturerId   String
   firstVerifiedAt  DateTime?
@@ -94,7 +95,7 @@ model Code {
 model VerificationLog {
   id                String            @id @default(uuid())
   codeId            String
-  codeValue         String    
+  codeValue         String
   userId            String? // nullable for guest verification
   timestamp         DateTime          @default(now())
   location          String? // optional geo
@@ -102,13 +103,12 @@ model VerificationLog {
   latitude          Float?
   longitude         Float?
   riskScore         Float?
-  userId            String?
   createdAt         DateTime          @default(now())
   user              User?             @relation(fields: [userId], references: [id])
   code              Code              @relation(fields: [codeId], references: [id])
 
   @@index([codeValue])
-  @@index([state])
+  @@index([verificationState])
   @@index([createdAt])
 }
 
@@ -122,23 +122,23 @@ model Alert {
 }
 
 model Incident {
-  id        String   @id @default(uuid())
-  codeValue String   
+  id        String            @id @default(uuid())
+  codeValue String
   riskScore Float
   state     VerificationState
-  status    String    // OPEN, UNDER_REVIEW, CLOSED
-  createdAt DateTime  @default(now())
+  status    String // OPEN, UNDER_REVIEW, CLOSED
+  createdAt DateTime          @default(now())
 
   @@index([status])
 }
 
 model Product {
-  id          String   @id @default(uuid())
+  id             String   @id @default(uuid())
   manufacturerId String
-  name        String
-  description String?
-  createdAt   DateTime @default(now())
-  batches     Batch[]
+  name           String
+  description    String?
+  createdAt      DateTime @default(now())
+  batches        Batch[]
 }
 
 enum Role {

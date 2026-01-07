@@ -3,63 +3,96 @@ import { calculateRisk } from "./aiRiskService.js";
 import { getTrustDecision } from "./trustDecisionService.js";
 import { maybeCreateIncident } from "./incidentService.js";
 
-export async function verifyCode(codeValue, userId = null, location = null) {
-    const code = await prisma.code.findUnique({
-        where: {codeValue},
-        include: { batch: true, manufacturer: true},
+export async function verifyCode({
+  codeValue,
+  userId = null,
+  latitude = null,
+  longitude = null,
+}) {
+  //Find code
+  const code = await prisma.code.findFirst({
+    where: { value: codeValue },
+    include: {
+      batch: { include: { product: true } },
+      manufacturer: true,
+    },
+  });
+
+  let verificationState;
+  let advisory = null;
+  let riskScore = 0;
+
+  // Base verification state
+  if (!code) {
+    verificationState = "UNREGISTERED_PRODUCT";
+  } else if (code.isUsed) {
+    verificationState = "CODE_ALREADY_USED";
+  } else {
+    verificationState = "GENUINE";
+  }
+
+  // AI Risk analysis (always run)
+  const aiResult = await calculateRisk(codeValue, {
+    latitude,
+    longitude,
+    verificationState,
+  });
+
+  riskScore = aiResult?.riskScore || 0;
+  advisory = aiResult?.advisory || null;
+
+  // Override state if suspicious
+  if (aiResult?.suspiciousPattern) {
+    verificationState = "SUSPICIOUS_PATTERN";
+  }
+
+  // Log verification
+  await prisma.verificationLog.create({
+    data: {
+      codeValue,
+      codeId: code?.id || null,
+      userId,
+      latitude,
+      longitude,
+      state: verificationState,
+      riskScore,
+    },
+  });
+
+  // Mark code as used (only if genuinely verified)
+  if (code && verificationState === "GENUINE") {
+    await prisma.code.update({
+      where: { id: code.id },
+      data: {
+        isUsed: true,
+        usedAt: new Date(),
+      },
     });
+  }
 
-    let verificationState;
-    let advisory = null;
-    let riskScore = 0
+  // Trust decision
+  const trustDecision = getTrustDecision({
+    state: verificationState,
+    riskScore,
+  });
 
-    if (!code) {
-        verificationState = 'UNREGISTERED_PRODUCT';
-        advisory: 'Product not registered; risk assessment not provided';
-    } else if (code.isUsed) {
-        verificationState = 'CODE_ALREADY_USED';
-    } else {
-        verificationState = 'GENUINE';
-    }
+  // Incident creation (centralized logic)
+  await maybeCreateIncident({
+    codeValue,
+    state: verificationState,
+    riskScore,
+    trustDecision,
+    latitude,
+    longitude,
+  });
 
-    // Calculate AI risk for all verifications
-    const aiResult = await calculateRisk(codeValue, location );
-    riskScore = aiResult.riskScore;
-    advisory = advisory || aiResult.advisory;
-
-    if (aiResult.suspiciousPattern) verificationState = 'SUSPICIOUS_PATTERN';
-
-    // log verification
-    await prisma.verificationLog.create({
-        data: {
-            codeValue,
-            state: verificationState,
-            latitude: location?.latitude || null,
-            longitude: location?.longitude || null,
-            riskScore,
-            userId,
-        },
-    });
-
-    // mark code used if genuine
-    if (code && verificationState === 'GENUINE') {
-        await prisma.code.update({
-            where: { id: code.id},
-            data: {isUsed: true, usedAt: new Date() },
-        });
-    }
-
-    const trustDecision = getTrustDecision({
-        state: verificationState,
-        riskScore,
-    });
-
-    const incident = await maybeCreateIncident({
-        codeValue,
-        state: verificationState,
-        riskScore,
-        trustDecision,
-    });
-
-    return { verificationState, advisory, riskScore, trustDecision};
+  // Final response
+  return {
+    codeValue,
+    product: code?.batch?.product?.name || "External / Unregistered",
+    verificationState,
+    riskScore,
+    advisory,
+    trustDecision,
+  };
 }

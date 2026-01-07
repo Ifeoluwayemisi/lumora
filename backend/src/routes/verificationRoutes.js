@@ -1,14 +1,17 @@
-import express from 'express';
-import { verifyManual, verifyQR } from '../controllers/verificationController';
-import { optionalAuthMiddleware } from '../middleware/optionalAuthMiddleware';
-import { authMiddleware } from '../middleware/authMiddleware';
+import express from "express";
+import {
+  verifyManual,
+  verifyQR,
+} from "../controllers/verificationController.js";
+import { optionalAuthMiddleware } from "../middleware/optionalAuthMiddleware.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-//manual verication, works for boyh unauth and auth users
-router.post('/manual', optionalAuthMiddleware, verifyManual);
+// Manual verification → authenticated OR guest
+router.post("/manual", optionalAuthMiddleware, verifyManual);
 
-//Qr verification. Authenticated users only
-router.post('/qr', authMiddleware, verifyQR);
+// QR verification → authenticated users only
+router.post("/qr", authMiddleware, verifyQR);
 
 export default router;
