@@ -44,7 +44,6 @@ export default function VerificationHub() {
     setMethod(selected);
   };
   
-
   return (
     <div className="min-h-screen bg-[#050505] p-6 lg:p-12">
       <div className="max-w-xl mx-auto space-y-8">
