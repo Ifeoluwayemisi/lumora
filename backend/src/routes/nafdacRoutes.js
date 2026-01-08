@@ -1,7 +1,7 @@
 import express from 'express';
-import { authMiddleware } from '../middleware/authMiddleware';
-import { roleMiddleware } from '../middleware/roleMiddleware';
-import { listIncidents, updateIncident, getHotspotData, getPredictedHotspotsData } from '../controllers/nafdacController';
+import { authMiddleware } from '../middleware/authMiddleware.js';
+import { roleMiddleware } from '../middleware/roleMiddleware.js';
+import { listIncidents, updateIncident, getHotspotData, getPredictedHotspotsData } from '../controllers/nafdacController.js';
 
 const router = express.Router();
 

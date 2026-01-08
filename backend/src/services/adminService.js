@@ -1,5 +1,5 @@
-import prisma from "../models/prismaClient";
-import { analyzeHotspots } from "../utils/aiClient";
+import prisma from "../models/prismaClient.js";
+import { analyzeHotspots } from "../utils/aiClient.js";
 
 export async function getAllVerifications({ page = 1, limit = 50 }) {
   const skip = (page - 1) * limit;

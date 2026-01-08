@@ -1,4 +1,4 @@
-import { getAllVerifications, getAdminPredictionHotspots, getAllIncidents, getHighRiskCodes } from "../services/adminService";
+import { getAllVerifications, getAdminPredictionHotspots, getAllIncidents, getHighRiskCodes } from "../services/adminService.js";
 
 export async function listVerifications(req, res) {
     try {

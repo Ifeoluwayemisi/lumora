@@ -1,4 +1,4 @@
-import { getIncidents, updateIncidentStatus, getHotspots, getPredictedHotspots } from "../services/nafdacService";
+import { getIncidents, updateIncidentStatus, getHotspots, getPredictedHotspots } from "../services/nafdacService.js";
 
 export async function listIncidents(req, res) {
     try {

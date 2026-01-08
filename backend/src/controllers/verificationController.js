@@ -1,6 +1,7 @@
 import { verifyCode } from "../services/verificationService.js";
 import { checkRateLimit } from "../services/rateLimitService.js";
 import { decodeQRcode } from "../utils/qrDecoder.js";
+import prisma from "../models/prismaClient.js";
 
 /* Helpers */
 function normalizeLocation(latitude, longitude) {

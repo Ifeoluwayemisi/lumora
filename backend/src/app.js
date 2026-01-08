@@ -7,6 +7,7 @@ import codeRoutes from './routes/codeRoutes.js';
 import manufacturerRoutes from './routes/manufacturerRoutes.js';
 import nafdacRoutes from './routes/nafdacRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import userRoute from './routes/userRoutes.js';
 
 const app = express();
 
@@ -15,11 +16,12 @@ app.use(express.json());
 
 //Routes
 app.use('/api/auth', authRoutes);
-app.use('api/verify', verificationRoutes);
+app.use('/api/verify', verificationRoutes);
 app.use('/api/codes', codeRoutes);
 app.use('/api/manufacturer', manufacturerRoutes);
 app.use('/api/nafdac', nafdacRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/user', userRoute)
 
 app.get("/", (req, res) => {
   res.send("Welcome to Lumora API");

@@ -1,44 +1,69 @@
-import prisma from '../models/prismaClient,js';
-import { generateUniqueCode } from '../utils/generateCode';
-import { generateQRCode } from '../utils/qrGenerator';  
+import prisma from "../models/prismaClient.js";
+import { generateQRCode } from "../utils/qrGenerator.js";
 
-export async function createProduct({ manufacturerId, name, desscription}) {
-    return prisma.product.create({
-        data: {manufacturerId, name, desscription},
-    });
+//  PRODUCTS 
+export async function createProduct({ manufacturerId, name, description }) {
+  return prisma.product.create({
+    data: { manufacturerId, name, description },
+  });
 }
 
-export async function createBatch({productId, batchNumber, productionDate, expiryDate}) {
-    return prisma.product.create({
-        data: {productId, batchNumber, productionDate, expiryDate},
-    });
+//  BATCHES 
+export async function createBatch({
+  productId,
+  batchNumber,
+  productionDate,
+  expiryDate,
+}) {
+  return prisma.batch.create({
+    data: { productId, batchNumber, productionDate, expiryDate },
+  });
 }
 
-//codesCount = number of codes to generate
+//  CODES 
 export async function generateCodes({ batchId, codesCount }) {
-    const codes = [];
-    for (let i = 0; i < codesCount; i++) {
-        //random code generator
-        const codeValue = generateUniqueCode();
-        const qrPath = await generateQRCode(codeValue);
+  if (!codesCount || codesCount < 1) {
+    throw new Error("codesCount must be greater than 0");
+  }
 
-        const code = await prisma.code.create({
-            data: {batchId, codeValue, qrPath},
-        });
-        codes.push(code);
+  return prisma.$transaction(async (tx) => {
+    const createdCodes = [];
+
+    for (let i = 0; i < codesCount; i++) {
+      const codeValue = await generateUniqueCode(tx);
+      const qrPath = await generateQRCode(codeValue);
+
+      const code = await tx.code.create({
+        data: { batchId, codeValue, qrPath },
+      });
+
+      createdCodes.push(code);
     }
-    return codes;
+
+    return createdCodes;
+  });
 }
 
-// helper: safe unique code
-function generateUniqueCode(length = 6) {
-    const charset = 'ABCDEFGHJKMNQRSTUVWXYZ23456789'; //REmoved I, L, 1, 0 ,O to avoid confusion
-    let code;
-    let exists = true;
-    while (exist) {
-        code = Array.from ({ length}, () => charset[Math.floor(Math.random()*charset.length)]).join('');
-        code = `LUM-${code}`;
-        exists = false; // for pproduction check db for uniqueness
-    }
-    return code;
+//  HELPERS 
+async function generateUniqueCode(tx, length = 6) {
+  const charset = "ABCDEFGHJKMNQRSTUVWXYZ23456789";
+  let code;
+  let exists = true;
+
+  while (exists) {
+    const random = Array.from(
+      { length },
+      () => charset[Math.floor(Math.random() * charset.length)]
+    ).join("");
+
+    code = `LUM-${random}`;
+
+    const found = await tx.code.findUnique({
+      where: { codeValue: code },
+    });
+
+    exists = Boolean(found);
+  }
+
+  return code;
 }
