@@ -90,6 +90,17 @@ export default function Footer() {
       {/* Copyright section */}
       <div className="border-t px-4 py-6 text-center text-xs text-gray-500 dark:text-gray-400">
         <p>&copy; {new Date().getFullYear()} Lumora. All rights reserved.</p>
+        <div className="flex justify-center mt-4 gap-4">
+          <a href="#" className="hover:text-genuine">
+            Twitter
+          </a>
+          <a href="#" className="hover:text-genuine">
+            LinkedIn
+          </a>
+          <a href="#" className="hover:text-genuine">
+            Instagram
+          </a>
+        </div>
       </div>
     </footer>
   );

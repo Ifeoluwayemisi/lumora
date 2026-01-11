@@ -5,9 +5,9 @@
  *
  * Structure:
  * - Providers: Context providers (Theme, Auth)
- * - Navbar: Fixed navigation header
+ * - Navbar: Fixed navigation header (hidden on /auth pages)
  * - Main: Page content area with padding for navbar
- * - Footer: Application footer
+ * - Footer: Application footer (hidden on /auth pages)
  *
  * Metadata: SEO configuration for the application
  */
@@ -15,6 +15,7 @@ import "./globals.css";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import Providers from "./providers";
+import LayoutContent from "./layout-content";
 
 // SEO Metadata for the application
 export const metadata = {
@@ -29,14 +30,8 @@ export default function RootLayout({ children }) {
       <body className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors">
         {/* Providers: Theme & Auth context */}
         <Providers>
-          {/* Fixed navigation header */}
-          <Navbar />
-
-          {/* Main content area - pt-16 accounts for fixed navbar height */}
-          <main className="min-h-screen pt-16">{children}</main>
-
-          {/* Application footer */}
-          <Footer />
+          {/* Client component to conditionally render navbar/footer */}
+          <LayoutContent>{children}</LayoutContent>
         </Providers>
       </body>
     </html>

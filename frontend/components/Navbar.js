@@ -123,13 +123,13 @@ export default function Navbar() {
           ) : (
             <>
               <Link
-                href="/login"
+                href="/auth/login"
                 className="text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors"
               >
                 Login
               </Link>
               <Link
-                href="/register"
+                href="/auth/register"
                 className="font-semibold text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors"
               >
                 Register

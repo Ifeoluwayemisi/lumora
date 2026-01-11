@@ -192,7 +192,7 @@ export default function LandingPage() {
             >
               Only manual verification available for unregistered users.{" "}
               <a
-                href="/register"
+                href="/auth/register"
                 className="underline hover:text-genuine transition-colors font-semibold"
               >
                 Register
@@ -337,8 +337,11 @@ export default function LandingPage() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="w-full py-20 px-6 sm:px-12">
-        <div className="max-w-4xl mx-auto">
+      <section
+        id="contact"
+        className="w-full py-20 px-6 sm:px-12 bg-gray-50 dark:bg-gray-900"
+      >
+        <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -349,39 +352,39 @@ export default function LandingPage() {
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-4">
               Get in Touch
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300">
+            <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Have questions? We'd love to hear from you. Contact us for
               partnerships, support, or inquiries.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Contact Info */}
+          <div className="grid md:grid-cols-2 gap-12">
+            {/* Contact Info + Direct Channels */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="space-y-6"
+              className="space-y-8"
             >
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  Email
+                  Support Email
                 </h3>
                 <a
                   href="mailto:support@lumora.health"
-                  className="text-lg text-genuine hover:text-opacity-80 transition-colors"
+                  className="text-lg text-genuine hover:text-opacity-80 transition-colors font-medium"
                 >
                   support@lumora.health
                 </a>
               </div>
               <div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  Partnerships
+                  Partnerships & Sponsorships
                 </h3>
                 <a
                   href="mailto:partners@lumora.health"
-                  className="text-lg text-genuine hover:text-opacity-80 transition-colors"
+                  className="text-lg text-genuine hover:text-opacity-80 transition-colors font-medium"
                 >
                   partners@lumora.health
                 </a>
@@ -391,58 +394,44 @@ export default function LandingPage() {
                   Location
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  Nigeria | Serving Africa & Beyond
+                  🇳🇬 Nigeria | Serving Africa & Beyond
                 </p>
               </div>
             </motion.div>
 
-            {/* Quick Links */}
+            {/* Contact Form */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
-              className="space-y-4"
             >
-              <div className="bg-blue-50 dark:bg-gray-800 p-6 rounded-xl">
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                  Quick Links
-                </h3>
-                <ul className="space-y-2">
-                  <li>
-                    <a
-                      href="/"
-                      className="text-genuine hover:text-opacity-80 transition-colors"
-                    >
-                      Back to Home
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#how"
-                      className="text-genuine hover:text-opacity-80 transition-colors"
-                    >
-                      How It Works
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#about"
-                      className="text-genuine hover:text-opacity-80 transition-colors"
-                    >
-                      About Us
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="mailto:support@lumora.health"
-                      className="text-genuine hover:text-opacity-80 transition-colors"
-                    >
-                      Email Support
-                    </a>
-                  </li>
-                </ul>
-              </div>
+              <form className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg flex flex-col gap-4">
+                <input
+                  type="text"
+                  placeholder="Your Name"
+                  className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all"
+                  aria-label="Name"
+                />
+                <input
+                  type="email"
+                  placeholder="Your Email"
+                  className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all"
+                  aria-label="Email"
+                />
+                <textarea
+                  placeholder="Message (tell us how we can help)"
+                  rows="5"
+                  className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all resize-none"
+                  aria-label="Message"
+                ></textarea>
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-genuine text-white rounded-md font-semibold hover:bg-green-600 active:bg-green-700 transition-colors"
+                >
+                  Send Message
+                </button>
+              </form>
             </motion.div>
           </div>
         </div>
