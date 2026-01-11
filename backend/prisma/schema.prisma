@@ -22,21 +22,27 @@ model User {
   updatedAt           DateTime          @updatedAt
   manufacturer        Manufacturer?
   verifications       VerificationLog[]
+  plan                Plan              @default(BASIC)
+  dailyCodeLimit      Int               @default(50)
+  planExpiresAt       DateTime?
 
   @@index([role])
 }
 
 model Manufacturer {
-  id        String   @id @default(uuid())
-  name      String
-  userId    String   @unique
-  verified  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
-  drugs     Drug[]
-  batches   Batch[]
-  Code      Code[]
+  id             String    @id @default(uuid())
+  name           String
+  userId         String    @unique
+  verified       Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id])
+  drugs          Drug[]
+  batches        Batch[]
+  Code           Code[]
+  plan           Plan      @default(BASIC)
+  dailyCodeLimit Int       @default(50)
+  planExpiresAt  DateTime?
 }
 
 model Drug {
@@ -47,16 +53,14 @@ model Drug {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
-  batches        Batch[]
 
   @@index([manufacturerId])
 }
 
 model Batch {
   id             String       @id @default(uuid())
-  drugId         String
   productId      String
-  productionDate String
+  productionDate DateTime
   manufacturerId String
   batchNumber    String
   expirationDate DateTime
@@ -64,8 +68,7 @@ model Batch {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
   manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
-  drug           Drug         @relation(fields: [drugId], references: [id])
-  Product        Product      @relation(fields: [productId], references: [id])
+  product        Product      @relation(fields: [productId], references: [id])
 
   @@index([batchNumber])
   @@index([expirationDate])
@@ -76,8 +79,7 @@ model Code {
   codeValue        String            @unique
   isUsed           Boolean           @default(false)
   usedAt           DateTime?
-  qrCodeImage      String // base64
-  qrImagePath      String
+   qrImagePath      String
   batchId          String
   manufacturerId   String
   firstVerifiedAt  DateTime?
@@ -94,7 +96,7 @@ model Code {
 
 model VerificationLog {
   id                String            @id @default(uuid())
-  codeId            String
+  codeId            String?
   codeValue         String
   userId            String? // nullable for guest verification
   timestamp         DateTime          @default(now())
@@ -105,7 +107,7 @@ model VerificationLog {
   riskScore         Float?
   createdAt         DateTime          @default(now())
   user              User?             @relation(fields: [userId], references: [id])
-  code              Code              @relation(fields: [codeId], references: [id])
+  code              Code?              @relation(fields: [codeId], references: [id])
 
   @@index([codeValue])
   @@index([verificationState])
@@ -154,4 +156,9 @@ enum VerificationState {
   INVALID
   UNREGISTERED_PRODUCT
   SUSPICIOUS_PATTERN
+}
+
+enum Plan {
+  BASIC
+  PREMIUM
 }

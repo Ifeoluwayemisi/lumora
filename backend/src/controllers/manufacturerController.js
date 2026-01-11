@@ -1,77 +1,95 @@
+import prisma from "../models/prismaClient.js";
 import {
   createProduct,
-  createBatch,
-  generateCodes,
+  createBatchWithCodes,
 } from "../services/manufacturerService.js";
+import { parseISO, isValid } from "date-fns";
 
+/**
+ * CREATE PRODUCT
+ */
 export async function addProduct(req, res) {
   try {
     const { name, description } = req.body;
+
     const product = await createProduct({
       manufacturerId: req.user.id,
       name,
       description,
     });
+
     res.status(201).json(product);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to create product" });
+    res.status(500).json({ error: err.message });
   }
 }
 
+/**
+ * CREATE BATCH + CODES
+ */
 export async function addBatch(req, res) {
   try {
-    const { productId, batchNumber, productionDate, expiryDate } = req.body;
-    const batch = await createBatch({
+    const { productId, productionDate, expiryDate, quantity } = req.body;
+
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ error: "quantity is required" });
+    }
+
+    const prodDate = parseISO(productionDate);
+    const expDate = parseISO(expiryDate);
+
+    if (!isValid(prodDate) || !isValid(expDate)) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    const { batch, createdCodes } = await createBatchWithCodes({
       productId,
-      batchNumber,
-      productionDate: new Date(productionDate),
-      expiryDate: newDate(expiryDate),
+      manufacturerId: req.user.id,
+      productionDate: prodDate,
+      expirationDate: expDate,
+      quantity,
     });
-    res.status(201).json(batch);
+
+    res.status(201).json({
+      batch, // return batch object directly
+      generatedCodes: createdCodes.length, // count of codes
+    });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to create batch" });
+
+    // Return error message from service if it exists
+    res.status(500).json({
+      error:
+        err.message ||
+        "Daily code limit reached or something went wrong. Upgrade to PREMIUM to generate more codes.",
+    });
   }
 }
 
-export async function createBatchCodes(req, res) {
-  try {
-    const { batchId, codesCount } = req.body;
-    const codes = await generateCodes({ batchId, codesCount });
-    res.status(201).json({ count: codes.length, codes });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to generate codes" });
-  }
-}
 
+/**
+ * MANUFACTURER HISTORY (Verification logs)
+ */
 export async function getManufacturerHistory(req, res) {
   try {
-    const manufacturerId = req.user.id;
     const { productId, batchId, from, to, page = 1, limit = 20 } = req.query;
 
-    const pageNum = Math.max(parseInt(page) || 1, 1);
-    const limitNum = Math.min(parseInt(limit) || 20, 100);
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.min(Number(limit), 100);
     const skip = (pageNum - 1) * limitNum;
 
-    const where = { manufacturerId };
+    const where = {
+      manufacturerId: req.user.id,
+    };
 
     if (productId) where.productId = productId;
     if (batchId) where.batchId = batchId;
 
     if (from || to) {
       where.createdAt = {};
-
-      if (from) {
-        const fromDate = parseISO(from);
-        if (isValid(fromDate)) where.createdAt.gte = fromDate;
-      }
-
-      if (to) {
-        const toDate = parseISO(to);
-        if (isValid(toDate)) where.createdAt.lte = toDate;
-      }
+      if (from && isValid(parseISO(from))) where.createdAt.gte = parseISO(from);
+      if (to && isValid(parseISO(to))) where.createdAt.lte = parseISO(to);
     }
 
     const [history, total] = await Promise.all([
@@ -87,12 +105,11 @@ export async function getManufacturerHistory(req, res) {
     res.json({
       total,
       page: pageNum,
-      limit: limitNum,
       pages: Math.ceil(total / limitNum),
       history,
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to fetch manufacturer history" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to fetch history" });
   }
 }

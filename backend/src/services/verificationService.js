@@ -11,7 +11,7 @@ export async function verifyCode({
 }) {
   //Find code
   const code = await prisma.code.findFirst({
-    where: { value: codeValue },
+    where: { codeValue },
     include: {
       batch: { include: { product: true } },
       manufacturer: true,
@@ -47,17 +47,17 @@ export async function verifyCode({
   }
 
   // Log verification
-  await prisma.verificationLog.create({
-    data: {
-      codeValue,
-      codeId: code?.id || null,
-      userId,
-      latitude,
-      longitude,
-      state: verificationState,
-      riskScore,
-    },
-  });
+ await prisma.verificationLog.create({
+   data: {
+     codeValue,
+     ...(code ? { codeId: code.id } : {}),
+     userId,
+     latitude,
+     longitude,
+     verificationState,
+     riskScore,
+   },
+ });
 
   // Mark code as used (only if genuinely verified)
   if (code && verificationState === "GENUINE") {

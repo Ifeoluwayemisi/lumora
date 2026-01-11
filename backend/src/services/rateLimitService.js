@@ -13,7 +13,7 @@ export async function checkRateLimit(userId, ipAddress) {
         },
     });
 
-    const limit = userid ? 30 : 5;
+    const limit = userId ? 30 : 5;
 
     if (count >= limit) {
         throw new Error('Rate limit exceeded');

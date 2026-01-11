@@ -21,9 +21,23 @@ export const signup = async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT);
+
+    // 1️⃣ Create the User
     const user = await prisma.user.create({
       data: { name, email, password: hashedPassword, role },
     });
+
+    // 2️⃣ If role is MANUFACTURER, auto-create a Manufacturer record
+    if (role === "MANUFACTURER") {
+      await prisma.manufacturer.create({
+        data: {
+          id: user.id, // match the User ID
+          userId: user.id, // link back to User
+          name: user.name, // company name or user name
+        },
+      });
+    }
+
     res.status(201).json({ message: "User Created", userId: user.id });
   } catch (error) {
     console.error("Prisma Signup Error:", error);

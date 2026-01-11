@@ -55,6 +55,7 @@ export async function verifyManual(req, res) {
       longitude,
     });
 
+    // Return the verification result always, even if UNREGISTERED_PRODUCT
     res.status(200).json(result);
   } catch (err) {
     if (err.message === "Rate limit exceeded") {
@@ -62,9 +63,10 @@ export async function verifyManual(req, res) {
     }
 
     console.error("Manual verification error:", err);
-    res.status(500).json({ error: "Verification failed" });
+    res.status(500).json({ error: "Internal server error" });
   }
 }
+
 
 export async function verifyQR(req, res) {
   try {

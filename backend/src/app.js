@@ -8,6 +8,8 @@ import manufacturerRoutes from './routes/manufacturerRoutes.js';
 import nafdacRoutes from './routes/nafdacRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import userRoute from './routes/userRoutes.js';
+import "dotenv/config";
+
 
 const app = express();
 

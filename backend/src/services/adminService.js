@@ -10,12 +10,20 @@ export async function getAllVerifications({ page = 1, limit = 50 }) {
     take: limit,
     orderBy: { createdAt: "desc" },
     include: {
-      code: true,
-      batch: true,
-      product: true,
+      code: {
+        include: {
+          batch: {
+            include: {
+              product: true,
+            },
+          },
+          manufacturer: true, // optional if you want manufacturer info
+        },
+      },
       user: true,
     },
   });
+
   return { total, page, limit, data };
 }
 

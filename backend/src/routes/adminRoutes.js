@@ -16,7 +16,7 @@ router.use(authMiddleware);
 router.use(roleMiddleware('ADMIN'));
 
 //routes
-router.get('/verifications', listVerifications); //paginated
+router.get('/verification/log', listVerifications); //paginated
 router.get('/incidents', listIncidents); //optional status filter
 router.get('/high-risk-codes', listHighRiskCodes);
 router.get('/hotspots/predicted', listPredictedHotspots); //optional ai layer

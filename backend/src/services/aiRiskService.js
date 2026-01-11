@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import prisma from "../models/prismaClient.js";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPEN_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 /**
@@ -25,11 +25,9 @@ export async function calculateRisk(codeValue, location) {
   /* ---------------- Rule 1: Multiple locations within 1 hour ---------------- */
   if (logs.length > 1) {
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-
     const recentLogs = logs.filter((l) => l.createdAt >= oneHourAgo);
 
     const locations = recentLogs.map((l) => `${l.latitude},${l.longitude}`);
-
     const uniqueLocations = new Set(locations);
 
     if (uniqueLocations.size > 1) {
@@ -74,21 +72,36 @@ ${logs
 `;
 
     try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
+      // Modern OpenAI API call
+      const response = await openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: prompt,
         temperature: 0,
-        max_tokens: 150,
+        max_output_tokens: 150,
       });
 
-      const aiText = response.choices[0].message.content;
-      const parsed = JSON.parse(aiText);
+      // Extract the AI text safely
+      const aiText = response.output_text?.trim();
 
-      riskScore = Math.max(riskScore, parsed.riskScore || 0);
-      suspiciousPattern = suspiciousPattern || parsed.suspiciousPattern;
-      if (parsed.advisory) advisories.push(parsed.advisory);
+      if (aiText) {
+        try {
+          const parsed = JSON.parse(aiText);
+
+          riskScore = Math.max(riskScore, parsed.riskScore || 0);
+          suspiciousPattern = suspiciousPattern || parsed.suspiciousPattern;
+          if (parsed.advisory) advisories.push(parsed.advisory);
+        } catch (parseErr) {
+          console.warn(
+            "AI returned invalid JSON, skipping AI enhancement:",
+            aiText
+          );
+        }
+      }
     } catch (err) {
-      console.warn("AI risk analysis failed, continuing without AI");
+      console.warn(
+        "AI risk analysis failed, continuing without AI:",
+        err.message
+      );
     }
   }
 
