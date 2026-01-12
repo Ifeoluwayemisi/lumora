@@ -1,0 +1,164 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String            @id @default(uuid())
+  name                String
+  email               String            @unique
+  password            String
+  role                Role
+  passwordResetToken  String? //nullable
+  passwordResetExpiry DateTime? //nullable
+  verified            Boolean           @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  manufacturer        Manufacturer?
+  verifications       VerificationLog[]
+  plan                Plan              @default(BASIC)
+  dailyCodeLimit      Int               @default(50)
+  planExpiresAt       DateTime?
+
+  @@index([role])
+}
+
+model Manufacturer {
+  id             String    @id @default(uuid())
+  name           String
+  userId         String    @unique
+  verified       Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id])
+  drugs          Drug[]
+  batches        Batch[]
+  Code           Code[]
+  plan           Plan      @default(BASIC)
+  dailyCodeLimit Int       @default(50)
+  planExpiresAt  DateTime?
+}
+
+model Drug {
+  id             String       @id @default(uuid())
+  name           String
+  category       String
+  manufacturerId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
+
+  @@index([manufacturerId])
+}
+
+model Batch {
+  id             String       @id @default(uuid())
+  productId      String
+  productionDate DateTime
+  manufacturerId String
+  batchNumber    String
+  expirationDate DateTime
+  codes          Code[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
+  product        Product      @relation(fields: [productId], references: [id])
+
+  @@index([batchNumber])
+  @@index([expirationDate])
+}
+
+model Code {
+  id               String            @id @default(uuid())
+  codeValue        String            @unique
+  isUsed           Boolean           @default(false)
+  usedAt           DateTime?
+   qrImagePath      String
+  batchId          String
+  manufacturerId   String
+  firstVerifiedAt  DateTime?
+  usedCount        Int               @default(0)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  verificationLogs VerificationLog[]
+  batch            Batch             @relation(fields: [batchId], references: [id])
+  manufacturer     Manufacturer      @relation(fields: [manufacturerId], references: [id])
+
+  @@index([codeValue])
+  @@index([isUsed])
+}
+
+model VerificationLog {
+  id                String            @id @default(uuid())
+  codeId            String?
+  codeValue         String
+  userId            String? // nullable for guest verification
+  timestamp         DateTime          @default(now())
+  location          String? // optional geo
+  verificationState VerificationState
+  latitude          Float?
+  longitude         Float?
+  riskScore         Float?
+  createdAt         DateTime          @default(now())
+  user              User?             @relation(fields: [userId], references: [id])
+  code              Code?              @relation(fields: [codeId], references: [id])
+
+  @@index([codeValue])
+  @@index([verificationState])
+  @@index([createdAt])
+}
+
+model Alert {
+  id        String   @id @default(uuid())
+  codeId    String
+  type      String
+  riskScore Float
+  location  String
+  timestamp DateTime @default(now())
+}
+
+model Incident {
+  id        String            @id @default(uuid())
+  codeValue String
+  riskScore Float
+  state     VerificationState
+  status    String // OPEN, UNDER_REVIEW, CLOSED
+  createdAt DateTime          @default(now())
+
+  @@index([status])
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  manufacturerId String
+  name           String
+  description    String?
+  createdAt      DateTime @default(now())
+  batches        Batch[]
+}
+
+enum Role {
+  CONSUMER
+  MANUFACTURER
+  ADMIN
+  NAFDAC
+}
+
+enum VerificationState {
+  GENUINE
+  CODE_ALREADY_USED
+  INVALID
+  UNREGISTERED_PRODUCT
+  SUSPICIOUS_PATTERN
+}
+
+enum Plan {
+  BASIC
+  PREMIUM
+}
