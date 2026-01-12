@@ -43,7 +43,7 @@ async function handleVerification({
  * Manual verification endpoint
  * Allows users to verify a product using a code string
  */
-export async function verifyManual(req, res) {
+export async function verifyManual(req, res, next) {
   try {
     const { codeValue, latitude, longitude } = req.body;
 
@@ -60,6 +60,9 @@ export async function verifyManual(req, res) {
       });
     }
 
+    // Ensure response content type is JSON
+    res.setHeader("Content-Type", "application/json");
+
     const result = await handleVerification({
       codeValue,
       userId: req.user?.id || null,
@@ -71,18 +74,14 @@ export async function verifyManual(req, res) {
     // Return the verification result always, even if UNREGISTERED_PRODUCT
     return res.status(200).json(result);
   } catch (err) {
+    console.error("[VERIFY_MANUAL] Error:", err);
+
     if (err.message === "Rate limit exceeded") {
       return res.status(429).json({ error: err.message });
     }
 
-    console.error("[VERIFY_MANUAL] Error:", err.message);
-    return res.status(500).json({
-      error: "Verification failed",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Please try again later",
-    });
+    // Pass error to global error handler
+    next(err);
   }
 }
 
@@ -90,7 +89,7 @@ export async function verifyManual(req, res) {
  * QR code verification endpoint
  * Allows users to verify a product by scanning a QR code
  */
-export async function verifyQR(req, res) {
+export async function verifyQR(req, res, next) {
   try {
     const userId = req.user?.id || null;
     const { qrData, latitude, longitude } = req.body;
@@ -101,6 +100,9 @@ export async function verifyQR(req, res) {
         error: "QR data is required and must be a string",
       });
     }
+
+    // Ensure response content type is JSON
+    res.setHeader("Content-Type", "application/json");
 
     // Decode QR code
     let codeValue;
@@ -128,17 +130,13 @@ export async function verifyQR(req, res) {
 
     return res.status(200).json(result);
   } catch (err) {
+    console.error("[VERIFY_QR] Error:", err);
+
     if (err.message === "Rate limit exceeded") {
       return res.status(429).json({ error: err.message });
     }
 
-    console.error("[VERIFY_QR] Error:", err.message);
-    return res.status(500).json({
-      error: "QR verification failed",
-      message:
-        process.env.NODE_ENV === "development"
-          ? err.message
-          : "Please try again later",
-    });
+    // Pass error to global error handler
+    next(err);
   }
 }

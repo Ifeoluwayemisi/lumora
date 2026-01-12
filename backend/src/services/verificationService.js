@@ -44,8 +44,12 @@ export async function verifyCode({
   } else if (code.isUsed) {
     verificationState = "CODE_ALREADY_USED";
   } else {
-    // Check expiration
-    if (code.batch.expirationDate && code.batch.expirationDate < new Date()) {
+    // Check expiration (safely access batch)
+    if (
+      code.batch &&
+      code.batch.expirationDate &&
+      code.batch.expirationDate < new Date()
+    ) {
       verificationState = "PRODUCT_EXPIRED";
     } else {
       verificationState = "GENUINE";

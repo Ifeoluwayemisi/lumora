@@ -31,6 +31,12 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
+// Ensure all responses are JSON
+app.use((req, res, next) => {
+  res.setHeader("Content-Type", "application/json");
+  next();
+});
+
 // Security headers
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -102,6 +108,9 @@ app.use((err, req, res, next) => {
   };
 
   console.error(`[ERROR] ${req.method} ${req.path}:`, err);
+  
+  // Ensure response is JSON
+  res.setHeader("Content-Type", "application/json");
   res.status(statusCode).json(response);
 });
 
