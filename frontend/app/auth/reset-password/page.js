@@ -56,11 +56,14 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, password }),
+        }
+      );
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -89,8 +92,18 @@ export default function ResetPasswordPage() {
         className="fixed top-4 left-4 p-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors shadow-sm"
         aria-label="Back to login"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
         </svg>
       </a>
 
@@ -167,10 +180,14 @@ export default function ResetPasswordPage() {
                   aria-label="Confirm password"
                 />
                 {confirmPassword && password !== confirmPassword && (
-                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">✗ Passwords do not match</p>
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                    ✗ Passwords do not match
+                  </p>
                 )}
                 {confirmPassword && password === confirmPassword && (
-                  <p className="text-xs text-green-600 dark:text-green-400 mt-1">✓ Passwords match</p>
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                    ✓ Passwords match
+                  </p>
                 )}
               </div>
 

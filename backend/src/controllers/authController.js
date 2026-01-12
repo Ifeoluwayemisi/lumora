@@ -14,7 +14,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-
 const BCRYPT_SALT = parseInt(process.env.BCRYPT_SALT);
 
 export const signup = async (req, res) => {
@@ -22,13 +21,24 @@ export const signup = async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT);
 
+    // Map frontend roles to Prisma enum values
+    const roleMap = {
+      user: "CONSUMER",
+      consumer: "CONSUMER",
+      manufacturer: "MANUFACTURER",
+      admin: "ADMIN",
+      nafdac: "NAFDAC",
+    };
+
+    const normalizedRole = roleMap[role?.toLowerCase()] || "CONSUMER";
+
     // 1️⃣ Create the User
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword, role },
+      data: { name, email, password: hashedPassword, role: normalizedRole },
     });
 
     // 2️⃣ If role is MANUFACTURER, auto-create a Manufacturer record
-    if (role === "MANUFACTURER") {
+    if (normalizedRole === "MANUFACTURER") {
       await prisma.manufacturer.create({
         data: {
           id: user.id, // match the User ID
@@ -59,7 +69,18 @@ export const login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
-    res.json({ token, role: user.role });
+
+    // Return user object with token (matching frontend expectations)
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role.toLowerCase(), // Convert CONSUMER -> consumer for frontend
+        verified: user.verified,
+      },
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Login failed" });

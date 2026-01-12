@@ -1,78 +1,81 @@
 "use client";
-import { useState, useContext } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useContext, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthContext } from "@/context/AuthContext";
 import { toast } from "react-toastify";
 
-/**
- * Login Page Component
- *
- * Features:
- * - Email and password authentication
- * - Role-based dashboard routing
- * - Secure token management via AuthContext
- * - Accessibility support (aria-labels)
- * - Responsive design with dark mode
- * - Loading states and error handling
- * - Toast notifications for feedback
- *
- * Redirects to:
- * - /dashboard/manufacturer (manufacturer role)
- * - /dashboard/admin (admin role)
- * - /dashboard/user (user role)
- */
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useContext(AuthContext);
+
   const [form, setForm] = useState({
     email: "",
     password: "",
-    role: "user",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /**
-   * Handle form input changes
-   */
+  // Prefill email if provided in query
+  useEffect(() => {
+    const prefilledEmail = searchParams.get("email");
+    if (prefilledEmail) {
+      setForm((prev) => ({ ...prev, email: prefilledEmail }));
+    }
+  }, [searchParams]);
+
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-  /**
-   * Handle form submission and authentication
-   */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
+    const data = await res.json();
+    console.log("Login API response:", data); // 🔹 Debug API response
 
-      // Store user data and token via AuthContext
-      await login(data.user, data.token);
-      toast.success("Login successful! Redirecting...");
-
-      // Redirect based on role
-      if (data.user.role === "manufacturer")
-        router.push("/dashboard/manufacturer");
-      else if (data.user.role === "admin") router.push("/dashboard/admin");
-      else router.push("/dashboard/user");
-    } catch (err) {
-      const errorMsg = err.message || "An error occurred. Please try again.";
-      setError(errorMsg);
-      toast.error(errorMsg);
-    } finally {
-      setLoading(false);
+    // Check if user exists in response
+    if (!res.ok || !data.user) {
+      const msg =
+        data.message || "Login failed. Please check your credentials.";
+      setError(msg);
+      toast.error(msg);
+      return; // stop further execution
     }
-  };
+
+    // Store user data and token via AuthContext
+    await login(data.user, data.token);
+    toast.success("Login successful! Redirecting...");
+
+    // Redirect safely based on role
+    switch (data.user.role) {
+      case "manufacturer":
+        router.push("/dashboard/manufacturer");
+        break;
+      case "admin":
+        router.push("/dashboard/admin");
+        break;
+      default:
+        router.push("/dashboard/user");
+        break;
+    }
+  } catch (err) {
+    const errorMsg =
+      err.message || "An unexpected error occurred. Please try again.";
+    setError(errorMsg);
+    toast.error(errorMsg);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-50 dark:bg-gray-900 px-4 py-16">
@@ -107,9 +110,8 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Form Container */}
+          {/* Form */}
           <div className="p-8">
-            {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
                 <p className="text-red-700 dark:text-red-300 text-sm font-medium">
@@ -119,7 +121,6 @@ export default function LoginPage() {
             )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              {/* Email Input */}
               <div>
                 <label
                   htmlFor="email"
@@ -141,7 +142,6 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Password Input */}
               <div>
                 <label
                   htmlFor="password"
@@ -163,30 +163,6 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Role Selection */}
-              <div>
-                <label
-                  htmlFor="role"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Account Type
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  value={form.role}
-                  onChange={handleChange}
-                  disabled={loading}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  aria-label="Account type"
-                >
-                  <option value="user">User (Patient/Consumer)</option>
-                  <option value="manufacturer">Manufacturer</option>
-                  <option value="admin">Admin</option>
-                </select>
-              </div>
-
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
@@ -197,7 +173,7 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* Footer Links */}
+            {/* Footer */}
             <div className="mt-6 space-y-3 text-sm">
               <a
                 href="/auth/forgot-password"

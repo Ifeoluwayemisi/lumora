@@ -13,19 +13,23 @@ import Footer from "@/components/Footer";
 export default function LayoutContent({ children }) {
   const pathname = usePathname();
   const isAuthPage = pathname?.startsWith("/auth");
+  const isDashboardPage = pathname?.startsWith("/dashboard");
+  const shouldHideNavFooter = isAuthPage || isDashboardPage;
 
   return (
     <>
-      {/* Fixed navigation header - hidden on auth pages */}
-      {!isAuthPage && <Navbar />}
+      {/* Fixed navigation header - hidden on auth and dashboard pages */}
+      {!shouldHideNavFooter && <Navbar />}
 
       {/* Main content area - pt-16 accounts for fixed navbar height (only when navbar shown) */}
-      <main className={isAuthPage ? "min-h-screen" : "min-h-screen pt-16"}>
+      <main
+        className={shouldHideNavFooter ? "min-h-screen" : "min-h-screen pt-16"}
+      >
         {children}
       </main>
 
-      {/* Application footer - hidden on auth pages */}
-      {!isAuthPage && <Footer />}
+      {/* Application footer - hidden on auth and dashboard pages */}
+      {!shouldHideNavFooter && <Footer />}
     </>
   );
 }
