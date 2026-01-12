@@ -108,7 +108,7 @@ app.use((err, req, res, next) => {
   };
 
   console.error(`[ERROR] ${req.method} ${req.path}:`, err);
-  
+
   // Ensure response is JSON
   res.setHeader("Content-Type", "application/json");
   res.status(statusCode).json(response);

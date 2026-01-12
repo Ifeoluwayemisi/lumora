@@ -52,4 +52,3 @@ export function getTrustDecision({ state, riskScore = 0 }) {
   // Fallback safety net
   return TrustDecision.VERIFY_WITH_PHARMACIST;
 }
-}
