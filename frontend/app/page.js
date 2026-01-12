@@ -49,23 +49,10 @@ export default function LandingPage() {
     try {
       setLoading(true);
 
-      // TODO: Use api.js interceptor instead of fetch for consistency
-      // This would automatically include auth token and handle errors
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/verify/manual`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code: code.trim().toUpperCase() }),
-        }
-      );
-
-      const data = await res.json();
-
-      // Check for HTTP errors
-      if (!res.ok) {
-        throw new Error(data.message || "Verification failed");
-      }
+      // Use api.js for consistent error handling and interceptors
+      const response = await api.post("/verify/manual", {
+        codeValue: code.trim().toUpperCase(),
+      });
 
       // Show success feedback
       setVerified(true);
@@ -76,8 +63,18 @@ export default function LandingPage() {
         router.push(`/verify/result?code=${code.trim()}`);
       }, 1500);
     } catch (err) {
-      console.error("Verification error:", err);
-      toast.error(err.message || "Verification failed");
+      console.error("[LANDING] Verification error:", err);
+
+      // Handle specific error responses
+      if (err.response?.status === 429) {
+        toast.error("Too many verification attempts. Please try again later.");
+      } else if (err.response?.status === 400) {
+        toast.error(err.response?.data?.error || "Invalid product code format");
+      } else if (err.response?.status === 500) {
+        toast.error("Server error. Please try again later.");
+      } else {
+        toast.error(err.response?.data?.error || "Verification failed");
+      }
     } finally {
       setLoading(false);
     }

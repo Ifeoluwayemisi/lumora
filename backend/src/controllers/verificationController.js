@@ -30,7 +30,7 @@ async function handleVerification({
   const location = normalizeLocation(latitude, longitude);
 
   return verifyCode({
-    codeValue: codeValue.trim(),
+    codeValue: codeValue.trim().toUpperCase(),
     userId,
     latitude: location.latitude,
     longitude: location.longitude,
@@ -39,12 +39,25 @@ async function handleVerification({
 
 /*  Controllers  */
 
+/**
+ * Manual verification endpoint
+ * Allows users to verify a product using a code string
+ */
 export async function verifyManual(req, res) {
   try {
     const { codeValue, latitude, longitude } = req.body;
 
-    if (!codeValue) {
-      return res.status(400).json({ error: "Code value is required" });
+    // Input validation
+    if (!codeValue || typeof codeValue !== "string") {
+      return res.status(400).json({
+        error: "Code value is required and must be a string",
+      });
+    }
+
+    if (codeValue.trim().length < 1) {
+      return res.status(400).json({
+        error: "Code value cannot be empty",
+      });
     }
 
     const result = await handleVerification({
@@ -56,30 +69,53 @@ export async function verifyManual(req, res) {
     });
 
     // Return the verification result always, even if UNREGISTERED_PRODUCT
-    res.status(200).json(result);
+    return res.status(200).json(result);
   } catch (err) {
     if (err.message === "Rate limit exceeded") {
       return res.status(429).json({ error: err.message });
     }
 
-    console.error("Manual verification error:", err);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("[VERIFY_MANUAL] Error:", err.message);
+    return res.status(500).json({
+      error: "Verification failed",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
   }
 }
 
-
+/**
+ * QR code verification endpoint
+ * Allows users to verify a product by scanning a QR code
+ */
 export async function verifyQR(req, res) {
   try {
     const userId = req.user?.id || null;
-
     const { qrData, latitude, longitude } = req.body;
-    if (!qrData) {
-      return res.status(400).json({ error: "QR data is required" });
+
+    // Input validation
+    if (!qrData || typeof qrData !== "string") {
+      return res.status(400).json({
+        error: "QR data is required and must be a string",
+      });
     }
 
-    const codeValue = decodeQRcode(qrData);
+    // Decode QR code
+    let codeValue;
+    try {
+      codeValue = decodeQRcode(qrData);
+    } catch (decodeErr) {
+      return res.status(400).json({
+        error: "Invalid QR code format",
+      });
+    }
+
     if (!codeValue) {
-      return res.status(400).json({ error: "Invalid QR data" });
+      return res
+        .status(400)
+        .json({ error: "QR code does not contain valid data" });
     }
 
     const result = await handleVerification({
@@ -90,13 +126,19 @@ export async function verifyQR(req, res) {
       longitude,
     });
 
-    res.status(200).json(result);
+    return res.status(200).json(result);
   } catch (err) {
     if (err.message === "Rate limit exceeded") {
       return res.status(429).json({ error: err.message });
     }
 
-    console.error("QR verification error:", err);
-    res.status(500).json({ error: "QR verification failed" });
+    console.error("[VERIFY_QR] Error:", err.message);
+    return res.status(500).json({
+      error: "QR verification failed",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
   }
 }
