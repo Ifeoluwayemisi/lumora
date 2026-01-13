@@ -1,128 +1,76 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import ExpiryBadge from "@/components/ExpiryBadge";
-import RiskScoreBadge from "@/components/RiskScoreBadge";
-import AIInsights from "@/components/AIInsights";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function Invalid() {
-  const searchParams = useSearchParams();
-  const code = searchParams.get("code");
+export default function Invalid({ code }) {
+  const router = useRouter();
+  const [copied, setCopied] = useState(false);
 
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`/api/verification/result?code=${code}`);
-        const data = await res.json();
-        setResult(data);
-
-        // Log the scan to backend
-        logScan(data);
-      } catch (err) {
-        console.error("Failed to fetch product info:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const logScan = async (data) => {
-      let location = null;
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            location = {
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-            };
-            sendLog(location, data);
-          },
-          () => sendLog(location, data)
-        );
-      } else {
-        sendLog(location, data);
-      }
-    };
-
-    const sendLog = async (location, data) => {
-      try {
-        await fetch("/verification/log", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            code,
-            status: data?.status || "invalid",
-            riskScore: data?.riskScore,
-            timestamp: new Date().toISOString(),
-            location,
-          }),
-        });
-      } catch (err) {
-        console.error("Failed to log scan:", err);
-      }
-    };
-
-    if (code) fetchData();
-  }, [code]);
-
-  if (loading)
-    return (
-      <p className="text-center dark:text-white mt-6">
-        Loading product assessment...
-      </p>
-    );
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-      <h1 className="text-4xl font-bold text-gray-500 dark:text-gray-400 mb-4">
-        ❌ Invalid Code
-      </h1>
-      <p className="text-gray-700 dark:text-gray-300 mb-6">
-        The scanned code <span className="font-mono">{code}</span> is invalid.
-        Please check and try again.
-      </p>
-
-      {result?.product && (
-        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md mb-4">
-          <p>
-            <strong>Product Name:</strong> {result.product.name}
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+        {/* Error Icon */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mb-4">
+            <span className="text-4xl">❌</span>
+          </div>
+          <h1 className="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">
+            Invalid Code
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            This code could not be verified
           </p>
-          <p>
-            <strong>Manufacturer:</strong> {result.product.manufacturer}
-          </p>
-          <p>
-            <strong>Batch:</strong> {result.product.batch}
-          </p>
-          <ExpiryBadge expiryDate={result.product.expiryDate} />
         </div>
-      )}
 
-      {result?.riskScore && <RiskScoreBadge score={result.riskScore} visual />}
-      {result?.aiInsights && <AIInsights insights={result.aiInsights} />}
+        {/* Code Display */}
+        <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg mb-6">
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Code Entered
+          </p>
+          <p className="font-mono text-sm font-bold text-gray-900 dark:text-white break-all">
+            {code}
+          </p>
+        </div>
 
-      <div className="mt-6 flex flex-col sm:flex-row justify-center gap-4">
-        <button
-          onClick={() => window.history.back()}
-          className="px-6 py-3 rounded-md bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-        >
-          Back to Verify
-        </button>
-        <button
-          onClick={() => (window.location.href = "/support")}
-          className="px-6 py-3 rounded-md bg-red-500 text-white hover:bg-red-600 transition"
-        >
-          Contact Support
-        </button>
+        {/* Details */}
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg mb-6">
+          <p className="text-sm text-red-800 dark:text-red-200">
+            This code is invalid because:
+          </p>
+          <ul className="text-sm text-red-700 dark:text-red-300 mt-2 space-y-1 ml-4 list-disc">
+            <li>Product has expired</li>
+            <li>Code format is incorrect</li>
+            <li>Code was already used</li>
+          </ul>
+        </div>
+
+        {/* Actions */}
+        <div className="space-y-3">
+          <button
+            onClick={() => router.push("/verify")}
+            className="w-full px-4 py-3 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition"
+          >
+            ← Try Another Code
+          </button>
+          <button
+            onClick={handleCopy}
+            className="w-full px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+          >
+            📋 Copy Code
+          </button>
+        </div>
+
+        <p className="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
+          ⛔ Not verified. Do not use this product.
+        </p>
       </div>
-
-      <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-        Tip: Double-check the code or reach out to support if you think this is
-        a valid product.
-      </p>
     </div>
   );
 }

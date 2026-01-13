@@ -7,14 +7,9 @@ export default function DashboardNav() {
 
   const links = [
     { name: "Home", href: "/dashboard/user", icon: "🏠" },
-    { name: "Verify", href: "/dashboard/user/verify", icon: "🔍" },
     { name: "History", href: "/dashboard/user/history", icon: "📜" },
     { name: "Favorites", href: "/dashboard/user/favorites", icon: "⭐" },
-    {
-      name: "Notifications",
-      href: "/dashboard/user/notifications",
-      icon: "🔔",
-    },
+    { name: "Profile", href: "/dashboard/user/profile", icon: "👤" },
   ];
 
   return (

@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import api from "@/services/api";
 
 export default function VerifyPage() {
+  const router = useRouter();
   const [code, setCode] = useState("");
-  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -12,18 +14,11 @@ export default function VerifyPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/verification/manual", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Verification failed");
-      setResult(data);
+      const data = await api.post("/verify/manual", { codeValue: code });
+      // Redirect to result page with code
+      router.push(`/verify/result?code=${encodeURIComponent(code)}`);
     } catch (err) {
       setError(err.message);
-    } finally {
       setLoading(false);
     }
   };
@@ -51,16 +46,6 @@ export default function VerifyPage() {
       </button>
 
       {error && <p className="text-red-500 mt-4">{error}</p>}
-
-      {result && (
-        <div className="mt-6 w-full max-w-md rounded-lg p-4 border dark:border-gray-600 bg-white dark:bg-gray-800 shadow">
-          <h2 className="font-bold text-lg mb-2">Verification Result:</h2>
-          <p className="mb-2">
-            Status: <span className="font-semibold">{result.status}</span>
-          </p>
-          {result.details && <p>Details: {result.details}</p>}
-        </div>
-      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import api from "@/services/api";
 
 export default function VerificationResultPage() {
   const searchParams = useSearchParams();
@@ -13,46 +14,58 @@ export default function VerificationResultPage() {
   useEffect(() => {
     const fetchResult = async () => {
       try {
-        const res = await fetch(`/api/verification/result?code=${code}`);
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Verification failed");
+        const data = await api.post("/verify/manual", { codeValue: code });
 
-        // Determine which state page to navigate to
-        let stateRoute = "";
-        switch (data.status) {
-          case "Genuine":
-            stateRoute = "/verify/state/Genuine";
-            break;
-          case "Code Already Used":
-            stateRoute = "/verify/state/CodeAlreadyUsed";
-            break;
-          case "Invalid Code":
-            stateRoute = "/verify/state/InvalidCode";
-            break;
-          case "Unregistered Product":
-            stateRoute = "/verify/state/UnregisteredProduct";
-            break;
-          case "Suspicious Pattern Detected":
-            stateRoute = "/verify/state/SuspiciousPattern";
-            break;
-          default:
-            stateRoute = "/verify/state/Unknown";
+        // Map status to URL-friendly format
+        let statusRoute = "";
+        const status = data.data.status;
+
+        if (status === "Genuine") {
+          statusRoute = "genuine";
+        } else if (status === "Code Already Used") {
+          statusRoute = "code-used";
+        } else if (status === "Invalid Code") {
+          statusRoute = "invalid";
+        } else if (status === "Unregistered Product") {
+          statusRoute = "unregistered";
+        } else if (status === "Suspicious Pattern Detected") {
+          statusRoute = "suspicious";
+        } else {
+          statusRoute = "unknown";
         }
 
-        // Pass backend AI data via query or state if needed
-        router.push(`${stateRoute}?code=${code}`);
+        // Redirect to dynamic route
+        router.push(`/verify/states/${statusRoute}?code=${code}`);
       } catch (err) {
         setError(err.message);
-      } finally {
         setLoading(false);
       }
     };
 
     if (code) fetchResult();
-  }, [code]);
+  }, [code, router]);
 
   if (loading)
-    return <p className="text-center mt-6 dark:text-white">Loading...</p>;
-  if (error) return <p className="text-center mt-6 text-red-500">{error}</p>;
+    return (
+      <div className="flex items-center justify-center min-h-screen dark:bg-gray-900">
+        <p className="text-center dark:text-white">Loading verification...</p>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="flex items-center justify-center min-h-screen dark:bg-gray-900">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <button
+            onClick={() => router.push("/verify")}
+            className="px-4 py-2 bg-genuine text-white rounded hover:bg-green-600"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+
   return null;
 }

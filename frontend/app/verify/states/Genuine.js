@@ -1,8 +1,14 @@
+"use client";
 import ExpiryBadge from "@/components/ExpiryBadge";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import api from "@/services/api";
 
 export default function Genuine({ code, product }) {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(code);
@@ -10,102 +16,121 @@ export default function Genuine({ code, product }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Log scan details to backend
-  useEffect(() => {
-    const logScan = async () => {
-      let location = null;
-
-      // Get geolocation if available
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            location = {
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-            };
-            sendLog(location);
-          },
-          (error) => {
-            console.warn("Geolocation error:", error);
-            sendLog(location); // send even if location unavailable
-          }
-        );
-      } else {
-        sendLog(location); // send without location
-      }
-    };
-
-    const sendLog = async (location) => {
-      try {
-        await fetch("/verification/log", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            code,
-            timestamp: new Date().toISOString(),
-            location,
-            status: "genuine",
-          }),
-        });
-      } catch (err) {
-        console.error("Failed to log scan:", err);
-      }
-    };
-
-    logScan();
-  }, [code]);
+  const handleSaveProduct = async () => {
+    setSaving(true);
+    try {
+      await api.post("/user/favorites", {
+        codeValue: code,
+        productName: product?.name,
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      console.error("Failed to save product:", err);
+      alert("Failed to save. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-      <h1 className="text-4xl font-bold text-green-600 dark:text-green-400 mb-4">
-        ✅ Genuine Product
-      </h1>
-      <p className="text-gray-700 dark:text-gray-300 mb-6">
-        The scanned code <span className="font-mono">{code}</span> is registered
-        and has not been used before. Safe to use.
-      </p>
-
-      {product && (
-        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md mb-4">
-          <p>
-            <strong>Product Name:</strong> {product.name}
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+        {/* Success Icon */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full mb-4">
+            <span className="text-4xl">✅</span>
+          </div>
+          <h1 className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
+            Genuine Product
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            This product is authentic and verified
           </p>
-          <p>
-            <strong>Manufacturer:</strong> {product.manufacturer}
-          </p>
-          <p>
-            <strong>Batch:</strong> {product.batch}
-          </p>
-          <ExpiryBadge expiryDate={product.expiryDate} />
         </div>
-      )}
 
-      {/* Actions */}
-      <div className="mt-6 flex flex-col sm:flex-row justify-center gap-4">
-        <button
-          onClick={() => window.history.back()}
-          className="px-6 py-3 rounded-md bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-        >
-          Back to Verify
-        </button>
-        <button
-          onClick={handleCopy}
-          className="px-6 py-3 rounded-md bg-green-500 text-white hover:bg-green-600 transition"
-        >
-          {copied ? "Copied!" : "Copy Code"}
-        </button>
-        <button
-          onClick={() => alert("Feature coming soon!")}
-          className="px-6 py-3 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition"
-        >
-          Save Product
-        </button>
+        {/* Product Details */}
+        {product && (
+          <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-6 space-y-3">
+            <div>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Product Name
+              </p>
+              <p className="font-semibold text-gray-900 dark:text-white">
+                {product.name || "N/A"}
+              </p>
+            </div>
+            {product.manufacturer && (
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Manufacturer
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {product.manufacturer}
+                </p>
+              </div>
+            )}
+            {product.batch && (
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Batch Number
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {product.batch}
+                </p>
+              </div>
+            )}
+            {product.expiryDate && (
+              <ExpiryBadge expiryDate={product.expiryDate} />
+            )}
+          </div>
+        )}
+
+        {/* Code Display */}
+        <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg mb-6">
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Verification Code
+          </p>
+          <p className="font-mono text-sm font-bold text-gray-900 dark:text-white break-all">
+            {code}
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="space-y-3">
+          <button
+            onClick={handleCopy}
+            className="w-full px-4 py-3 rounded-lg bg-green-500 text-white font-medium hover:bg-green-600 transition flex items-center justify-center gap-2"
+          >
+            {copied ? "✓ Copied!" : "📋 Copy Code"}
+          </button>
+          <button
+            onClick={handleSaveProduct}
+            disabled={saving || saved}
+            className={`w-full px-4 py-3 rounded-lg font-medium transition flex items-center justify-center gap-2 ${
+              saved
+                ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                : "bg-blue-500 text-white hover:bg-blue-600"
+            }`}
+          >
+            {saving
+              ? "⏳ Saving..."
+              : saved
+              ? "❤️ Saved to Favorites"
+              : "🔖 Save Product"}
+          </button>
+          <button
+            onClick={() => router.push("/verify")}
+            className="w-full px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+          >
+            Back
+          </button>
+        </div>
+
+        <p className="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
+          ✔️ Product verified and safe to use
+        </p>
       </div>
-
-      <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-        Tip: Keep this product information for your records or share it with
-        friends to verify authenticity.
-      </p>
     </div>
   );
 }

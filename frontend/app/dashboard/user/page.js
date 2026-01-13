@@ -1,10 +1,12 @@
 "use client";
 
 import { useContext, useEffect, useState } from "react";
+import Link from "next/link";
 import { AuthContext } from "@/context/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import api from "@/services/api";
 
 import {
   BarChart,
@@ -17,7 +19,14 @@ import {
 
 export default function UserDashboardPage() {
   const { user } = useContext(AuthContext);
-  const [summary, setSummary] = useState(null);
+
+  // ✅ Default summary ensures .map() works even before API loads
+  const [summary, setSummary] = useState({
+    totalVerifications: 0,
+    verificationStats: [],
+    avgRiskScore: 0,
+    hotspots: [],
+  });
   const [loading, setLoading] = useState(true);
 
   // Check if user is new (created within last hour)
@@ -35,15 +44,31 @@ export default function UserDashboardPage() {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await fetch("/api/user/dashboard-summary");
-        const data = await res.json();
-        setSummary(data);
+        setLoading(true);
+        const response = await api.get("/user/dashboard-summary");
+
+        // Ensure all keys exist to avoid undefined.map errors
+        setSummary({
+          totalVerifications: response.data?.totalVerifications ?? 0,
+          verificationStats: response.data?.verificationStats ?? [],
+          avgRiskScore: response.data?.avgRiskScore ?? 0,
+          hotspots: response.data?.hotspots ?? [],
+        });
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching dashboard summary:", err);
+
+        // Already safe defaults, but just to be sure
+        setSummary({
+          totalVerifications: 0,
+          verificationStats: [],
+          avgRiskScore: 0,
+          hotspots: [],
+        });
       } finally {
         setLoading(false);
       }
     };
+
     fetchSummary();
   }, []);
 
@@ -66,13 +91,32 @@ export default function UserDashboardPage() {
 
         {/* Main Content */}
         <div className="px-4 sm:px-6 lg:px-8 py-8">
+          {/* Quick Verify CTA */}
+          <div className="mb-8 p-6 rounded-xl bg-gradient-to-r from-genuine to-green-600 text-white shadow-lg">
+            <h2 className="text-2xl font-bold mb-2">Verify a Product</h2>
+            <p className="text-green-50 mb-4">
+              Check if your products are genuine
+            </p>
+            <div className="flex gap-3 flex-col sm:flex-row">
+              <Link
+                href="/verify"
+                className="px-6 py-3 bg-gray-700 text-genuine font-semibold rounded-lg hover:bg-gray-500 transition text-center"
+              >
+                Enter Code Manually
+              </Link>
+              <Link
+                href="/verify/qr"
+                className="px-6 py-3 bg-green-700 hover:bg-green-800 text-gray-900 font-semibold rounded-lg transition text-center border border-green-600"
+              >
+                Scan QR Code
+              </Link>
+            </div>
+          </div>
+
+          {/* Stats Section */}
           {loading ? (
             <p className="text-center dark:text-white mt-6">
               Loading dashboard...
-            </p>
-          ) : !summary ? (
-            <p className="text-center dark:text-white mt-6">
-              No summary data available.
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -88,7 +132,7 @@ export default function UserDashboardPage() {
               <div className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow border dark:border-gray-600">
                 <h2 className="font-semibold text-lg mb-2">Genuine vs Risky</h2>
                 <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={summary.verificationStats}>
+                  <BarChart data={summary.verificationStats ?? []}>
                     <XAxis dataKey="status" />
                     <YAxis />
                     <Tooltip />
@@ -107,11 +151,15 @@ export default function UserDashboardPage() {
                   Hotspot Predictions
                 </h2>
                 <ul className="text-sm text-gray-700 dark:text-gray-300">
-                  {summary.hotspots.map((hs, idx) => (
-                    <li key={idx}>
-                      {hs.location}: {hs.prediction}
-                    </li>
-                  ))}
+                  {summary.hotspots?.length > 0 ? (
+                    summary.hotspots.map((hs, idx) => (
+                      <li key={idx}>
+                        {hs.location}: {hs.prediction}
+                      </li>
+                    ))
+                  ) : (
+                    <li>No hotspots yet</li>
+                  )}
                 </ul>
               </div>
             </div>
