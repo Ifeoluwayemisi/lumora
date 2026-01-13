@@ -6,13 +6,17 @@ import { useContext, useState } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import {
   FiHome,
-  FiBarChart2,
-  FiPackage,
-  FiUsers,
+  FiList,
+  FiStar,
+  FiBell,
+  FiUser,
   FiSettings,
   FiLogOut,
   FiMenu,
   FiX,
+  FiPackage,
+  FiBarChart2,
+  FiUsers,
 } from "react-icons/fi";
 
 export default function DashboardSidebar({ userRole }) {
@@ -24,8 +28,19 @@ export default function DashboardSidebar({ userRole }) {
   const getNavItems = () => {
     const baseItems = [
       { href: "/dashboard/user", label: "Dashboard", icon: FiHome },
-      { href: "/dashboard/user/history", label: "History", icon: FiBarChart2 },
-      { href: "/dashboard/user/profile", label: "Profile", icon: FiUsers },
+      { href: "/dashboard/user/history", label: "History", icon: FiList },
+      {
+        href: "/dashboard/user/favorites",
+        label: "Favorites",
+        icon: FiStar,
+      },
+      {
+        href: "/dashboard/user/notifications",
+        label: "Notifications",
+        icon: FiBell,
+      },
+      { href: "/dashboard/user/profile", label: "Profile", icon: FiUser },
+      { href: "/dashboard/user/settings", label: "Settings", icon: FiSettings },
     ];
     const manufacturerItems = [
       { href: "/dashboard/manufacturer", label: "Dashboard", icon: FiHome },

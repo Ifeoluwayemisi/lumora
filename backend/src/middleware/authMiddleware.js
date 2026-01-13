@@ -2,18 +2,34 @@ import jwt from "jsonwebtoken";
 import prisma from "../models/prismaClient.js";
 
 export async function authMiddleware(req, res, next) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ error: "Missing or invalid authorization header" });
+    }
 
-    if (!user) return res.json(401).json({ error: "User not found" });
+    const token = authHeader.split(" ")[1];
 
-    req.user = user;
-    next();
-  } catch {
-    return res.status(401).json({ error: "Invalid token" });
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
+      }
+
+      req.user = user;
+      next();
+    } catch (jwtError) {
+      if (jwtError.name === "TokenExpiredError") {
+        return res.status(401).json({ error: "Token has expired" });
+      }
+      return res.status(401).json({ error: "Invalid token" });
+    }
+  } catch (error) {
+    console.error("[AUTH_MIDDLEWARE] Unexpected error:", error);
+    return res.status(500).json({ error: "Authentication check failed" });
   }
 }

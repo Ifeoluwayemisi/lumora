@@ -14,7 +14,8 @@ export default function LayoutContent({ children }) {
   const pathname = usePathname();
   const isAuthPage = pathname?.startsWith("/auth");
   const isDashboardPage = pathname?.startsWith("/dashboard");
-  const shouldHideNavFooter = isAuthPage || isDashboardPage;
+  const isVerifyPage = pathname?.startsWith("/verify");
+  const shouldHideNavFooter = isAuthPage || isDashboardPage || isVerifyPage;
 
   return (
     <>

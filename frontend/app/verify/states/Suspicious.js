@@ -1,102 +1,88 @@
 "use client";
+import { useRouter } from "next/navigation";
 
-import { useEffect } from "react";
-import ExpiryBadge from "@/components/ExpiryBadge";
-import RiskScoreBadge from "@/components/RiskScoreBadge";
-import AIInsights from "@/components/AIInsights";
-
-export default function Suspicious({ code, product, risk, aiInsights }) {
-  // Log scan to backend
-  useEffect(() => {
-    const logScan = async () => {
-      let location = null;
-
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            location = {
-              latitude: pos.coords.latitude,
-              longitude: pos.coords.longitude,
-            };
-            sendLog(location);
-          },
-          () => sendLog(location)
-        );
-      } else {
-        sendLog(location);
-      }
-    };
-
-    const sendLog = async (location) => {
-      try {
-        await fetch("/verification/log", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            code,
-            status: "suspicious",
-            riskScore: risk?.score,
-            timestamp: new Date().toISOString(),
-            location,
-          }),
-        });
-      } catch (err) {
-        console.error("Failed to log scan:", err);
-      }
-    };
-
-    logScan();
-  }, [code, risk]);
-
+export default function Suspicious({ code, product }) {
+  const router = useRouter();
   return (
-    <div className="max-w-3xl mx-auto px-4 py-20 text-center">
-      <h1 className="text-4xl font-bold text-red-600 dark:text-red-400 mb-4">
-        🔴 Suspicious Product
-      </h1>
-      <p className="text-gray-700 dark:text-gray-300 mb-6">
-        The scanned code <span className="font-mono">{code}</span> shows unusual
-        patterns and may be unsafe.
-      </p>
-
-      {product && (
-        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-md mb-4">
-          <p>
-            <strong>Product Name:</strong> {product.name}
+    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+        {/* Danger Icon */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mb-4">
+            <span className="text-4xl">🚨</span>
+          </div>
+          <h1 className="text-3xl font-bold text-red-600 dark:text-red-400 mb-2">
+            Suspicious Activity
+          </h1>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Unusual patterns detected
           </p>
-          <p>
-            <strong>Manufacturer:</strong> {product.manufacturer}
-          </p>
-          <p>
-            <strong>Batch:</strong> {product.batch}
-          </p>
-          <ExpiryBadge expiryDate={product.expiryDate} />
         </div>
-      )}
 
-      {/* Risk & AI insights visual */}
-      <div className="mb-4">
-        <RiskScoreBadge score={risk?.score} visual />
-        <AIInsights insights={aiInsights} />
-      </div>
+        {/* Code Display */}
+        <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg mb-6">
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+            Verification Code
+          </p>
+          <p className="font-mono text-sm font-bold text-gray-900 dark:text-white break-all">
+            {code}
+          </p>
+        </div>
 
-      <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-        ⚠️ Warning: Do not consume this product until verified. You can report
-        it to support.
-      </p>
+        {/* Product Info if available */}
+        {product && (
+          <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-6 space-y-2">
+            <div>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Product
+              </p>
+              <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                {product.name}
+              </p>
+            </div>
+            {product.manufacturer && (
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Manufacturer
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                  {product.manufacturer}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
-      <div className="mt-6 flex flex-col sm:flex-row justify-center gap-4">
-        <button
-          onClick={() => window.history.back()}
-          className="px-6 py-3 rounded-md bg-gray-300 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-400 dark:hover:bg-gray-600 transition"
-        >
-          Back to Verify
-        </button>
-        <button
-          onClick={() => (window.location.href = "/support")}
-          className="px-6 py-3 rounded-md bg-red-600 text-white hover:bg-red-700 transition"
-        >
-          Report a Problem
-        </button>
+        {/* Details */}
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg mb-6">
+          <p className="text-sm text-red-800 dark:text-red-200 font-semibold mb-2">
+            ⚠️ Risk Detected:
+          </p>
+          <p className="text-sm text-red-700 dark:text-red-300">
+            This code shows unusual verification patterns. Possible counterfeit
+            or tampering detected.
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="space-y-3">
+          <button
+            onClick={() => (window.location.href = "/support")}
+            className="w-full px-4 py-3 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition"
+          >
+            📞 Report Suspicious Product
+          </button>
+          <button
+            onClick={() => router.push("/verify")}
+            className="w-full px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+          >
+            ← Go Back
+          </button>
+        </div>
+
+        <p className="mt-6 text-xs text-gray-500 dark:text-gray-400 text-center">
+          🚨 High risk - Do not use this product
+        </p>
       </div>
     </div>
   );
