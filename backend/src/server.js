@@ -21,11 +21,11 @@ function validateEnvironment() {
   const missing = requiredEnvVars.filter((v) => !process.env[v]);
   if (missing.length > 0) {
     console.error(
-      `❌ CRITICAL: Missing environment variables: ${missing.join(", ")}`
+      `CRITICAL: Missing environment variables: ${missing.join(", ")}`
     );
     process.exit(1);
   }
-  console.log("✅ All required environment variables are configured");
+  console.log("All required environment variables are configured");
 }
 
 /**
@@ -34,9 +34,9 @@ function validateEnvironment() {
 async function testDatabaseConnection() {
   try {
     await prisma.$queryRaw`SELECT 1`;
-    console.log("✅ Database connection successful");
+    console.log(" Database connection successful");
   } catch (error) {
-    console.error("❌ Database connection failed:", error.message);
+    console.error(" Database connection failed:", error.message);
     process.exit(1);
   }
 }

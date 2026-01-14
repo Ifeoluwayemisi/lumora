@@ -2,30 +2,29 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Html5Qrcode } from "html5-qrcode";
 import jsQR from "jsqr";
+import { toast } from "react-toastify";
 import api from "@/services/api";
 import AuthGuard from "@/components/AuthGuard";
+import { getLocationPermission } from "@/utils/geolocation";
 
 function QRVerifyPageContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [scanActive, setScanActive] = useState(true);
   const [torchActive, setTorchActive] = useState(false);
-  const [hasAudioPermission, setHasAudioPermission] = useState(false);
+  const [uploadMode, setUploadMode] = useState(false);
   const router = useRouter();
   const qrScannerRef = useRef(null);
   const scannerInstanceRef = useRef(null);
-  const audioContextRef = useRef(null);
   const fileInputRef = useRef(null);
 
   const playBeep = () => {
     try {
-      const audioContext =
-        audioContextRef.current ||
-        new (window.AudioContext || window.webkitAudioContext)();
-      audioContextRef.current = audioContext;
-
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gain = audioContext.createGain();
 
@@ -43,8 +42,6 @@ function QRVerifyPageContent() {
 
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.1);
-
-      setHasAudioPermission(true);
     } catch (err) {
       console.error("Beep failed:", err);
     }
@@ -56,25 +53,6 @@ function QRVerifyPageContent() {
     }
   };
 
-  const toggleTorch = async () => {
-    if (!scannerInstanceRef.current) return;
-    try {
-      if (!torchActive) {
-        await scannerInstanceRef.current.applyConstraints({
-          advanced: [{ torch: true }],
-        });
-        setTorchActive(true);
-      } else {
-        await scannerInstanceRef.current.applyConstraints({
-          advanced: [{ torch: false }],
-        });
-        setTorchActive(false);
-      }
-    } catch (err) {
-      console.error("Torch not supported on this device:", err);
-    }
-  };
-
   const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -83,46 +61,85 @@ function QRVerifyPageContent() {
     setError("");
 
     try {
+      // Stop the scanner if it's running
+      if (scannerInstanceRef.current && scanActive) {
+        try {
+          await scannerInstanceRef.current.stop();
+        } catch (stopErr) {
+          console.debug("Scanner stop error (safe to ignore):", stopErr);
+        }
+        setScanActive(false);
+      }
+
       const reader = new FileReader();
       reader.onload = async (event) => {
         try {
           const img = new Image();
           img.onload = async () => {
             try {
-              // Create canvas and draw image
               const canvas = document.createElement("canvas");
               canvas.width = img.width;
               canvas.height = img.height;
               const ctx = canvas.getContext("2d");
               ctx.drawImage(img, 0, 0);
 
-              // Get image data
               const imageData = ctx.getImageData(0, 0, img.width, img.height);
               const code = jsQR(imageData.data, img.width, img.height);
 
               if (!code) {
-                setError("No QR code found in image. Try another image.");
+                const msg = "No QR code found in image. Try another image.";
+                setError(msg);
+                toast.error(msg);
                 setLoading(false);
                 return;
               }
 
-              console.log(`QR Code from image: ${code.data}`);
               playBeep();
               vibrate();
 
-              const result = await api.post("/verify/qr", {
-                qrData: code.data.trim(),
-              });
+              try {
+                // Get location with permission
+                toast.info("📍 Requesting location permission...");
+                const location = await getLocationPermission();
 
-              router.push(
-                `/verify/result?code=${encodeURIComponent(code.data.trim())}`
-              );
+                const response = await api.post("/verify/qr", {
+                  qrData: code.data.trim(),
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                });
+
+                // Store the verification result in localStorage
+                if (response.data) {
+                  localStorage.setItem(
+                    "verificationResult",
+                    JSON.stringify(response.data)
+                  );
+                }
+
+                toast.success("QR code verified! Redirecting...");
+                const status = response.data?.verification?.state || "UNKNOWN";
+                // Add small delay to ensure localStorage persists before navigation
+                setTimeout(() => {
+                  router.push(
+                    `/verify/states/${encodeURIComponent(
+                      status
+                    )}?code=${encodeURIComponent(code.data.trim())}`
+                  );
+                }, 100);
+              } catch (apiErr) {
+                const errorMsg =
+                  apiErr.response?.data?.error ||
+                  apiErr.response?.data?.message ||
+                  apiErr.message ||
+                  "Failed to verify QR code";
+                setError(errorMsg);
+                toast.error(errorMsg);
+                setLoading(false);
+              }
             } catch (err) {
-              console.error("QR decode error:", err);
-              const errorMsg =
-                err.response?.data?.message ||
-                err.message ||
-                "Failed to decode QR code";
+              const errorMsg = "Failed to process image";
+              setError(errorMsg);
+              toast.error(errorMsg);
               setError(`Verification error: ${errorMsg}`);
               setLoading(false);
             }
@@ -150,64 +167,83 @@ function QRVerifyPageContent() {
     }
   };
 
+  const toggleTorch = async () => {
+    if (!scannerInstanceRef.current) return;
+    try {
+      if (!torchActive) {
+        await scannerInstanceRef.current.applyConstraints({
+          advanced: [{ torch: true }],
+        });
+        setTorchActive(true);
+      } else {
+        await scannerInstanceRef.current.applyConstraints({
+          advanced: [{ torch: false }],
+        });
+        setTorchActive(false);
+      }
+    } catch (err) {
+      console.error("Torch not supported:", err);
+    }
+  };
+
   useEffect(() => {
-    if (!scanActive) return;
+    if (!scanActive || uploadMode) return;
 
     const timer = setTimeout(async () => {
       const element = document.getElementById("qr_reader");
-      if (!element) {
-        console.error("QR reader element not found");
-        setError("Camera element not found. Please refresh the page.");
-        return;
-      }
+      if (!element) return;
 
       try {
         const qrCode = new Html5Qrcode("qr_reader");
         scannerInstanceRef.current = qrCode;
 
         const onScanSuccess = async (decodedText) => {
-          console.log(`QR Code detected: ${decodedText}`);
-
-          // User interaction triggers
           playBeep();
           vibrate();
-
           setScanActive(false);
           setLoading(true);
           setError("");
 
           try {
-            // Stop scanning
-            await qrCode.stop();
+            // Get location with permission
+            toast.info("📍 Requesting location permission...");
+            const location = await getLocationPermission();
 
-            const result = await api.post("/verify/qr", {
+            await qrCode.stop();
+            const response = await api.post("/verify/qr", {
               qrData: decodedText.trim(),
+              latitude: location.latitude,
+              longitude: location.longitude,
             });
 
-            // Auto-pause before redirect
-            setTimeout(() => {
-              router.push(
-                `/verify/result?code=${encodeURIComponent(decodedText.trim())}`
+            // Store the verification result in localStorage
+            if (response.data) {
+              localStorage.setItem(
+                "verificationResult",
+                JSON.stringify(response.data)
               );
+            }
+
+            setTimeout(() => {
+              const status = response.data?.verification?.state || "UNKNOWN";
+              // Add small delay to ensure localStorage persists before navigation
+              setTimeout(() => {
+                router.push(
+                  `/verify/states/${encodeURIComponent(
+                    status
+                  )}?code=${encodeURIComponent(decodedText.trim())}`
+                );
+              }, 100);
             }, 500);
           } catch (err) {
             console.error("Verification error:", err);
-            setError(err.message || "Verification failed");
+            setError(
+              err.response?.data?.message ||
+                err.message ||
+                "Verification failed"
+            );
             setLoading(false);
             setScanActive(true);
-            try {
-              await qrCode.start(
-                { facingMode: "user" },
-                {
-                  fps: 10,
-                  qrbox: { width: 250, height: 250 },
-                },
-                onScanSuccess,
-                onScanFailure
-              );
-            } catch (restartErr) {
-              console.error("Failed to restart scanner:", restartErr);
-            }
           }
         };
 
@@ -216,22 +252,15 @@ function QRVerifyPageContent() {
         };
 
         await qrCode.start(
-          { facingMode: "user" },
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-          },
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 250 } },
           onScanSuccess,
           onScanFailure
         );
-
-        console.log("QR Code scanner started successfully");
       } catch (err) {
         console.error("Failed to start QR scanner:", err);
         setError(
-          `Unable to access camera: ${
-            err.message || "Permission denied or camera not available"
-          }`
+          `Unable to access camera: ${err.message || "Permission denied"}`
         );
         setLoading(false);
       }
@@ -240,116 +269,164 @@ function QRVerifyPageContent() {
     return () => {
       clearTimeout(timer);
       if (scannerInstanceRef.current) {
-        scannerInstanceRef.current.stop().catch(() => {});
+        try {
+          scannerInstanceRef.current.stop().catch(() => {});
+        } catch (err) {
+          // Scanner cleanup error - safe to ignore
+          console.debug("Scanner cleanup error (safe to ignore):", err);
+        }
       }
     };
-  }, [scanActive, router]);
-
-  const handleRetry = () => {
-    setError("");
-    setScanActive(true);
-  };
+  }, [scanActive, uploadMode, router]);
 
   return (
-    <div className="flex flex-col items-center p-4 pt-6 md:pt-12">
-      <h1 className="text-2xl font-bold dark:text-white mb-4">Scan QR Code</h1>
-      <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
-        Point your camera at the Lumora QR code to verify instantly.
-      </p>
-
-      {error && (
-        <div className="w-full max-w-md mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          <p className="text-sm">{error}</p>
-          <button
-            onClick={handleRetry}
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Try Again
-          </button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950 flex items-center justify-center px-4 py-8">
+      <style>{`
+        @keyframes scanline {
+          0% { top: 0%; }
+          50% { top: 100%; }
+          100% { top: 0%; }
+        }
+        .scanline {
+          animation: scanline 2s infinite;
+          position: absolute;
+          left: 0;
+          right: 0;
+          height: 3px;
+          background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+          z-index: 10;
+        }
+      `}</style>
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4">
+            <span className="text-4xl">📱</span>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Scan QR Code
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400">
+            Point your camera at the product QR code
+          </p>
         </div>
-      )}
 
-      <div className="w-full max-w-md bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg">
-        {scanActive ? (
-          <>
-            <div
-              id="qr_reader"
-              ref={qrScannerRef}
-              className="w-full h-80 rounded-md overflow-hidden relative"
-              style={{ minHeight: "320px" }}
-            >
-              {/* Animated scanning line */}
-              <style>{`
-                @keyframes scanline {
-                  0% { top: 0%; }
-                  50% { top: 100%; }
-                  100% { top: 0%; }
-                }
-                .scanline {
-                  animation: scanline 2s infinite;
-                  position: absolute;
-                  left: 0;
-                  right: 0;
-                  height: 3px;
-                  background: linear-gradient(
-                    90deg,
-                    transparent,
-                    #3b82f6,
-                    transparent
-                  );
-                  z-index: 10;
-                }
-              `}</style>
-              <div className="scanline"></div>
+        {/* Camera/Upload Card */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden mb-6">
+          {/* Error Message */}
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500">
+              <p className="text-sm text-red-700 dark:text-red-300 font-medium">
+                {error}
+              </p>
             </div>
+          )}
 
-            {/* Control buttons */}
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={toggleTorch}
-                className={`flex-1 py-2 px-4 rounded font-medium text-sm transition ${
-                  torchActive
-                    ? "bg-yellow-500 text-white hover:bg-yellow-600"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600"
-                }`}
-              >
-                {torchActive ? "🔦 Torch On" : "🔦 Torch Off"}
-              </button>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded font-medium text-sm hover:bg-blue-700 transition"
-              >
-                📷 Upload Image
-              </button>
-            </div>
+          {/* Camera/Upload Area */}
+          <div className="p-6">
+            {uploadMode ? (
+              /* Upload Mode */
+              <div className="space-y-4">
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-8 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition"
+                >
+                  <span className="text-4xl mb-3 block">🖼️</span>
+                  <p className="font-medium text-gray-900 dark:text-white mb-1">
+                    Choose Image
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Select a QR code photo from your device
+                  </p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-          </>
-        ) : (
-          <div className="w-full h-64 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-md">
-            {loading ? (
-              <div className="text-center">
-                <p className="text-gray-600 dark:text-gray-300 mb-2">
-                  Verifying...
-                </p>
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <button
+                  onClick={() => setUploadMode(false)}
+                  className="w-full py-2 text-blue-600 dark:text-blue-400 font-medium hover:underline"
+                >
+                  ← Back to Camera
+                </button>
               </div>
             ) : (
-              <p className="text-gray-600 dark:text-gray-300">Redirecting...</p>
+              /* Camera Mode */
+              <div className="space-y-4">
+                {scanActive && !loading ? (
+                  <>
+                    <div
+                      id="qr_reader"
+                      ref={qrScannerRef}
+                      className="w-full rounded-lg overflow-hidden relative bg-black"
+                      style={{ minHeight: "320px" }}
+                    >
+                      <div className="scanline"></div>
+                    </div>
+
+                    {/* Control Buttons */}
+                    <div className="flex gap-3">
+                      <button
+                        onClick={toggleTorch}
+                        className={`flex-1 py-3 px-4 rounded-lg font-medium text-sm transition flex items-center justify-center gap-2 ${
+                          torchActive
+                            ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                            : "bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white"
+                        }`}
+                      >
+                        <span>{torchActive ? "🔦" : "💡"}</span>
+                        {torchActive ? "Torch On" : "Light"}
+                      </button>
+                      <button
+                        onClick={() => setUploadMode(true)}
+                        className="flex-1 py-3 px-4 rounded-lg font-medium text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white transition flex items-center justify-center gap-2"
+                      >
+                        <span>📷</span>
+                        Upload
+                      </button>
+                    </div>
+
+                    {/* Hint */}
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                      ✓ Position QR code in the center of the frame
+                    </p>
+                  </>
+                ) : (
+                  /* Loading State */
+                  <div className="py-16 flex flex-col items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Verifying code...
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
 
-      <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-        Make sure you have camera permissions enabled and good lighting.
-      </p>
+        {/* Quick Links */}
+        <div className="flex gap-3">
+          <Link
+            href="/verify"
+            className="flex-1 py-3 px-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-lg transition text-center flex items-center justify-center gap-2"
+          >
+            <span>⌨️</span>
+            Manual Entry
+          </Link>
+          <Link
+            href="/dashboard/user"
+            className="flex-1 py-3 px-4 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white font-medium rounded-lg transition text-center flex items-center justify-center gap-2"
+          >
+            <span>🏠</span>
+            Home
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

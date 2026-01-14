@@ -22,10 +22,14 @@ export default function UserDashboardPage() {
 
   // ✅ Default summary ensures .map() works even before API loads
   const [summary, setSummary] = useState({
-    totalVerifications: 0,
-    verificationStats: [],
-    avgRiskScore: 0,
-    hotspots: [],
+    stats: {
+      total: 0,
+      genuine: 0,
+      suspicious: 0,
+      used: 0,
+      favorites: 0,
+    },
+    recent: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -49,20 +53,28 @@ export default function UserDashboardPage() {
 
         // Ensure all keys exist to avoid undefined.map errors
         setSummary({
-          totalVerifications: response.data?.totalVerifications ?? 0,
-          verificationStats: response.data?.verificationStats ?? [],
-          avgRiskScore: response.data?.avgRiskScore ?? 0,
-          hotspots: response.data?.hotspots ?? [],
+          stats: response.data?.stats || {
+            total: 0,
+            genuine: 0,
+            suspicious: 0,
+            used: 0,
+            favorites: 0,
+          },
+          recent: response.data?.recent || [],
         });
       } catch (err) {
         console.error("Error fetching dashboard summary:", err);
 
         // Already safe defaults, but just to be sure
         setSummary({
-          totalVerifications: 0,
-          verificationStats: [],
-          avgRiskScore: 0,
-          hotspots: [],
+          stats: {
+            total: 0,
+            genuine: 0,
+            suspicious: 0,
+            used: 0,
+            favorites: 0,
+          },
+          recent: [],
         });
       } finally {
         setLoading(false);
@@ -119,48 +131,77 @@ export default function UserDashboardPage() {
               Loading dashboard...
             </p>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <div className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow border dark:border-gray-600">
-                <h2 className="font-semibold text-lg mb-2">
+                <h2 className="font-semibold text-sm text-gray-600 dark:text-gray-300 mb-2">
                   Total Verifications
                 </h2>
-                <p className="text-3xl font-bold">
-                  {summary.totalVerifications}
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                  {summary.stats?.total || 0}
                 </p>
               </div>
 
               <div className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow border dark:border-gray-600">
-                <h2 className="font-semibold text-lg mb-2">Genuine vs Risky</h2>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={summary.verificationStats ?? []}>
-                    <XAxis dataKey="status" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#16a34a" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow border dark:border-gray-600">
-                <h2 className="font-semibold text-lg mb-2">Risk Score (Avg)</h2>
-                <p className="text-3xl font-bold">{summary.avgRiskScore}</p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow border dark:border-gray-600">
-                <h2 className="font-semibold text-lg mb-2">
-                  Hotspot Predictions
+                <h2 className="font-semibold text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  ✅ Genuine Products
                 </h2>
-                <ul className="text-sm text-gray-700 dark:text-gray-300">
-                  {summary.hotspots?.length > 0 ? (
-                    summary.hotspots.map((hs, idx) => (
-                      <li key={idx}>
-                        {hs.location}: {hs.prediction}
-                      </li>
-                    ))
-                  ) : (
-                    <li>No hotspots yet</li>
-                  )}
-                </ul>
+                <p className="text-3xl font-bold text-green-600">
+                  {summary.stats?.genuine || 0}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow border dark:border-gray-600">
+                <h2 className="font-semibold text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  ⚠️ Suspicious/Used
+                </h2>
+                <p className="text-3xl font-bold text-orange-600">
+                  {(summary.stats?.suspicious || 0) +
+                    (summary.stats?.used || 0)}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-white dark:bg-gray-800 shadow border dark:border-gray-600">
+                <h2 className="font-semibold text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  ❤️ Saved Products
+                </h2>
+                <p className="text-3xl font-bold text-red-600">
+                  {summary.stats?.favorites || 0}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Recent Verifications */}
+          {!loading && summary.recent?.length > 0 && (
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold mb-4 dark:text-white">
+                Recent Verifications
+              </h2>
+              <div className="space-y-3">
+                {summary.recent.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-4 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700 flex justify-between items-center hover:shadow-md transition"
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        Code: {item.code}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {new Date(item.createdAt).toLocaleString()}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 capitalize">
+                        Status: {item.verificationState}
+                      </p>
+                    </div>
+                    <Link
+                      href="/dashboard/user/history"
+                      className="px-4 py-2 bg-genuine text-white rounded-lg text-sm hover:bg-green-600 transition font-medium"
+                    >
+                      View All
+                    </Link>
+                  </div>
+                ))}
               </div>
             </div>
           )}

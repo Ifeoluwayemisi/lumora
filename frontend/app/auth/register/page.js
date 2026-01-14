@@ -3,6 +3,7 @@ import { useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "@/context/AuthContext";
 import { toast } from "react-toastify";
+import api from "@/services/api";
 
 /**
  * Registration Page Component
@@ -75,60 +76,58 @@ export default function RegisterPage() {
   /**
    * Handle form submission and registration
    */
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  // Validation
-  if (form.password !== form.confirmPassword) {
-    const msg = "Passwords do not match";
-    setError(msg);
-    toast.error(msg);
-    return;
-  }
-  if (form.password.length < 8) {
-    const msg = "Password must be at least 8 characters long";
-    setError(msg);
-    toast.error(msg);
-    return;
-  }
-  if (!form.agreeToTerms) {
-    const msg = "You must agree to the terms and conditions";
-    setError(msg);
-    toast.error(msg);
-    return;
-  }
+    // Validation
+    if (form.password !== form.confirmPassword) {
+      const msg = "Passwords do not match";
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (form.password.length < 8) {
+      const msg = "Password must be at least 8 characters long";
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+    if (!form.agreeToTerms) {
+      const msg = "You must agree to the terms and conditions";
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
 
-  setLoading(true);
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    setLoading(true);
+    try {
+      const response = await api.post("/auth/signup", {
         name: form.fullName,
         email: form.email,
         phone: form.phone || undefined,
         password: form.password,
         role: form.role,
-      }),
-    });
+      });
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Registration failed");
+      toast.success(
+        "Account created successfully! Please log in to continue..."
+      );
 
-    toast.success("Account created successfully! Please log in to continue...");
-
-    // 🔹 Redirect to login instead of auto-login/dashboard
-    // Redirect to login page with email in query
-    router.push(`/auth/login?email=${encodeURIComponent(form.email)}`)
-  } catch (err) {
-    const errorMsg = err.message || "An error occurred. Please try again.";
-    setError(errorMsg);
-    toast.error(errorMsg);
-  } finally {
-    setLoading(false);
-  }
-};
+      // Redirect to login page with email in query
+      router.push(`/auth/login?email=${encodeURIComponent(form.email)}`);
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "An error occurred. Please try again.";
+      setError(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-50 dark:bg-gray-900 px-4 py-16">

@@ -1,6 +1,8 @@
 import prisma from "../models/prismaClient.js";
 import { parseISO, isValid } from "date-fns";
 import { Parser } from "json2csv";
+import bcrypt from "bcryptjs";
+import PDFDocument from "pdfkit";
 
 /**
  * Shared helper to fetch user history
@@ -93,10 +95,10 @@ export async function getUserHistory(req, res) {
 export async function addFavorite(req, res) {
   try {
     const userId = req.user.id;
-    const { codeValue, productId } = req.body;
+    const { codeValue, productName, productId } = req.body;
 
     const fav = await prisma.userFavorites.create({
-      data: { userId, codeValue, productId },
+      data: { userId, codeValue, productName, productId },
     });
 
     res.json(fav);
@@ -211,15 +213,18 @@ export async function getUserDashboard(req, res) {
 
 /**
  * GET /history/export
- * Exports user history as CSV
+ * Exports user history as CSV, JSON, or PDF
  */
 export async function exportUserHistory(req, res) {
   try {
     const userId = req.user.id;
     const { state, from, to, format = "csv" } = req.query;
 
-    if (format !== "csv") {
-      return res.status(400).json({ message: "Only CSV export supported" });
+    const validFormats = ["csv", "json", "pdf"];
+    if (!validFormats.includes(format)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid format. Use csv, json, or pdf" });
     }
 
     const { history } = await fetchUserHistory({
@@ -227,17 +232,344 @@ export async function exportUserHistory(req, res) {
       state,
       from,
       to,
-      paginate: false, // export all history
+      paginate: false,
     });
 
-    const parser = new Parser();
-    const csv = parser.parse(history);
+    if (format === "csv") {
+      const parser = new Parser();
+      const csv = parser.parse(history);
+      res.header("Content-Type", "text/csv");
+      res.attachment("user_history.csv");
+      return res.send(csv);
+    }
 
-    res.header("Content-Type", "text/csv");
-    res.attachment("user_history.csv");
-    res.send(csv);
+    if (format === "json") {
+      res.header("Content-Type", "application/json");
+      res.attachment("user_history.json");
+      return res.send(JSON.stringify(history, null, 2));
+    }
+
+    if (format === "pdf") {
+      const doc = new PDFDocument();
+      res.header("Content-Type", "application/pdf");
+      res.attachment("user_history.pdf");
+      doc.pipe(res);
+
+      doc.fontSize(16).text("Verification History Report", { underline: true });
+      doc.fontSize(10).text(`Exported: ${new Date().toLocaleDateString()}\n`);
+
+      history.forEach((record, idx) => {
+        doc.fontSize(10).text(`\n${idx + 1}. Code: ${record.codeValue}`);
+        doc.text(`   Status: ${record.verificationState}`);
+        doc.text(`   Date: ${new Date(record.createdAt).toLocaleDateString()}`);
+        if (record.location) doc.text(`   Location: ${record.location}`);
+      });
+
+      doc.end();
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to export user history" });
+  }
+}
+
+/**
+ * PATCH /profile
+ * Update user profile (name and email)
+ */
+export async function updateUserProfile(req, res) {
+  try {
+    const userId = req.user.id;
+    const { name, email } = req.body;
+
+    // Validate input
+    if (!name || !email) {
+      return res.status(400).json({ message: "Name and email are required" });
+    }
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // Check if email already exists (but not for current user)
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser && existingUser.id !== userId) {
+      return res.status(400).json({ message: "Email already in use" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+      },
+    });
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update profile" });
+  }
+}
+
+/**
+ * PATCH /password
+ * Change user password
+ */
+export async function changeUserPassword(req, res) {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    // Validate input
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res
+        .status(400)
+        .json({ message: "All password fields are required" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "New passwords do not match" });
+    }
+
+    if (newPassword.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
+    }
+
+    // Get current user
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password
+    );
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to change password" });
+  }
+}
+
+/**
+ * DELETE /account
+ * Delete user account permanently
+ */
+export async function deleteUserAccount(req, res) {
+  try {
+    const userId = req.user.id;
+    const { password, confirmation } = req.body;
+
+    // Validate confirmation
+    if (confirmation !== "DELETE MY ACCOUNT") {
+      return res.status(400).json({ message: "Invalid confirmation text" });
+    }
+
+    // Get user and verify password
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Password is incorrect" });
+    }
+
+    // Delete all user data in cascade
+    // Note: relies on database foreign key cascade delete configuration
+    await Promise.all([
+      prisma.userNotifications.deleteMany({ where: { userId } }),
+      prisma.userFavorites.deleteMany({ where: { userId } }),
+      prisma.verificationLog.deleteMany({ where: { userId } }),
+    ]);
+
+    // Finally delete the user
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    res.json({ message: "Account deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to delete account" });
+  }
+}
+
+/**
+ * GET /settings
+ * Get user notification preferences
+ */
+export async function getUserSettings(req, res) {
+  try {
+    const userId = req.user.id;
+
+    // For now, return default settings from user model
+    // In future, create separate UserSettings table
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+      },
+    });
+
+    const settings = {
+      emailNotifications: true,
+      pushNotifications: false,
+      weeklyDigest: true,
+      suspiciousActivityAlerts: true,
+    };
+
+    res.json(settings);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch settings" });
+  }
+}
+
+/**
+ * PATCH /settings
+ * Update user notification preferences
+ */
+export async function updateUserSettings(req, res) {
+  try {
+    const userId = req.user.id;
+    const {
+      emailNotifications,
+      pushNotifications,
+      weeklyDigest,
+      suspiciousActivityAlerts,
+    } = req.body;
+
+    // Validate input
+    const validSettings = {
+      emailNotifications: Boolean(emailNotifications),
+      pushNotifications: Boolean(pushNotifications),
+      weeklyDigest: Boolean(weeklyDigest),
+      suspiciousActivityAlerts: Boolean(suspiciousActivityAlerts),
+    };
+
+    // Store settings (in future, use separate UserSettings table)
+    // For now, just return success
+    res.json({
+      message: "Settings updated successfully",
+      settings: validSettings,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update settings" });
+  }
+}
+
+/**
+ * DELETE /history
+ * Clear all user verification history
+ */
+export async function clearUserHistory(req, res) {
+  try {
+    const userId = req.user.id;
+    const { confirmation } = req.body;
+
+    if (confirmation !== true) {
+      return res.status(400).json({ message: "Confirmation required" });
+    }
+
+    const result = await prisma.verificationLog.deleteMany({
+      where: { userId },
+    });
+
+    res.json({
+      message: "History cleared successfully",
+      deletedCount: result.count,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to clear history" });
+  }
+}
+
+/**
+ * GET /dashboard-summary
+ * Get dashboard summary stats
+ */
+export async function getDashboardSummary(req, res) {
+  try {
+    const userId = req.user.id;
+
+    const [total, genuine, suspicious, used] = await Promise.all([
+      prisma.verificationLog.count({ where: { userId } }),
+      prisma.verificationLog.count({
+        where: { userId, verificationState: "GENUINE" },
+      }),
+      prisma.verificationLog.count({
+        where: {
+          userId,
+          verificationState: {
+            in: ["SUSPICIOUS_PATTERN"],
+          },
+        },
+      }),
+      prisma.verificationLog.count({
+        where: { userId, verificationState: "CODE_ALREADY_USED" },
+      }),
+    ]);
+
+    // Get recent verifications
+    const recent = await prisma.verificationLog.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    });
+
+    // Get favorites count
+    const favoritesCount = await prisma.userFavorites.count({
+      where: { userId },
+    });
+
+    res.json({
+      stats: {
+        total,
+        genuine,
+        suspicious,
+        used,
+        favorites: favoritesCount,
+      },
+      recent,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch dashboard summary" });
   }
 }

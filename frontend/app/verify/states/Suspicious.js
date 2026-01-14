@@ -1,10 +1,31 @@
 "use client";
 import { useRouter } from "next/navigation";
 
-export default function Suspicious({ code, product }) {
+export default function Suspicious({ code, product, verification }) {
   const router = useRouter();
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      {/* Back Button */}
+      <button
+        onClick={() => router.push("/verify")}
+        className="fixed top-4 left-4 p-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors shadow-sm"
+        aria-label="Back to verify"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+
       <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
         {/* Danger Icon */}
         <div className="text-center mb-6">
@@ -58,10 +79,18 @@ export default function Suspicious({ code, product }) {
           <p className="text-sm text-red-800 dark:text-red-200 font-semibold mb-2">
             ⚠️ Risk Detected:
           </p>
-          <p className="text-sm text-red-700 dark:text-red-300">
-            This code shows unusual verification patterns. Possible counterfeit
-            or tampering detected.
+          <p className="text-sm text-red-700 dark:text-red-300 mb-3">
+            {verification?.advisory ||
+              "This code shows unusual verification patterns. Possible counterfeit or tampering detected."}
           </p>
+          {verification?.riskScore && (
+            <div className="bg-white dark:bg-red-950/30 p-2 rounded border border-red-200 dark:border-red-800">
+              <p className="text-xs text-red-800 dark:text-red-200">
+                Risk Score:{" "}
+                <span className="font-bold">{verification.riskScore}/100</span>
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Actions */}

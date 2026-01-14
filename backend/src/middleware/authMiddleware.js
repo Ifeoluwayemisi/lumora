@@ -33,3 +33,31 @@ export async function authMiddleware(req, res, next) {
     return res.status(500).json({ error: "Authentication check failed" });
   }
 }
+// Optional authentication - user is attached to req if authenticated, otherwise null
+export async function optionalAuthMiddleware(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+
+    // If no auth header, continue without user
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      req.user = null;
+      return next();
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+      req.user = user || null;
+    } catch (jwtError) {
+      // Token invalid or expired - continue without user
+      req.user = null;
+    }
+    next();
+  } catch (error) {
+    console.error("[OPTIONAL_AUTH_MIDDLEWARE] Unexpected error:", error);
+    req.user = null;
+    next();
+  }
+}

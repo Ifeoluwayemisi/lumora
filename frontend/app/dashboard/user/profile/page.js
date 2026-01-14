@@ -6,6 +6,7 @@ import { AuthContext } from "@/context/AuthContext";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { FiMail, FiUser, FiLock, FiTrash2, FiArrowLeft } from "react-icons/fi";
 import { toast } from "react-toastify";
+import api from "@/services/api";
 
 export default function ProfilePage() {
   const { user, logout } = useContext(AuthContext);
@@ -39,18 +40,15 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/user/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update profile");
-
+      await api.patch("/user/profile", formData);
       toast.success("Profile updated successfully!");
     } catch (err) {
-      toast.error(err.message);
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to update profile";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -72,17 +70,10 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/user/password", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          currentPassword: passwordForm.currentPassword,
-          newPassword: passwordForm.newPassword,
-        }),
+      await api.patch("/user/password", {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to change password");
 
       toast.success("Password changed successfully!");
       setPasswordForm({
@@ -91,7 +82,12 @@ export default function ProfilePage() {
         confirmPassword: "",
       });
     } catch (err) {
-      toast.error(err.message);
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to change password";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -101,19 +97,18 @@ export default function ProfilePage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/user/account", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to delete account");
+      await api.delete("/user/account");
 
       toast.success("Account deleted successfully");
       logout();
       router.push("/");
     } catch (err) {
-      toast.error(err.message);
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to delete account";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

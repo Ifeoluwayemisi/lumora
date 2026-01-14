@@ -8,6 +8,7 @@ import manufacturerRoutes from "./routes/manufacturerRoutes.js";
 import nafdacRoutes from "./routes/nafdacRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoute from "./routes/userRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 import "dotenv/config";
 
 const app = express();
@@ -74,6 +75,7 @@ app.use("/api/manufacturer", manufacturerRoutes);
 app.use("/api/nafdac", nafdacRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/user", userRoute);
+app.use("/api/reports", reportRoutes);
 
 app.get("/", (req, res) => {
   res.json({

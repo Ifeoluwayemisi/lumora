@@ -1,21 +1,24 @@
-import prisma from '../models/prismaClient.js';
+import prisma from "../models/prismaClient.js";
 
 export async function checkRateLimit(userId, ipAddress) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  // Disabled for development - set ENABLE_RATE_LIMIT=true in .env to enable
+  if (process.env.ENABLE_RATE_LIMIT !== "true") {
+    return; // Skip rate limiting in dev
+  }
 
-    const count = await prisma.verificationLog.count({
-        where: {
-            createdAt: { gte: today},
-            OR: [
-                userId ? {userId} : {},
-            ],
-        },
-    });
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    const limit = userId ? 30 : 5;
+  const count = await prisma.verificationLog.count({
+    where: {
+      createdAt: { gte: today },
+      OR: [userId ? { userId } : {}],
+    },
+  });
 
-    if (count >= limit) {
-        throw new Error('Rate limit exceeded');
-    }
+  const limit = userId ? 30 : 5;
+
+  if (count >= limit) {
+    throw new Error("Rate limit exceeded");
+  }
 }

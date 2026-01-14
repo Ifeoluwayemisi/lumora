@@ -22,6 +22,9 @@ model User {
   updatedAt           DateTime          @updatedAt
   manufacturer        Manufacturer?
   verifications       VerificationLog[]
+  favorites           UserFavorites[]
+  notifications       UserNotifications[]
+  reports             Report[]
   plan                Plan              @default(BASIC)
   dailyCodeLimit      Int               @default(50)
   planExpiresAt       DateTime?
@@ -30,19 +33,20 @@ model User {
 }
 
 model Manufacturer {
-  id             String    @id @default(uuid())
-  name           String
-  userId         String    @unique
-  verified       Boolean   @default(false)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  user           User      @relation(fields: [userId], references: [id])
-  drugs          Drug[]
-  batches        Batch[]
-  Code           Code[]
-  plan           Plan      @default(BASIC)
-  dailyCodeLimit Int       @default(50)
-  planExpiresAt  DateTime?
+  id               String             @id @default(uuid())
+  name             String
+  userId           String             @unique
+  verified         Boolean            @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  user             User               @relation(fields: [userId], references: [id])
+  drugs            Drug[]
+  batches          Batch[]
+  Code             Code[]
+  verificationLogs VerificationLog[]
+  plan             Plan               @default(BASIC)
+  dailyCodeLimit   Int                @default(50)
+  planExpiresAt    DateTime?
 }
 
 model Drug {
@@ -58,17 +62,18 @@ model Drug {
 }
 
 model Batch {
-  id             String       @id @default(uuid())
-  productId      String
-  productionDate DateTime
-  manufacturerId String
-  batchNumber    String
-  expirationDate DateTime
-  codes          Code[]
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
-  product        Product      @relation(fields: [productId], references: [id])
+  id                 String             @id @default(uuid())
+  productId          String
+  productionDate     DateTime
+  manufacturerId     String
+  batchNumber        String
+  expirationDate     DateTime
+  codes              Code[]
+  verificationLogs   VerificationLog[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  manufacturer       Manufacturer       @relation(fields: [manufacturerId], references: [id])
+  product            Product            @relation(fields: [productId], references: [id])
 
   @@index([batchNumber])
   @@index([expirationDate])
@@ -97,6 +102,8 @@ model Code {
 model VerificationLog {
   id                String            @id @default(uuid())
   codeId            String?
+  batchId           String?
+  manufacturerId    String?
   codeValue         String
   userId            String? // nullable for guest verification
   timestamp         DateTime          @default(now())
@@ -108,6 +115,8 @@ model VerificationLog {
   createdAt         DateTime          @default(now())
   user              User?             @relation(fields: [userId], references: [id])
   code              Code?              @relation(fields: [codeId], references: [id])
+  batch             Batch?             @relation(fields: [batchId], references: [id])
+  manufacturer      Manufacturer?      @relation(fields: [manufacturerId], references: [id])
 
   @@index([codeValue])
   @@index([verificationState])
@@ -129,6 +138,8 @@ model Incident {
   riskScore Float
   state     VerificationState
   status    String // OPEN, UNDER_REVIEW, CLOSED
+  latitude  Float?
+  longitude Float?
   createdAt DateTime          @default(now())
 
   @@index([status])
@@ -161,4 +172,53 @@ enum VerificationState {
 enum Plan {
   BASIC
   PREMIUM
+}
+
+model UserFavorites {
+  id        String   @id @default(uuid())
+  userId    String
+  codeValue String
+  productName String?
+  productId String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@unique([userId, codeValue])
+}
+
+model UserNotifications {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   // VERIFICATION, ALERT, GENERAL
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([read])
+}
+
+model Report {
+  id                String   @id @default(uuid())
+  codeValue         String
+  productName       String?
+  reportType        String   // counterfeit, fake_packaging, invalid_code, quality_issue, other
+  description       String   @db.Text
+  location          String?
+  purchaseDate      DateTime?
+  purchaseLocation  String?
+  contact           String?
+  userId            String?
+  latitude          Float?   // Reporter's location latitude
+  longitude         Float?   // Reporter's location longitude
+  status            String   @default("OPEN") // OPEN, UNDER_REVIEW, RESOLVED, DISMISSED
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([codeValue])
 }

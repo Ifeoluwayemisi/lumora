@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams, usePathname } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { toast } from "react-toastify";
 import api from "@/services/api";
 import Genuine from "../Genuine";
 import CodeUsed from "../CodeUsed";
@@ -11,12 +12,9 @@ import Unregistered from "../Unregistered";
 
 export default function StatePage() {
   const searchParams = useSearchParams();
-  const pathname = usePathname();
   const code = searchParams.get("code");
-
-  // Extract status from pathname
-  const pathSegments = pathname.split("/");
-  const statusFromPath = pathSegments[pathSegments.length - 1] || "";
+  const isReverify = searchParams.get("reverify") === "true";
+  const hasFetchedRef = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -24,18 +22,62 @@ export default function StatePage() {
 
   useEffect(() => {
     const fetchResult = async () => {
+      // Prevent multiple fetches
+      if (hasFetchedRef.current) {
+        return;
+      }
+      hasFetchedRef.current = true;
+
       try {
-        const data = await api.post("/verify/manual", { codeValue: code });
-        setResult(data.data);
+        // First try to get the verification result from localStorage
+        const storedResult = localStorage.getItem("verificationResult");
+
+        if (storedResult) {
+          const parsedResult = JSON.parse(storedResult);
+          setResult(parsedResult);
+          // Clear the stored result after retrieving it
+          localStorage.removeItem("verificationResult");
+          setLoading(false);
+          return;
+        }
+
+        // If localStorage is empty but this is a re-verify, fetch from backend
+        if (isReverify && code) {
+          const response = await api.post("/verify/manual", {
+            codeValue: code,
+          });
+
+          if (response.data) {
+            setResult(response.data);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // If no localStorage and no code, show error
+        if (!code) {
+          setError("No verification result found. Please verify a code first.");
+          setLoading(false);
+          return;
+        }
+
+        // If localStorage is empty and not a re-verify, show expired message
+        setError("Verification result expired. Please verify the code again.");
+        setLoading(false);
       } catch (err) {
-        setError(err.message);
-      } finally {
+        console.error("Error retrieving verification result:", err);
+        setError(
+          err.response?.data?.error ||
+            err.message ||
+            "Failed to load verification result"
+        );
+        toast.error("Failed to load verification result");
         setLoading(false);
       }
     };
 
-    if (code) fetchResult();
-  }, [code]);
+    fetchResult();
+  }, [code, isReverify]);
 
   if (loading)
     return (
@@ -59,22 +101,49 @@ export default function StatePage() {
     );
   }
 
-  // Map status to component based on result verificationState
-  const resultStatus = result?.verificationState || "";
+  // Map status to component based on result verification.state
+  const resultStatus = result?.verification?.state || "";
 
   try {
     if (resultStatus.includes("GENUINE")) {
-      return <Genuine code={code} product={result.product} />;
+      return (
+        <Genuine
+          code={code}
+          product={result.product}
+          batch={result.batch}
+          verification={result.verification}
+          codeInfo={result.code}
+        />
+      );
     } else if (resultStatus.includes("CODE_ALREADY_USED")) {
-      return <CodeUsed code={code} />;
+      return (
+        <CodeUsed
+          code={code}
+          product={result.product}
+          batch={result.batch}
+          codeInfo={result.code}
+        />
+      );
     } else if (
       resultStatus.includes("INVALID") ||
       resultStatus.includes("EXPIRED") ||
       resultStatus.includes("UNREGISTERED")
     ) {
-      return <Invalid code={code} />;
+      return (
+        <Invalid
+          code={code}
+          product={result.product}
+          verification={result.verification}
+        />
+      );
     } else if (resultStatus.includes("SUSPICIOUS")) {
-      return <Suspicious code={code} product={result.product} />;
+      return (
+        <Suspicious
+          code={code}
+          product={result.product}
+          verification={result.verification}
+        />
+      );
     } else {
       return (
         <div className="flex items-center justify-center min-h-screen dark:bg-gray-900">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { FiBell, FiDownload, FiTrash, FiArrowLeft } from "react-icons/fi";
 import { toast } from "react-toastify";
+import api from "@/services/api";
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -19,9 +20,8 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch("/api/user/settings");
-        const data = await res.json();
-        setSettings(data);
+        const response = await api.get("/user/settings");
+        setSettings(response.data);
       } catch (err) {
         console.error("Failed to fetch settings:", err);
       }
@@ -40,18 +40,16 @@ export default function SettingsPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/user/settings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to save settings");
+      await api.patch("/user/settings", settings);
 
       toast.success("Settings saved successfully!");
     } catch (err) {
-      toast.error(err.message);
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to save settings";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -61,12 +59,12 @@ export default function SettingsPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`/api/user/history/export?format=${format}`);
-
-      if (!res.ok) throw new Error("Failed to export data");
+      const response = await api.get(`/user/history/export?format=${format}`, {
+        responseType: "blob",
+      });
 
       // Create blob and download
-      const blob = await res.blob();
+      const blob = response.data;
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -78,7 +76,12 @@ export default function SettingsPage() {
 
       toast.success(`Data exported as ${format.toUpperCase()}`);
     } catch (err) {
-      toast.error(err.message);
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to export data";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -96,17 +99,16 @@ export default function SettingsPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/user/history", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to clear history");
+      await api.delete("/user/history");
 
       toast.success("Verification history cleared");
     } catch (err) {
-      toast.error(err.message);
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to clear history";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
