@@ -25,10 +25,15 @@ const BCRYPT_SALT = parseInt(process.env.BCRYPT_SALT || "10");
 
 /**
  * Signup endpoint
- * Creates a new user account
+ * Creates a new user account (consumer or manufacturer)
+ * 
+ * For manufacturers:
+ * - Requires: name, email, password, companyName, country, phone
+ * - Creates both User and Manufacturer records
+ * - Sets accountStatus to 'pending_verification'
  */
 export const signup = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, companyName, country, phone } = req.body;
 
   // Input validation
   if (!name || !email || !password) {
@@ -80,19 +85,37 @@ export const signup = async (req, res) => {
       },
     });
 
-    // If role is MANUFACTURER, auto-create a Manufacturer record
+    // If role is MANUFACTURER, create Manufacturer record with pending verification
     if (normalizedRole === "MANUFACTURER") {
+      if (!companyName || !country) {
+        // Clean up created user if manufacturer data is incomplete
+        await prisma.user.delete({ where: { id: user.id } });
+        return res.status(400).json({
+          error: "Missing manufacturer required fields",
+          required: ["companyName", "country"],
+        });
+      }
+
       await prisma.manufacturer.create({
         data: {
           id: user.id,
           userId: user.id,
-          name: user.name,
+          name: companyName,
+          email: email,
+          phone: phone || null,
+          country: country,
+          accountStatus: "pending_verification", // Set to pending until admin approves
+          verified: false,
+          trustScore: 0,
+          riskLevel: "MEDIUM",
         },
       });
     }
 
     return res.status(201).json({
-      message: "User created successfully",
+      message: normalizedRole === "MANUFACTURER" 
+        ? "Manufacturer account created. Please upload verification documents."
+        : "User created successfully",
       userId: user.id,
       role: normalizedRole.toLowerCase(),
     });

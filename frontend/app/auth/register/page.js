@@ -6,14 +6,16 @@ import { toast } from "react-toastify";
 import api from "@/services/api";
 
 /**
- * Registration Page Component
+ * Registration Page Component (Step 2 of Signup Flow)
  *
  * Features:
- * - Full name, email, and password registration
+ * - Two-step signup: Intent picker → Account creation
+ * - Role-specific form fields (Consumer vs Manufacturer)
  * - Password strength validation and indicator
  * - Phone number field for contact
+ * - Company details for manufacturers
+ * - Country selection for manufacturers
  * - Terms & conditions checkbox
- * - Role-based account setup
  * - Secure token management via AuthContext
  * - Accessibility support (aria-labels, aria-describedby)
  * - Responsive design with dark mode
@@ -22,10 +24,13 @@ import api from "@/services/api";
  *
  * Redirects to:
  * - /dashboard/manufacturer (manufacturer role)
- * - /dashboard/user (user role)
+ * - /dashboard/user (user/consumer role)
  */
 function RegisterContent() {
   const router = useRouter();
+  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const queryRole = searchParams.get("role") || "consumer";
+  
   const { login } = useContext(AuthContext);
   const [form, setForm] = useState({
     fullName: "",
@@ -33,11 +38,14 @@ function RegisterContent() {
     phone: "",
     password: "",
     confirmPassword: "",
-    role: "user",
+    role: queryRole === "manufacturer" ? "manufacturer" : "consumer",
+    companyName: "",
+    country: "",
     agreeToTerms: false,
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const isManufacturer = form.role === "manufacturer";
 
   /**
    * Calculate password strength
@@ -100,22 +108,54 @@ function RegisterContent() {
       return;
     }
 
+    // Manufacturer-specific validation
+    if (isManufacturer) {
+      if (!form.companyName || form.companyName.trim().length === 0) {
+        const msg = "Company name is required";
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+      if (!form.country || form.country.trim().length === 0) {
+        const msg = "Country is required";
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
-      const response = await api.post("/auth/signup", {
+      const payload = {
         name: form.fullName,
         email: form.email,
         phone: form.phone || undefined,
         password: form.password,
         role: form.role,
-      });
+      };
+
+      // Add manufacturer-specific fields
+      if (isManufacturer) {
+        payload.companyName = form.companyName;
+        payload.country = form.country;
+      }
+
+      const response = await api.post("/auth/signup", payload);
 
       toast.success(
-        "Account created successfully! Please log in to continue..."
+        isManufacturer
+          ? "Account created! Please upload verification documents to start generating codes."
+          : "Account created successfully! Please log in to continue..."
       );
 
-      // Redirect to login page with email in query
-      router.push(`/auth/login?email=${encodeURIComponent(form.email)}`);
+      // Redirect based on role
+      if (isManufacturer) {
+        // For manufacturers, redirect to verification upload page
+        router.push(`/auth/login?email=${encodeURIComponent(form.email)}`);
+      } else {
+        // For consumers, redirect to login
+        router.push(`/auth/login?email=${encodeURIComponent(form.email)}`);
+      }
     } catch (err) {
       const errorMsg =
         err.response?.data?.error ||
@@ -131,11 +171,11 @@ function RegisterContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-50 dark:bg-gray-900 px-4 py-16">
-      {/* Back Button */}
+      {/* Back Button - Goes to role selection */}
       <a
-        href="/"
+        href="/auth/register/select-role"
         className="fixed top-4 left-4 p-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors shadow-sm"
-        aria-label="Back to home"
+        aria-label="Back to role selection"
       >
         <svg
           className="w-6 h-6"
@@ -155,10 +195,16 @@ function RegisterContent() {
       <div className="w-full max-w-md">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-genuine to-green-600 px-8 py-8 text-center">
+          <div className={`px-8 py-8 text-center bg-gradient-to-r ${
+            isManufacturer
+              ? "from-blue-600 to-blue-700"
+              : "from-genuine to-green-600"
+          }`}>
             <h2 className="text-3xl font-bold text-white">Create Account</h2>
-            <p className="text-green-100 text-sm mt-1">
-              Join Lumora and help fight counterfeits
+            <p className="text-white text-opacity-90 text-sm mt-1">
+              {isManufacturer
+                ? "Join as a manufacturer and protect your brand"
+                : "Join Lumora and help fight counterfeits"}
             </p>
           </div>
 
@@ -224,7 +270,7 @@ function RegisterContent() {
                   htmlFor="phone"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
-                  Phone Number (Optional)
+                  Phone Number {isManufacturer ? "" : "(Optional)"}
                 </label>
                 <input
                   id="phone"
@@ -234,10 +280,75 @@ function RegisterContent() {
                   value={form.phone}
                   onChange={handleChange}
                   disabled={loading}
+                  required={isManufacturer}
                   className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   aria-label="Phone number"
                 />
               </div>
+
+              {/* Manufacturer-Specific Fields */}
+              {isManufacturer && (
+                <>
+                  {/* Company Name */}
+                  <div>
+                    <label
+                      htmlFor="companyName"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Company Name *
+                    </label>
+                    <input
+                      id="companyName"
+                      type="text"
+                      name="companyName"
+                      placeholder="Your Company Ltd."
+                      value={form.companyName}
+                      onChange={handleChange}
+                      disabled={loading}
+                      required
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      aria-label="Company name"
+                    />
+                  </div>
+
+                  {/* Country Selection */}
+                  <div>
+                    <label
+                      htmlFor="country"
+                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    >
+                      Country *
+                    </label>
+                    <select
+                      id="country"
+                      name="country"
+                      value={form.country}
+                      onChange={handleChange}
+                      disabled={loading}
+                      required
+                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      aria-label="Country"
+                    >
+                      <option value="">Select your country</option>
+                      <option value="Nigeria">Nigeria</option>
+                      <option value="Ghana">Ghana</option>
+                      <option value="Kenya">Kenya</option>
+                      <option value="South Africa">South Africa</option>
+                      <option value="Egypt">Egypt</option>
+                      <option value="Ethiopia">Ethiopia</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  {/* Info Box */}
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <p className="text-sm text-blue-900 dark:text-blue-300">
+                      ℹ️ After signing up, you'll need to upload verification documents (CAC, Trademark, Regulatory approval, etc.) for NAFDAC review before generating codes.
+                    </p>
+                  </div>
+                </>
+              )}
+
 
               {/* Password Input with Strength Indicator */}
               <div>
@@ -331,28 +442,6 @@ function RegisterContent() {
                       ✓ Passwords match
                     </p>
                   )}
-              </div>
-
-              {/* Role Selection */}
-              <div>
-                <label
-                  htmlFor="role"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Account Type
-                </label>
-                <select
-                  id="role"
-                  name="role"
-                  value={form.role}
-                  onChange={handleChange}
-                  disabled={loading}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  aria-label="Account type"
-                >
-                  <option value="user">Consumer</option>
-                  <option value="manufacturer">Manufacturer</option>
-                </select>
               </div>
 
               {/* Terms & Conditions Checkbox */}

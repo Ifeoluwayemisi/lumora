@@ -46,18 +46,13 @@ export default function DashboardSidebar({ userRole }) {
       { href: "/dashboard/manufacturer", label: "Dashboard", icon: FiHome },
       {
         href: "/dashboard/manufacturer/products",
-        label: "Products (Owns)",
+        label: "Products",
         icon: FiPackage,
       },
       {
-        href: "/dashboard/manufacturer/batches",
-        label: "Batches",
+        href: "/dashboard/manufacturer/codes",
+        label: "Generate Codes",
         icon: FiBarChart2,
-      },
-      {
-        href: "/dashboard/manufacturer/history",
-        label: "Verification History",
-        icon: FiList,
       },
       {
         href: "/dashboard/manufacturer/profile",
