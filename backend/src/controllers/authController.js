@@ -97,23 +97,46 @@ export const signup = async (req, res) => {
       }
 
       try {
-        // Create manufacturer with only fields that exist in current database schema
-        // The new fields (email, phone, country, accountStatus, etc) will be added
-        // once the database migration is applied to production
+        // Create manufacturer with all fields
+        // Note: If "Unknown argument" error occurs, it means the database migration
+        // hasn't been applied yet. In that case, redeploy the backend on Render
+        // to trigger the migration via "prisma migrate deploy"
         await prisma.manufacturer.create({
           data: {
             id: user.id,
             userId: user.id,
             name: companyName,
+            email: email,
+            phone: phone || null,
+            country: country,
+            accountStatus: "pending_verification",
             verified: false,
+            trustScore: 0,
+            riskLevel: "MEDIUM",
+            plan: "BASIC",
           },
         });
         
-        console.log("[SIGNUP] Manufacturer created with minimal fields (migration pending)");
+        console.log("[SIGNUP] Manufacturer created successfully with all fields");
       } catch (manufacturerErr) {
         // Clean up user if manufacturer creation fails
         await prisma.user.delete({ where: { id: user.id } });
-        console.error("[SIGNUP] Manufacturer creation failed:", manufacturerErr.message);
+        
+        // Log detailed error for debugging
+        console.error("[SIGNUP] Manufacturer creation failed:", {
+          message: manufacturerErr.message,
+          code: manufacturerErr.code,
+        });
+        
+        // If it's a schema mismatch, provide helpful error message
+        if (manufacturerErr.message.includes("Unknown argument")) {
+          return res.status(500).json({
+            error: "Database schema not updated",
+            message: "The database is being updated. Please try again in a few moments after the backend redeploys.",
+            details: "If this persists, contact support to trigger a manual migration.",
+          });
+        }
+        
         throw manufacturerErr;
       }
     }
