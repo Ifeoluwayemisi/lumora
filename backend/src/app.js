@@ -15,59 +15,75 @@ const app = express();
 const NODE_ENV = process.env.NODE_ENV || "development";
 
 /**
- * Security & Performance Middleware
+ * ============================
+ * CORS (FIXED & SIMPLIFIED)
+ * ============================
  */
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
+  })
+);
 
-// CORS configuration - restrict in production
-const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
+// Explicitly handle preflight requests
+app.options("*", cors());
 
-app.use(cors(corsOptions));
-
-// Body parsing middleware with size limits
+/**
+ * ============================
+ * Body Parsing
+ * ============================
+ */
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-// Ensure all responses are JSON
-app.use((req, res, next) => {
-  res.setHeader("Content-Type", "application/json");
-  next();
-});
-
-// Security headers
+/**
+ * ============================
+ * Security Headers
+ * ============================
+ */
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("X-XSS-Protection", "1; mode=block");
+
   if (NODE_ENV === "production") {
     res.setHeader(
       "Strict-Transport-Security",
       "max-age=31536000; includeSubDomains"
     );
   }
+
   next();
 });
 
-// Request logging middleware
+/**
+ * ============================
+ * Request Logging
+ * ============================
+ */
 app.use((req, res, next) => {
   const start = Date.now();
+
   res.on("finish", () => {
     const duration = Date.now() - start;
     const log = `[${req.method}] ${req.path} - ${res.statusCode} (${duration}ms)`;
+
     if (res.statusCode >= 400) {
       console.warn(log);
     } else if (NODE_ENV === "development") {
       console.log(log);
     }
   });
+
   next();
 });
 
-// Routes
+/**
+ * ============================
+ * Routes
+ * ============================
+ */
 app.use("/api/auth", authRoutes);
 app.use("/api/verify", verificationRoutes);
 app.use("/api/codes", codeRoutes);
@@ -85,12 +101,18 @@ app.get("/", (req, res) => {
   });
 });
 
-// Health check endpoint
 app.get("/health", (req, res) => {
-  res.json({ status: "healthy", timestamp: new Date().toISOString() });
+  res.json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// 404 handler
+/**
+ * ============================
+ * 404 Handler
+ * ============================
+ */
 app.use((req, res) => {
   res.status(404).json({
     error: "Not Found",
@@ -99,21 +121,20 @@ app.use((req, res) => {
   });
 });
 
-// Global error handler
+/**
+ * ============================
+ * Global Error Handler
+ * ============================
+ */
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
-  const isDevelopment = NODE_ENV === "development";
-
-  const response = {
-    error: err.message || "Internal Server Error",
-    ...(isDevelopment && { stack: err.stack }),
-  };
 
   console.error(`[ERROR] ${req.method} ${req.path}:`, err);
 
-  // Ensure response is JSON
-  res.setHeader("Content-Type", "application/json");
-  res.status(statusCode).json(response);
+  res.status(statusCode).json({
+    error: err.message || "Internal Server Error",
+    ...(NODE_ENV === "development" && { stack: err.stack }),
+  });
 });
 
 export default app;

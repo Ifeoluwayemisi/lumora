@@ -71,14 +71,14 @@ async function startServer() {
     });
 
     process.on("SIGINT", async () => {
-      console.log("\n⏸️  SIGINT received, shutting down...");
+      console.log("\n SIGINT received, shutting down...");
       server.close(async () => {
         await prisma.$disconnect();
         process.exit(0);
       });
     });
   } catch (error) {
-    console.error("❌ Failed to start server:", error);
+    console.error(" Failed to start server:", error);
     await prisma.$disconnect();
     process.exit(1);
   }
