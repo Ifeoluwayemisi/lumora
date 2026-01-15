@@ -143,7 +143,7 @@ export default function ForgotPasswordPage() {
           <div className="text-gray-600 dark:text-gray-400">
             Don't have an account?{" "}
             <a
-              href="/auth/register"
+              href="/auth/register/select-role"
               className="text-genuine hover:text-green-600 font-medium transition-colors"
             >
               Sign up

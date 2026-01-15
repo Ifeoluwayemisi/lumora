@@ -136,7 +136,7 @@ export default function Navbar() {
                 Login
               </Link>
               <Link
-                href="/auth/register"
+                href="/auth/register/select-role"
                 className="font-semibold text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors"
               >
                 Register

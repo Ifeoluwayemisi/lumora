@@ -192,7 +192,7 @@ export default function LandingPage() {
             >
               Only manual verification available for unregistered users.{" "}
               <a
-                href="/auth/register"
+                href="/auth/register/select-role"
                 className="underline hover:text-genuine transition-colors font-semibold"
               >
                 Register
