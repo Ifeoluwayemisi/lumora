@@ -11,25 +11,47 @@ import { parseISO, isValid } from "date-fns";
  */
 export async function getDashboard(req, res) {
   try {
-    const manufacturerId = req.user.id;
+    const manufacturerId = req.user?.id;
+
+    if (!manufacturerId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "User not found in request",
+      });
+    }
 
     // Get manufacturer info
-    const manufacturer = await prisma.manufacturer.findUnique({
-      where: { id: manufacturerId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        verified: true,
-        accountStatus: true,
-        trustScore: true,
-        riskLevel: true,
-        plan: true,
-      },
-    });
+    let manufacturer = null;
+    try {
+      manufacturer = await prisma.manufacturer.findUnique({
+        where: { id: manufacturerId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          verified: true,
+          accountStatus: true,
+          trustScore: true,
+          riskLevel: true,
+          plan: true,
+        },
+      });
+    } catch (dbErr) {
+      // Log specific Prisma errors
+      console.error("[GET_DASHBOARD] Prisma Error:", {
+        code: dbErr.code,
+        message: dbErr.message,
+        meta: dbErr.meta,
+      });
+      throw dbErr;
+    }
 
     if (!manufacturer) {
-      return res.status(404).json({ error: "Manufacturer not found" });
+      return res.status(404).json({
+        error: "Manufacturer not found",
+        message:
+          "No manufacturer record found. Please complete manufacturer registration.",
+      });
     }
 
     // Get product count
@@ -150,11 +172,15 @@ export async function getDashboard(req, res) {
       error: "Failed to fetch dashboard",
       message:
         process.env.NODE_ENV === "development"
-          ? `${err.message} (${err.code})`
+          ? `${err.message}${err.code ? ` (${err.code})` : ""}`
           : "Please try again later",
       details:
         process.env.NODE_ENV === "development"
-          ? err.meta || err.message
+          ? {
+              code: err.code,
+              meta: err.meta,
+              message: err.message,
+            }
           : undefined,
     });
   }
