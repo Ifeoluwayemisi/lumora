@@ -20,64 +20,38 @@ export async function getDashboard(req, res) {
       });
     }
 
-    // Get manufacturer info
+    // Get manufacturer info (using only fields that exist in current schema)
     let manufacturer = null;
     try {
-      // Try to fetch with all new fields first
-      manufacturer = await prisma.manufacturer.findUnique({
+      const manufacturerData = await prisma.manufacturer.findUnique({
         where: { id: manufacturerId },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          verified: true,
-          accountStatus: true,
-          trustScore: true,
-          riskLevel: true,
-          plan: true,
-        },
       });
-    } catch (dbErr) {
-      // If error is about unknown fields (migration not applied), try with minimal fields
-      if (dbErr.message.includes("Unknown argument") || dbErr.message.includes("Unknown column")) {
-        console.warn("[GET_DASHBOARD] Migration not applied, using fallback query");
-        try {
-          const minimalMfg = await prisma.manufacturer.findUnique({
-            where: { id: manufacturerId },
-          });
-          // Map to expected response format with defaults
-          manufacturer = {
-            id: minimalMfg?.id,
-            name: minimalMfg?.name,
-            email: minimalMfg?.email || "", // Default if field doesn't exist
-            verified: minimalMfg?.verified || false,
-            accountStatus: "pending_verification", // Default
-            trustScore: 0, // Default
-            riskLevel: "MEDIUM", // Default
-            plan: "BASIC", // Default
-          };
-        } catch (fallbackErr) {
-          console.error("[GET_DASHBOARD] Fallback query failed:", fallbackErr.message);
-          throw fallbackErr;
-        }
-      } else {
-        console.error("[GET_DASHBOARD] Prisma Error:", {
-          code: dbErr.code,
-          message: dbErr.message,
-          meta: dbErr.meta,
+      
+      if (!manufacturerData) {
+        return res.status(404).json({
+          error: "Manufacturer not found",
+          message: "No manufacturer record found. Please complete manufacturer registration.",
         });
-        throw dbErr;
       }
-    }
 
-    if (!manufacturer) {
-      return res.status(404).json({
-        error: "Manufacturer not found",
-        message:
-          "No manufacturer record found. Please complete manufacturer registration.",
+      // Build response with defaults for fields that may not exist yet
+      manufacturer = {
+        id: manufacturerData?.id,
+        name: manufacturerData?.name,
+        email: manufacturerData?.email || "", // Will be populated once migration runs
+        verified: manufacturerData?.verified || false,
+        accountStatus: manufacturerData?.accountStatus || "pending_verification",
+        trustScore: manufacturerData?.trustScore ?? 0,
+        riskLevel: manufacturerData?.riskLevel || "MEDIUM",
+        plan: manufacturerData?.plan || "BASIC",
+      };
+    } catch (dbErr) {
+      console.error("[GET_DASHBOARD] Database error:", {
+        code: dbErr.code,
+        message: dbErr.message,
       });
+      throw dbErr;
     }
-
     // Get product count
     const totalProducts = await prisma.product.count({
       where: { manufacturerId },

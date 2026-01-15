@@ -97,45 +97,24 @@ export const signup = async (req, res) => {
       }
 
       try {
-        // Try to create with new fields first (if migration has been applied)
+        // Create manufacturer with only fields that exist in current database schema
+        // The new fields (email, phone, country, accountStatus, etc) will be added
+        // once the database migration is applied to production
         await prisma.manufacturer.create({
           data: {
             id: user.id,
             userId: user.id,
             name: companyName,
-            email: email,
-            phone: phone || null,
-            country: country,
-            accountStatus: "pending_verification",
             verified: false,
-            trustScore: 0,
-            riskLevel: "MEDIUM",
-            plan: "BASIC",
           },
         });
+        
+        console.log("[SIGNUP] Manufacturer created with minimal fields (migration pending)");
       } catch (manufacturerErr) {
-        // If error is about unknown fields, create with minimal fields
-        if (manufacturerErr.message.includes("Unknown argument")) {
-          console.warn(
-            "[SIGNUP] Using fallback manufacturer creation (migration not applied yet)"
-          );
-          try {
-            await prisma.manufacturer.create({
-              data: {
-                id: user.id,
-                userId: user.id,
-                name: companyName,
-                verified: false,
-              },
-            });
-          } catch (fallbackErr) {
-            // Clean up user if manufacturer creation fails
-            await prisma.user.delete({ where: { id: user.id } });
-            throw fallbackErr;
-          }
-        } else {
-          throw manufacturerErr;
-        }
+        // Clean up user if manufacturer creation fails
+        await prisma.user.delete({ where: { id: user.id } });
+        console.error("[SIGNUP] Manufacturer creation failed:", manufacturerErr.message);
+        throw manufacturerErr;
       }
     }
 
