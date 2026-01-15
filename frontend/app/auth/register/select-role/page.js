@@ -4,11 +4,11 @@ import { useState } from "react";
 
 /**
  * Role Intent Picker Page
- * 
+ *
  * This is Step 1 of the signup flow.
  * Users select their intent (Consumer or Manufacturer)
  * which determines what happens in Step 2 (actual signup form)
- * 
+ *
  * Flow:
  * 1. User selects "I want to verify products" → CONSUMER
  * 2. User selects "I own/manufacture products" → MANUFACTURER
@@ -23,7 +23,7 @@ export default function SelectRolePage() {
   const handleRoleSelect = (role) => {
     setIsTransitioning(true);
     setSelectedRole(role);
-    
+
     // Redirect to signup form with role query param
     setTimeout(() => {
       router.push(`/auth/register?role=${role}`);
@@ -74,25 +74,34 @@ export default function SelectRolePage() {
               selectedRole === "consumer"
                 ? "ring-2 ring-genuine ring-offset-2 dark:ring-offset-gray-900"
                 : "hover:shadow-xl"
-            } ${isTransitioning && selectedRole !== "consumer" ? "opacity-50" : ""}`}
+            } ${
+              isTransitioning && selectedRole !== "consumer" ? "opacity-50" : ""
+            }`}
             style={{
-              background: selectedRole === "consumer"
-                ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
-                : "linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%)"
+              background:
+                selectedRole === "consumer"
+                  ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                  : "linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%)",
             }}
           >
             {/* Animated background blur for dark mode */}
-            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
-              selectedRole !== "consumer" ? "dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800" : ""
-            }`}></div>
+            <div
+              className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${
+                selectedRole !== "consumer"
+                  ? "dark:bg-gradient-to-br dark:from-gray-700 dark:to-gray-800"
+                  : ""
+              }`}
+            ></div>
 
             {/* Content */}
             <div className="relative z-10 text-left">
-              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${
-                selectedRole === "consumer"
-                  ? "bg-white/20"
-                  : "bg-genuine/10 dark:bg-genuine/20"
-              }`}>
+              <div
+                className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${
+                  selectedRole === "consumer"
+                    ? "bg-white/20"
+                    : "bg-genuine/10 dark:bg-genuine/20"
+                }`}
+              >
                 <svg
                   className={`w-7 h-7 ${
                     selectedRole === "consumer"
@@ -112,52 +121,85 @@ export default function SelectRolePage() {
                 </svg>
               </div>
 
-              <h2 className={`text-2xl font-bold mb-2 ${
-                selectedRole === "consumer"
-                  ? "text-white"
-                  : "text-gray-900 dark:text-white"
-              }`}>
+              <h2
+                className={`text-2xl font-bold mb-2 ${
+                  selectedRole === "consumer"
+                    ? "text-white"
+                    : "text-gray-900 dark:text-white"
+                }`}
+              >
                 Verify Products
               </h2>
 
-              <p className={`text-sm mb-6 leading-relaxed ${
-                selectedRole === "consumer"
-                  ? "text-green-50"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}>
-                Scan QR codes to verify product authenticity and see AI-powered insights about brand safety.
+              <p
+                className={`text-sm mb-6 leading-relaxed ${
+                  selectedRole === "consumer"
+                    ? "text-green-50"
+                    : "text-gray-600 dark:text-gray-400"
+                }`}
+              >
+                Scan QR codes to verify product authenticity and see AI-powered
+                insights about brand safety.
               </p>
 
-              <div className={`space-y-2 text-sm ${
-                selectedRole === "consumer"
-                  ? "text-green-50"
-                  : "text-gray-700 dark:text-gray-300"
-              }`}>
+              <div
+                className={`space-y-2 text-sm ${
+                  selectedRole === "consumer"
+                    ? "text-green-50"
+                    : "text-gray-700 dark:text-gray-300"
+                }`}
+              >
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Instant authenticity checks
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   View product details
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Report suspicious items
                 </div>
               </div>
 
-              <div className={`mt-6 inline-block px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                selectedRole === "consumer"
-                  ? "bg-white/20 text-white"
-                  : "bg-genuine/10 dark:bg-genuine/20 text-genuine dark:text-green-400"
-              }`}>
+              <div
+                className={`mt-6 inline-block px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                  selectedRole === "consumer"
+                    ? "bg-white/20 text-white"
+                    : "bg-genuine/10 dark:bg-genuine/20 text-genuine dark:text-green-400"
+                }`}
+              >
                 {selectedRole === "consumer" ? "✓ Selected" : "Get Started"}
               </div>
             </div>
@@ -171,20 +213,27 @@ export default function SelectRolePage() {
               selectedRole === "manufacturer"
                 ? "ring-2 ring-blue-600 ring-offset-2 dark:ring-offset-gray-900"
                 : "hover:shadow-xl"
-            } ${isTransitioning && selectedRole !== "manufacturer" ? "opacity-50" : ""}`}
+            } ${
+              isTransitioning && selectedRole !== "manufacturer"
+                ? "opacity-50"
+                : ""
+            }`}
             style={{
-              background: selectedRole === "manufacturer"
-                ? "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)"
-                : "linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%)"
+              background:
+                selectedRole === "manufacturer"
+                  ? "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)"
+                  : "linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%)",
             }}
           >
             {/* Content */}
             <div className="relative z-10 text-left">
-              <div className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${
-                selectedRole === "manufacturer"
-                  ? "bg-white/20"
-                  : "bg-blue-600/10 dark:bg-blue-500/20"
-              }`}>
+              <div
+                className={`w-14 h-14 rounded-xl flex items-center justify-center mb-4 ${
+                  selectedRole === "manufacturer"
+                    ? "bg-white/20"
+                    : "bg-blue-600/10 dark:bg-blue-500/20"
+                }`}
+              >
                 <svg
                   className={`w-7 h-7 ${
                     selectedRole === "manufacturer"
@@ -204,52 +253,85 @@ export default function SelectRolePage() {
                 </svg>
               </div>
 
-              <h2 className={`text-2xl font-bold mb-2 ${
-                selectedRole === "manufacturer"
-                  ? "text-white"
-                  : "text-gray-900 dark:text-white"
-              }`}>
+              <h2
+                className={`text-2xl font-bold mb-2 ${
+                  selectedRole === "manufacturer"
+                    ? "text-white"
+                    : "text-gray-900 dark:text-white"
+                }`}
+              >
                 Own/Manufacture Products
               </h2>
 
-              <p className={`text-sm mb-6 leading-relaxed ${
-                selectedRole === "manufacturer"
-                  ? "text-blue-50"
-                  : "text-gray-600 dark:text-gray-400"
-              }`}>
-                Protect your brand with verification codes, monitor counterfeits, and get AI-powered supply chain insights.
+              <p
+                className={`text-sm mb-6 leading-relaxed ${
+                  selectedRole === "manufacturer"
+                    ? "text-blue-50"
+                    : "text-gray-600 dark:text-gray-400"
+                }`}
+              >
+                Protect your brand with verification codes, monitor
+                counterfeits, and get AI-powered supply chain insights.
               </p>
 
-              <div className={`space-y-2 text-sm ${
-                selectedRole === "manufacturer"
-                  ? "text-blue-50"
-                  : "text-gray-700 dark:text-gray-300"
-              }`}>
+              <div
+                className={`space-y-2 text-sm ${
+                  selectedRole === "manufacturer"
+                    ? "text-blue-50"
+                    : "text-gray-700 dark:text-gray-300"
+                }`}
+              >
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Generate verification codes
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   Monitor verifications
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   AI-powered insights & alerts
                 </div>
               </div>
 
-              <div className={`mt-6 inline-block px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
-                selectedRole === "manufacturer"
-                  ? "bg-white/20 text-white"
-                  : "bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
-              }`}>
+              <div
+                className={`mt-6 inline-block px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${
+                  selectedRole === "manufacturer"
+                    ? "bg-white/20 text-white"
+                    : "bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                }`}
+              >
                 {selectedRole === "manufacturer" ? "✓ Selected" : "Get Started"}
               </div>
             </div>

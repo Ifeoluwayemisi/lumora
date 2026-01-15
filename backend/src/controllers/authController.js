@@ -26,7 +26,7 @@ const BCRYPT_SALT = parseInt(process.env.BCRYPT_SALT || "10");
 /**
  * Signup endpoint
  * Creates a new user account (consumer or manufacturer)
- * 
+ *
  * For manufacturers:
  * - Requires: name, email, password, companyName, country, phone
  * - Creates both User and Manufacturer records
@@ -113,9 +113,10 @@ export const signup = async (req, res) => {
     }
 
     return res.status(201).json({
-      message: normalizedRole === "MANUFACTURER" 
-        ? "Manufacturer account created. Please upload verification documents."
-        : "User created successfully",
+      message:
+        normalizedRole === "MANUFACTURER"
+          ? "Manufacturer account created. Please upload verification documents."
+          : "User created successfully",
       userId: user.id,
       role: normalizedRole.toLowerCase(),
     });

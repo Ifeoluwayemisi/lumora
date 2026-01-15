@@ -63,8 +63,11 @@ export default function Navbar() {
     <header className="fixed top-0 left-0 w-full z-50 backdrop-blur bg-white/80 dark:bg-gray-950/80 border-b">
       <nav className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo - Brand Identity */}
-        <Link href="/" className="font-heading text-xl font-bold text-genuine hover:text-green-300 transition-colors relative h-8 w-32 flex items-center">
-        Lumora
+        <Link
+          href="/"
+          className="font-heading text-xl font-bold text-genuine hover:text-green-300 transition-colors relative h-8 w-32 flex items-center"
+        >
+          Lumora
           {/* <Image
             src="/logo2.png"
             alt="Lumora Logo"

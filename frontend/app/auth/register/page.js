@@ -28,9 +28,11 @@ import api from "@/services/api";
  */
 function RegisterContent() {
   const router = useRouter();
-  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const searchParams = new URLSearchParams(
+    typeof window !== "undefined" ? window.location.search : ""
+  );
   const queryRole = searchParams.get("role") || "consumer";
-  
+
   const { login } = useContext(AuthContext);
   const [form, setForm] = useState({
     fullName: "",
@@ -195,11 +197,13 @@ function RegisterContent() {
       <div className="w-full max-w-md">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           {/* Header */}
-          <div className={`px-8 py-8 text-center bg-gradient-to-r ${
-            isManufacturer
-              ? "from-blue-600 to-blue-700"
-              : "from-genuine to-green-600"
-          }`}>
+          <div
+            className={`px-8 py-8 text-center bg-gradient-to-r ${
+              isManufacturer
+                ? "from-blue-600 to-blue-700"
+                : "from-genuine to-green-600"
+            }`}
+          >
             <h2 className="text-3xl font-bold text-white">Create Account</h2>
             <p className="text-white text-opacity-90 text-sm mt-1">
               {isManufacturer
@@ -343,12 +347,13 @@ function RegisterContent() {
                   {/* Info Box */}
                   <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <p className="text-sm text-blue-900 dark:text-blue-300">
-                      ℹ️ After signing up, you'll need to upload verification documents (CAC, Trademark, Regulatory approval, etc.) for NAFDAC review before generating codes.
+                      ℹ️ After signing up, you'll need to upload verification
+                      documents (CAC, Trademark, Regulatory approval, etc.) for
+                      NAFDAC review before generating codes.
                     </p>
                   </div>
                 </>
               )}
-
 
               {/* Password Input with Strength Indicator */}
               <div>

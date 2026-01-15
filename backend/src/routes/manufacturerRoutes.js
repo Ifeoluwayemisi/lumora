@@ -9,6 +9,7 @@ import {
   updateProduct,
   deleteProduct,
   addBatch,
+  getBatches,
   getManufacturerHistory,
 } from "../controllers/manufacturerController.js";
 
@@ -28,6 +29,7 @@ router.patch("/products/:id", updateProduct);
 router.delete("/products/:id", deleteProduct);
 
 // Batches & History
+router.get("/batches", getBatches);
 router.post("/batch", addBatch);
 router.get("/history", getManufacturerHistory);
 

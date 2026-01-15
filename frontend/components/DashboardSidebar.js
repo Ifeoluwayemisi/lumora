@@ -50,8 +50,8 @@ export default function DashboardSidebar({ userRole }) {
         icon: FiPackage,
       },
       {
-        href: "/dashboard/manufacturer/codes",
-        label: "Generate Codes",
+        href: "/dashboard/manufacturer/batches",
+        label: "Batches",
         icon: FiBarChart2,
       },
       {

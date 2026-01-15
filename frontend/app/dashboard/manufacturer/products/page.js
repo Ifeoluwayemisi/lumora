@@ -22,7 +22,12 @@ import Link from "next/link";
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, pages: 1 });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    pages: 1,
+  });
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -171,8 +176,18 @@ export default function ProductsPage() {
           onClick={() => openModal()}
           className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold transition-all flex items-center gap-2 w-fit"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Add Product
         </button>
@@ -208,7 +223,9 @@ export default function ProductsPage() {
         {loading ? (
           <div className="p-8 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-3 text-gray-600 dark:text-gray-400">Loading products...</p>
+            <p className="mt-3 text-gray-600 dark:text-gray-400">
+              Loading products...
+            </p>
           </div>
         ) : products.length === 0 ? (
           <div className="p-8 text-center text-gray-600 dark:text-gray-400">
@@ -317,7 +334,8 @@ export default function ProductsPage() {
             {pagination.pages > 1 && (
               <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Page {pagination.page} of {pagination.pages} ({pagination.total} total)
+                  Page {pagination.page} of {pagination.pages} (
+                  {pagination.total} total)
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -356,7 +374,9 @@ export default function ProductsPage() {
         {loading ? (
           <div className="p-8 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-3 text-gray-600 dark:text-gray-400">Loading products...</p>
+            <p className="mt-3 text-gray-600 dark:text-gray-400">
+              Loading products...
+            </p>
           </div>
         ) : products.length === 0 ? (
           <div className="p-8 text-center text-gray-600 dark:text-gray-400">
@@ -390,13 +410,17 @@ export default function ProductsPage() {
                   <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
                     {product.codeCount}
                   </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Codes</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Codes
+                  </p>
                 </div>
                 <div className="p-2 rounded bg-green-50 dark:bg-green-900/20">
                   <p className="text-lg font-bold text-green-600 dark:text-green-400">
                     {product.batchCount}
                   </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Batches</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    Batches
+                  </p>
                 </div>
                 <div className="p-2 rounded bg-gray-50 dark:bg-gray-700">
                   <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -540,11 +564,7 @@ export default function ProductsPage() {
                   disabled={submitting}
                   className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium transition-colors"
                 >
-                  {submitting
-                    ? "Saving..."
-                    : editingId
-                    ? "Update"
-                    : "Create"}
+                  {submitting ? "Saving..." : editingId ? "Update" : "Create"}
                 </button>
               </div>
             </form>
@@ -584,7 +604,8 @@ export default function ProductsPage() {
               {deleteConfirm.codeCount > 0 && (
                 <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                   <p className="text-sm text-red-700 dark:text-red-400">
-                    ⚠️ This product has {deleteConfirm.codeCount} generated code(s) and cannot be deleted.
+                    ⚠️ This product has {deleteConfirm.codeCount} generated
+                    code(s) and cannot be deleted.
                   </p>
                 </div>
               )}

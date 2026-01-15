@@ -42,6 +42,11 @@ export async function getDashboard(req, res) {
       where: { manufacturerId },
     });
 
+    // Get total batches
+    const totalBatches = await prisma.batch.count({
+      where: { manufacturerId },
+    });
+
     // Get verification count
     const totalVerifications = await prisma.verificationLog.count({
       where: { manufacturerId },
@@ -102,7 +107,10 @@ export async function getDashboard(req, res) {
           : "Code Reuse Attempt",
       message:
         alert.verificationState === "SUSPICIOUS_PATTERN"
-          ? `Multiple rapid verifications of code ${alert.code?.substring(0, 8)}...`
+          ? `Multiple rapid verifications of code ${alert.code?.substring(
+              0,
+              8
+            )}...`
           : `Code ${alert.code?.substring(0, 8)}... was already verified`,
       severity:
         alert.verificationState === "SUSPICIOUS_PATTERN" ? "high" : "medium",
@@ -114,6 +122,7 @@ export async function getDashboard(req, res) {
       stats: {
         totalProducts,
         totalCodes,
+        totalBatches,
         totalVerifications,
         suspiciousAttempts,
       },
@@ -283,11 +292,15 @@ export async function addProduct(req, res) {
     }
 
     if (name.length > 255) {
-      return res.status(400).json({ error: "Product name must be less than 255 characters" });
+      return res
+        .status(400)
+        .json({ error: "Product name must be less than 255 characters" });
     }
 
     if (description && description.length > 1000) {
-      return res.status(400).json({ error: "Description must be less than 1000 characters" });
+      return res
+        .status(400)
+        .json({ error: "Description must be less than 1000 characters" });
     }
 
     // Check manufacturer is verified
@@ -375,12 +388,16 @@ export async function updateProduct(req, res) {
         return res.status(400).json({ error: "Product name cannot be empty" });
       }
       if (name.length > 255) {
-        return res.status(400).json({ error: "Product name must be less than 255 characters" });
+        return res
+          .status(400)
+          .json({ error: "Product name must be less than 255 characters" });
       }
     }
 
     if (description && description.length > 1000) {
-      return res.status(400).json({ error: "Description must be less than 1000 characters" });
+      return res
+        .status(400)
+        .json({ error: "Description must be less than 1000 characters" });
     }
 
     // Update product
@@ -482,10 +499,12 @@ export async function deleteProduct(req, res) {
 
 /**
  * Add batch with codes - Only for verified manufacturers
+ * Enforces daily quota limits based on plan
  */
 export async function addBatch(req, res) {
   try {
     const { productId, productionDate, expiryDate, quantity } = req.body;
+    const manufacturerId = req.user.id;
 
     // Input validation
     if (!productId || !expiryDate) {
@@ -501,11 +520,61 @@ export async function addBatch(req, res) {
       });
     }
 
-    // Check manufacturer is verified
-    if (!req.user.verified) {
+    // Check manufacturer exists and is verified
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      select: {
+        id: true,
+        verified: true,
+        plan: true,
+      },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    if (!manufacturer.verified) {
       return res.status(403).json({
         error: "Unauthorized",
         message: "Your account must be verified by NAFDAC to create batches",
+      });
+    }
+
+    // Verify product exists and belongs to manufacturer
+    const product = await prisma.product.findFirst({
+      where: { id: productId, manufacturerId },
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // Check quota enforcement
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const codesGeneratedToday = await prisma.code.count({
+      where: {
+        manufacturerId,
+        createdAt: { gte: today },
+      },
+    });
+
+    // Determine daily limit based on plan
+    const dailyLimit = manufacturer.plan === "PREMIUM" ? 1000 : 50;
+
+    if (codesGeneratedToday + quantity > dailyLimit) {
+      const remaining = dailyLimit - codesGeneratedToday;
+      return res.status(429).json({
+        error: "Daily quota exceeded",
+        message: `You can generate ${remaining} more codes today. Upgrade to PREMIUM plan for unlimited codes.`,
+        quota: {
+          limit: dailyLimit,
+          used: codesGeneratedToday,
+          remaining,
+          requestedQuantity: quantity,
+        },
       });
     }
 
@@ -525,9 +594,10 @@ export async function addBatch(req, res) {
       });
     }
 
+    // Create batch and codes
     const { batch, createdCodes } = await createBatchWithCodes({
       productId,
-      manufacturerId: req.user.id,
+      manufacturerId,
       productionDate: prodDate,
       expirationDate: expDate,
       quantity,
@@ -536,20 +606,17 @@ export async function addBatch(req, res) {
     return res.status(201).json({
       message: "Batch created successfully",
       batch,
-      generatedCodes: createdCodes.length,
+      codesGenerated: createdCodes.length,
+      quota: {
+        limit: dailyLimit,
+        used: codesGeneratedToday + quantity,
+        remaining: dailyLimit - (codesGeneratedToday + quantity),
+      },
     });
   } catch (err) {
     console.error("[ADD_BATCH] Error:", err.message);
 
     // Handle specific errors
-    if (err.message?.includes("Daily code limit")) {
-      return res.status(429).json({
-        error: "Rate limited",
-        message:
-          "Daily code generation limit reached. Upgrade to PREMIUM plan to generate more codes.",
-      });
-    }
-
     if (err.code === "P2025") {
       return res.status(404).json({
         error: "Product not found",
@@ -558,6 +625,72 @@ export async function addBatch(req, res) {
 
     return res.status(500).json({
       error: "Failed to create batch",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
+ * Get manufacturer's batches
+ * Returns: list of batches with code counts, pagination support
+ */
+export async function getBatches(req, res) {
+  try {
+    const manufacturerId = req.user.id;
+    const { page = 1, limit = 20, productId } = req.query;
+
+    // Input validation
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.min(Math.max(Number(limit), 1), 100); // Clamp between 1-100
+    const skip = (pageNum - 1) * limitNum;
+
+    const where = { manufacturerId };
+    if (productId) {
+      where.productId = productId;
+    }
+
+    const [batches, total] = await Promise.all([
+      prisma.batch.findMany({
+        where,
+        include: {
+          _count: {
+            select: { codes: true },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limitNum,
+      }),
+      prisma.batch.count({ where }),
+    ]);
+
+    // Format batches for frontend
+    const formattedBatches = batches.map((batch) => ({
+      id: batch.id,
+      productId: batch.productId,
+      quantity: batch._count.codes,
+      productionDate: batch.productionDate,
+      expirationDate: batch.expirationDate,
+      createdAt: batch.createdAt,
+      updatedAt: batch.updatedAt,
+    }));
+
+    return res.status(200).json({
+      data: formattedBatches,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (err) {
+    console.error("[GET_BATCHES] Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to fetch batches",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
