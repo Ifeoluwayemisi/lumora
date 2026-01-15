@@ -55,6 +55,11 @@ export default function DashboardSidebar({ userRole }) {
         icon: FiBarChart2,
       },
       {
+        href: "/dashboard/manufacturer/codes",
+        label: "Codes",
+        icon: FiList,
+      },
+      {
         href: "/dashboard/manufacturer/profile",
         label: "Profile",
         icon: FiUsers,
