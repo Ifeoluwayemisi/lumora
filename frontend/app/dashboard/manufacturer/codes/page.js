@@ -75,7 +75,8 @@ export default function CodesPage() {
       case "VERIFIED":
         return {
           text: "Verified",
-          color: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
+          color:
+            "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
           icon: "✓",
         };
       case "SUSPICIOUS_PATTERN":
@@ -87,13 +88,15 @@ export default function CodesPage() {
       case "CODE_ALREADY_USED":
         return {
           text: "Already Used",
-          color: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300",
+          color:
+            "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300",
           icon: "🔄",
         };
       default:
         return {
           text: state || "Unknown",
-          color: "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
+          color:
+            "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300",
           icon: "•",
         };
     }
@@ -221,7 +224,9 @@ export default function CodesPage() {
                         </code>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${badge.color}`}>
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${badge.color}`}
+                        >
                           {badge.icon} {badge.text}
                         </span>
                       </td>
@@ -236,7 +241,8 @@ export default function CodesPage() {
                         {log.latitude && log.longitude ? (
                           <div>
                             <div>
-                              {log.latitude.toFixed(4)}, {log.longitude.toFixed(4)}
+                              {log.latitude.toFixed(4)},{" "}
+                              {log.longitude.toFixed(4)}
                             </div>
                             <a
                               href={`https://maps.google.com/?q=${log.latitude},${log.longitude}`}
@@ -287,8 +293,8 @@ export default function CodesPage() {
       <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
         <p className="text-sm text-blue-900 dark:text-blue-300">
           💡 <strong>Suspicious Activity:</strong> Code reuse attempts and rapid
-          verification patterns are automatically flagged. Monitor these closely as
-          they may indicate counterfeit activity.
+          verification patterns are automatically flagged. Monitor these closely
+          as they may indicate counterfeit activity.
         </p>
       </div>
     </div>

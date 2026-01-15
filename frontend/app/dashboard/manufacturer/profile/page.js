@@ -108,8 +108,7 @@ export default function ManufacturerProfilePage() {
       await fetchManufacturer();
     } catch (err) {
       console.error("[UPDATE] Error:", err);
-      const message =
-        err.response?.data?.message || "Failed to update profile";
+      const message = err.response?.data?.message || "Failed to update profile";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -274,9 +273,9 @@ export default function ManufacturerProfilePage() {
 
             <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
               <p className="text-sm text-blue-900 dark:text-blue-300">
-                ℹ️ <strong>Note:</strong> All required documents must be uploaded and
-                approved by our NAFDAC team before you can generate codes. This
-                typically takes 1-3 business days.
+                ℹ️ <strong>Note:</strong> All required documents must be
+                uploaded and approved by our NAFDAC team before you can generate
+                codes. This typically takes 1-3 business days.
               </p>
             </div>
           </div>
@@ -338,7 +337,7 @@ export default function ManufacturerProfilePage() {
                           : "bg-red-500"
                       }`}
                       style={{
-                        width: `${(manufacturer?.trustScore || 0)}%`,
+                        width: `${manufacturer?.trustScore || 0}%`,
                       }}
                     ></div>
                   </div>
@@ -374,8 +373,8 @@ export default function ManufacturerProfilePage() {
               Need Help?
             </h3>
             <p className="text-sm text-blue-800 dark:text-blue-300 mb-4">
-              If you have questions about verification or need assistance uploading
-              documents, please contact our support team.
+              If you have questions about verification or need assistance
+              uploading documents, please contact our support team.
             </p>
             <a
               href="mailto:support@lumora.com"

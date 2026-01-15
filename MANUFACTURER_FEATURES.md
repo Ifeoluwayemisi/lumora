@@ -9,6 +9,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 1. Authentication & Onboarding
 
 ### Two-Step Signup Flow
+
 - **Location**: `/auth/register/select-role`
 - **Features**:
   - Beautiful role intent picker with visual cards
@@ -17,6 +18,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
   - Redirects to role-specific registration form
 
 ### Manufacturer Registration
+
 - **Location**: `/auth/register?role=manufacturer`
 - **Fields**:
   - Email (auto-filled from intent picker)
@@ -33,6 +35,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 2. Dashboard
 
 ### Manufacturer Dashboard Overview
+
 - **Location**: `/dashboard/manufacturer`
 - **Features**:
   - Account Status Badge (Verified ✓, Pending ⏳, Rejected ✗)
@@ -52,6 +55,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
   - **Recent Alerts Section** with severity levels
 
 ### Quota System
+
 - **BASIC Plan**: 50 codes/day
 - **PREMIUM Plan**: 1000 codes/day
 - **Reset**: Midnight UTC daily
@@ -63,6 +67,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 3. Products Management
 
 ### Products List Page
+
 - **Location**: `/dashboard/manufacturer/products`
 - **Features**:
   - Desktop: Responsive table with 6 columns
@@ -83,13 +88,15 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ### Backend Product Endpoints
 
 #### GET `/manufacturer/products`
+
 - **Query Parameters**: `page`, `limit`, `search`, `category`
 - **Response**: Paginated product list with code/batch counts
 - **Auth**: Required (MANUFACTURER role)
 
 #### POST `/manufacturer/products`
+
 - **Body**: `{name, description, category, skuPrefix}`
-- **Validation**: 
+- **Validation**:
   - name: required, max 255 chars
   - description: max 1000 chars
   - Category: from predefined list
@@ -97,16 +104,19 @@ This document details all manufacturer features implemented in Lumora, the anti-
 - **Response**: Created product object
 
 #### GET `/manufacturer/products/:id`
+
 - **Response**: Single product with associated batches and code count
 - **Validation**: Ownership check
 
 #### PATCH `/manufacturer/products/:id`
+
 - **Body**: `{name, description, category, skuPrefix}`
 - **Business Rule**: Cannot edit if codes already generated
 - **Response**: Updated product
 
 #### DELETE `/manufacturer/products/:id`
-- **Business Rules**: 
+
+- **Business Rules**:
   - Cannot delete if codes generated
   - Cannot delete if batches exist
   - Returns 409 error with specific reason
@@ -117,6 +127,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 4. Batch & Code Generation
 
 ### Batches Management Page
+
 - **Location**: `/dashboard/manufacturer/batches`
 - **Features**:
   - **Quota Display**:
@@ -139,6 +150,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
   - **CSV Download**: Per batch, includes all codes
 
 ### Batch Detail Page
+
 - **Location**: `/dashboard/manufacturer/batch/:id`
 - **Features**:
   - Batch info card (product, total codes, expiration, created date)
@@ -157,6 +169,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ### Backend Batch Endpoints
 
 #### POST `/manufacturer/batch`
+
 - **Body**: `{productId, productionDate, expiryDate, quantity}`
 - **Quota Enforcement**:
   - Queries codes generated today
@@ -170,11 +183,13 @@ This document details all manufacturer features implemented in Lumora, the anti-
 - **Response**: `{batch, codesGenerated, quota}`
 
 #### GET `/manufacturer/batches`
+
 - **Query Parameters**: `page`, `limit`, `productId`
 - **Response**: Paginated batch list with code counts
 - **Auth**: Required
 
 #### GET `/manufacturer/batch/:id`
+
 - **Response**: Batch detail with all codes
   ```json
   {
@@ -192,6 +207,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
   ```
 
 #### GET `/manufacturer/batch/:id/download`
+
 - **Response**: CSV file with columns:
   - Code
   - Status
@@ -206,6 +222,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 5. Code Management & Verification History
 
 ### Codes & Verification Page
+
 - **Location**: `/dashboard/manufacturer/codes`
 - **Features**:
   - **Statistics**:
@@ -229,9 +246,10 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ### Backend Verification History
 
 #### GET `/manufacturer/history`
+
 - **Query Parameters**: `page`, `limit`, `productId`, `batchId`, `from`, `to`
 - **Response**: Verification log entries ordered by most recent
-- **Fields**: 
+- **Fields**:
   - id, code, verificationState, latitude, longitude, createdAt
 - **Auth**: Required
 
@@ -240,6 +258,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 6. Manufacturer Profile & Verification
 
 ### Profile Page
+
 - **Location**: `/dashboard/manufacturer/profile`
 - **Features**:
   - **Company Information Form**:
@@ -265,6 +284,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
   - **Support Info**: Contact support link
 
 ### Document Upload (Placeholder)
+
 - **Backend Ready**: Routes and functions for document upload
 - **Frontend**: Upload buttons for all required documents
 - **Validation**: Will verify document types and sizes
@@ -275,6 +295,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 7. Navigation & Sidebar
 
 ### Manufacturer Sidebar Menu
+
 - Dashboard
 - Products
 - Batches
@@ -282,6 +303,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 - Profile
 
 ### Dashboard Quick Actions
+
 - Generate Codes → `/dashboard/manufacturer/batches`
 - Manage Products → `/dashboard/manufacturer/products`
 - View Analytics → (Placeholder)
@@ -291,6 +313,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 8. API Response Formats
 
 ### Dashboard Response
+
 ```json
 {
   "manufacturer": {
@@ -333,6 +356,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ```
 
 ### Batch Creation Response
+
 ```json
 {
   "batch": {
@@ -358,6 +382,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 9. Business Rules & Constraints
 
 ### Product Management
+
 - ✓ Only verified manufacturers can create products
 - ✓ Cannot edit product if codes already generated
 - ✓ Cannot delete product with existing codes
@@ -366,6 +391,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 - ✓ Description max 1000 characters
 
 ### Code Generation
+
 - ✓ Only verified manufacturers can generate codes
 - ✓ BASIC plan: 50 codes/day limit
 - ✓ PREMIUM plan: 1000 codes/day limit
@@ -374,12 +400,14 @@ This document details all manufacturer features implemented in Lumora, the anti-
 - ✓ Expiration date must be in future
 
 ### Quota System
+
 - ✓ Enforced at batch creation
 - ✓ Returns 429 error if quota exceeded
 - ✓ Error includes remaining quota info
 - ✓ Quota info returned in all batch responses
 
 ### Account Status
+
 - ✓ pending_verification: Cannot generate codes
 - ✓ verified: Full access to all features
 - ✓ rejected: Account disabled, contact support
@@ -389,21 +417,25 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 10. Error Handling
 
 ### Validation Errors
+
 - Missing required fields: 400
 - Invalid data format: 400
 - Product not found: 404
 - Access denied (ownership): 403
 
 ### Business Rule Violations
+
 - Quota exceeded: 429 with quota details
 - Cannot edit/delete locked product: 409
 - Unverified manufacturer: 403
 
 ### Server Errors
+
 - Database errors: 500
 - Service unavailable: 503
 
 ### Error Response Format
+
 ```json
 {
   "error": "Short error title",
@@ -417,6 +449,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 11. Frontend Components & Pages
 
 ### Key Files
+
 - **Layout**: `/app/dashboard/manufacturer/` (shared layout)
 - **Pages**:
   - `page.js` - Dashboard overview
@@ -427,10 +460,12 @@ This document details all manufacturer features implemented in Lumora, the anti-
   - `profile/page.js` - Company info & documents
 
 ### Components
+
 - `DashboardSidebar.js` - Manufacturer navigation
 - `DashboardNav.js` - Top navigation (shared)
 
 ### Styling
+
 - Tailwind CSS
 - Dark mode support
 - Responsive design (mobile-first)
@@ -441,11 +476,13 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 12. Backend Files
 
 ### Key Endpoints
+
 - **File**: `/src/routes/manufacturerRoutes.js`
 - **Controller**: `/src/controllers/manufacturerController.js`
 - **Service**: `/src/services/manufacturerService.js`
 
 ### Functions
+
 - `getDashboard()` - Dashboard overview
 - `getProducts()` - Product list with filters
 - `getProduct()` - Single product detail
@@ -463,16 +500,19 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 13. Security Features
 
 ### Authentication
+
 - JWT-based authentication
 - Role-based middleware (MANUFACTURER role required)
 - All routes protected
 
 ### Authorization
+
 - Ownership checks on all operations
 - Manufacturer can only access their own products/batches/codes
 - Verified status validation for sensitive operations
 
 ### Data Protection
+
 - Query parameters validated
 - Request body validation
 - SQL injection prevention (Prisma ORM)
@@ -482,11 +522,13 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 14. Next Steps & Future Enhancements
 
 ### In Progress
+
 - Document upload functionality
 - QR code generation per code
 - PDF export functionality
 
 ### Planned Features
+
 - Analytics dashboard with charts
 - Batch status tracking (archived, active, expired)
 - Bulk operations (delete multiple products)
@@ -497,6 +539,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 - NAFDAC integration for approval workflow
 
 ### Admin Features Needed
+
 - Manufacturer verification approval panel
 - Document review interface
 - Trust score adjustment
@@ -509,6 +552,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 15. Testing Scenarios
 
 ### Happy Path
+
 1. ✓ Sign up as manufacturer
 2. ✓ Create product
 3. ✓ Generate batch of codes
@@ -517,6 +561,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 6. ✓ Search codes by status
 
 ### Edge Cases
+
 - [ ] Generate codes exceeding daily quota
 - [ ] Try to edit product with existing codes
 - [ ] Try to delete product with batches
@@ -525,6 +570,7 @@ This document details all manufacturer features implemented in Lumora, the anti-
 - [ ] Zero or negative quantity
 
 ### Error Handling
+
 - [ ] Network timeout during batch creation
 - [ ] File download fails
 - [ ] Search with special characters
@@ -535,18 +581,21 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 16. Deployment Status
 
 ### Frontend
+
 - Deployed: Vercel (https://lumora-x91f.vercel.app)
 - Framework: Next.js 16.0.10
 - Build: Turbopack
 - Status: ✓ Live
 
 ### Backend
+
 - Deployed: Render (https://lumoraorg.onrender.com)
 - Framework: Node.js + Express
 - Database: PostgreSQL (Prisma)
 - Status: ✓ Live
 
 ### Database
+
 - Provider: Prisma at db.prisma.io
 - Type: PostgreSQL
 - Status: ✓ Connected
@@ -565,17 +614,20 @@ This document details all manufacturer features implemented in Lumora, the anti-
 ## 18. Support & Maintenance
 
 ### Issues & Debugging
+
 - Check browser console for frontend errors
 - Check backend logs on Render dashboard
 - Check database connection in Prisma Studio
 
 ### Performance
+
 - Products pagination: 10 items/page
 - Batch codes pagination: 50 items/page
 - Verification history: 20 items/page
 - Database queries optimized with Prisma `include`
 
 ### Monitoring
+
 - Monitor daily quota resets
 - Track trust score calculations
 - Alert on suspicious pattern detection
