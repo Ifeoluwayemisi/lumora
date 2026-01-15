@@ -3,7 +3,11 @@ import { authMiddleware } from "../middleware/authMiddleware.js";
 import { roleMiddleware } from "../middleware/roleMiddleware.js";
 import {
   getDashboard,
+  getProducts,
+  getProduct,
   addProduct,
+  updateProduct,
+  deleteProduct,
   addBatch,
   getManufacturerHistory,
 } from "../controllers/manufacturerController.js";
@@ -16,8 +20,14 @@ router.use(authMiddleware, roleMiddleware("MANUFACTURER"));
 // Dashboard
 router.get("/dashboard", getDashboard);
 
-// Products & Batches
+// Products CRUD
+router.get("/products", getProducts);
 router.post("/products", addProduct);
+router.get("/products/:id", getProduct);
+router.patch("/products/:id", updateProduct);
+router.delete("/products/:id", deleteProduct);
+
+// Batches & History
 router.post("/batch", addBatch);
 router.get("/history", getManufacturerHistory);
 

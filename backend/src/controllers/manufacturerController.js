@@ -142,29 +142,184 @@ export async function getDashboard(req, res) {
 }
 
 /**
+ * Get all products for a manufacturer
+ * With pagination and search support
+ */
+export async function getProducts(req, res) {
+  try {
+    const { page = 1, limit = 10, search, category } = req.query;
+    const manufacturerId = req.user.id;
+
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.min(Math.max(Number(limit), 1), 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build where clause
+    const where = { manufacturerId };
+    if (search && search.trim()) {
+      where.OR = [
+        { name: { contains: search.trim(), mode: "insensitive" } },
+        { description: { contains: search.trim(), mode: "insensitive" } },
+      ];
+    }
+    if (category && category.trim()) {
+      where.category = category.trim();
+    }
+
+    // Fetch products with code count
+    const products = await prisma.product.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        category: true,
+        skuPrefix: true,
+        createdAt: true,
+        _count: {
+          select: { batches: true, codes: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limitNum,
+    });
+
+    // Get total count
+    const total = await prisma.product.count({ where });
+
+    // Transform response
+    const data = products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      category: p.category,
+      skuPrefix: p.skuPrefix,
+      batchCount: p._count.batches,
+      codeCount: p._count.codes,
+      createdAt: p.createdAt,
+      canEdit: p._count.codes === 0, // Can edit if no codes generated
+      canDelete: false, // Generally safer to not allow deletion
+    }));
+
+    return res.status(200).json({
+      data,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (err) {
+    console.error("[GET_PRODUCTS] Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to fetch products",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
+ * Get single product with detailed info
+ */
+export async function getProduct(req, res) {
+  try {
+    const { id } = req.params;
+    const manufacturerId = req.user.id;
+
+    const product = await prisma.product.findFirst({
+      where: { id, manufacturerId },
+      include: {
+        batches: {
+          select: {
+            id: true,
+            quantity: true,
+            expirationDate: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "desc" },
+        },
+        _count: {
+          select: { codes: true },
+        },
+      },
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    return res.status(200).json({
+      ...product,
+      codeCount: product._count.codes,
+    });
+  } catch (err) {
+    console.error("[GET_PRODUCT] Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to fetch product",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
  * Add product - Only for verified manufacturers
  */
 export async function addProduct(req, res) {
   try {
-    const { name, description } = req.body;
+    const { name, description, category, skuPrefix } = req.body;
+    const manufacturerId = req.user.id;
 
     // Input validation
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return res.status(400).json({ error: "Product name is required" });
     }
 
+    if (name.length > 255) {
+      return res.status(400).json({ error: "Product name must be less than 255 characters" });
+    }
+
+    if (description && description.length > 1000) {
+      return res.status(400).json({ error: "Description must be less than 1000 characters" });
+    }
+
     // Check manufacturer is verified
-    if (!req.user.verified) {
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      select: { verified: true },
+    });
+
+    if (!manufacturer?.verified) {
       return res.status(403).json({
         error: "Unauthorized",
         message: "Your account must be verified by NAFDAC to add products",
       });
     }
 
-    const product = await createProduct({
-      manufacturerId: req.user.id,
-      name: name.trim(),
-      description: description?.trim() || "",
+    // Create product
+    const product = await prisma.product.create({
+      data: {
+        manufacturerId,
+        name: name.trim(),
+        description: description?.trim() || null,
+        category: category?.trim() || null,
+        skuPrefix: skuPrefix?.trim() || null,
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        category: true,
+        skuPrefix: true,
+        createdAt: true,
+      },
     });
 
     return res.status(201).json({
@@ -175,6 +330,148 @@ export async function addProduct(req, res) {
     console.error("[ADD_PRODUCT] Error:", err.message);
     return res.status(500).json({
       error: "Failed to create product",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
+ * Update product - Cannot edit if codes have been generated
+ */
+export async function updateProduct(req, res) {
+  try {
+    const { id } = req.params;
+    const { name, description, category, skuPrefix } = req.body;
+    const manufacturerId = req.user.id;
+
+    // Verify product exists and belongs to manufacturer
+    const product = await prisma.product.findFirst({
+      where: { id, manufacturerId },
+      select: {
+        id: true,
+        _count: { select: { codes: true } },
+      },
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // Business rule: Cannot edit if codes already generated
+    if (product._count.codes > 0) {
+      return res.status(400).json({
+        error: "Cannot edit product",
+        message:
+          "This product cannot be edited because codes have already been generated. Create a new product instead.",
+      });
+    }
+
+    // Validate input
+    if (name && typeof name === "string") {
+      if (name.trim().length === 0) {
+        return res.status(400).json({ error: "Product name cannot be empty" });
+      }
+      if (name.length > 255) {
+        return res.status(400).json({ error: "Product name must be less than 255 characters" });
+      }
+    }
+
+    if (description && description.length > 1000) {
+      return res.status(400).json({ error: "Description must be less than 1000 characters" });
+    }
+
+    // Update product
+    const updated = await prisma.product.update({
+      where: { id },
+      data: {
+        ...(name && { name: name.trim() }),
+        ...(description && { description: description.trim() }),
+        ...(category && { category: category.trim() }),
+        ...(skuPrefix && { skuPrefix: skuPrefix.trim() }),
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        category: true,
+        skuPrefix: true,
+        createdAt: true,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Product updated successfully",
+      product: updated,
+    });
+  } catch (err) {
+    console.error("[UPDATE_PRODUCT] Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to update product",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
+ * Delete product - Cannot delete if codes or verifications exist
+ */
+export async function deleteProduct(req, res) {
+  try {
+    const { id } = req.params;
+    const manufacturerId = req.user.id;
+
+    // Verify product exists and belongs to manufacturer
+    const product = await prisma.product.findFirst({
+      where: { id, manufacturerId },
+      select: {
+        id: true,
+        name: true,
+        _count: {
+          select: { codes: true, batches: true },
+        },
+      },
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // Business rules: Cannot delete if codes or batches exist
+    if (product._count.codes > 0) {
+      return res.status(400).json({
+        error: "Cannot delete product",
+        message: "This product has generated codes and cannot be deleted",
+      });
+    }
+
+    if (product._count.batches > 0) {
+      return res.status(400).json({
+        error: "Cannot delete product",
+        message: "This product has active batches and cannot be deleted",
+      });
+    }
+
+    // Delete product
+    await prisma.product.delete({ where: { id } });
+
+    return res.status(200).json({
+      message: `Product "${product.name}" deleted successfully`,
+    });
+  } catch (err) {
+    console.error("[DELETE_PRODUCT] Error:", err.message);
+
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    return res.status(500).json({
+      error: "Failed to delete product",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
