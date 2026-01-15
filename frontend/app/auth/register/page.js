@@ -29,32 +29,37 @@ import api from "@/services/api";
 function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const queryRole = searchParams.get("role") || "consumer";
-
-  const { login } = useContext(AuthContext);
+  
+  // Get initial role from query params or default to consumer
   const [form, setForm] = useState({
     fullName: "",
     email: "",
     phone: "",
     password: "",
     confirmPassword: "",
-    role: queryRole === "manufacturer" ? "manufacturer" : "consumer",
+    role: "consumer", // Default, will be updated by useEffect
     companyName: "",
     country: "",
     agreeToTerms: false,
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const isManufacturer = form.role === "manufacturer";
 
-  // Update form role when query parameter changes
+  // Initialize role from query parameter on mount
   useEffect(() => {
-    const newRole = queryRole === "manufacturer" ? "manufacturer" : "consumer";
-    setForm((prev) => ({
-      ...prev,
-      role: newRole,
-    }));
-  }, [queryRole]);
+    if (searchParams) {
+      const queryRole = searchParams.get("role");
+      if (queryRole === "manufacturer" || queryRole === "consumer") {
+        setForm((prev) => ({
+          ...prev,
+          role: queryRole,
+        }));
+      }
+      setIsInitialized(true);
+    }
+  }, [searchParams]);
 
   /**
    * Calculate password strength
@@ -202,25 +207,34 @@ function RegisterContent() {
       </a>
 
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-          {/* Header */}
-          <div
-            className={`px-8 py-8 text-center bg-gradient-to-r ${
-              isManufacturer
-                ? "from-blue-600 to-blue-700"
-                : "from-genuine to-green-600"
-            }`}
-          >
-            <h2 className="text-3xl font-bold text-white">Create Account</h2>
-            <p className="text-white text-opacity-90 text-sm mt-1">
-              {isManufacturer
-                ? "Join as a manufacturer and protect your brand"
-                : "Join Lumora and help fight counterfeits"}
-            </p>
+        {!isInitialized ? (
+          // Loading state while params are being read
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            <div className="px-8 py-12 text-center">
+              <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading form...</p>
+            </div>
           </div>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+            {/* Header */}
+            <div
+              className={`px-8 py-8 text-center bg-gradient-to-r ${
+                isManufacturer
+                  ? "from-blue-600 to-blue-700"
+                  : "from-genuine to-green-600"
+              }`}
+            >
+              <h2 className="text-3xl font-bold text-white">Create Account</h2>
+              <p className="text-white text-opacity-90 text-sm mt-1">
+                {isManufacturer
+                  ? "Join as a manufacturer and protect your brand"
+                  : "Join Lumora and help fight counterfeits"}
+              </p>
+            </div>
 
-          {/* Form Container */}
-          <div className="p-8 max-h-[85vh] overflow-y-auto">
+            {/* Form Container */}
+            <div className="p-8 max-h-[85vh] overflow-y-auto">
             {/* Error Message */}
             {error && (
               <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
@@ -510,8 +524,9 @@ function RegisterContent() {
                 Sign in
               </a>
             </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
