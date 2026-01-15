@@ -200,7 +200,8 @@ function ManufacturerHistoryContent() {
                       Coordinates
                     </label>
                     <p className="text-gray-900 dark:text-white">
-                      {selectedItem.latitude.toFixed(4)}, {selectedItem.longitude.toFixed(4)}
+                      {selectedItem.latitude.toFixed(4)},{" "}
+                      {selectedItem.longitude.toFixed(4)}
                     </p>
                   </div>
                 )}
