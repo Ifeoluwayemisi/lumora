@@ -99,6 +99,7 @@ export default function SelectRolePage() {
             <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto">
               Choose your role to protect and verify authenticity
             </p>
+
           </div>
 
           {/* Role Selection Cards */}
@@ -111,9 +112,19 @@ export default function SelectRolePage() {
               disabled={isTransitioning}
               className={`card-glow group relative overflow-hidden rounded-2xl transition-all duration-500 transform cursor-pointer ${
                 selectedRole === "consumer" ? "active scale-100" : ""
-              } ${hoveredRole === "consumer" && selectedRole !== "manufacturer" ? "scale-105" : ""} ${
-                isTransitioning && selectedRole !== "consumer" ? "opacity-40 scale-95" : ""
-              } ${isTransitioning && selectedRole === "consumer" ? "scale-110" : ""}`}
+              } ${
+                hoveredRole === "consumer" && selectedRole !== "manufacturer"
+                  ? "scale-105"
+                  : ""
+              } ${
+                isTransitioning && selectedRole !== "consumer"
+                  ? "opacity-40 scale-95"
+                  : ""
+              } ${
+                isTransitioning && selectedRole === "consumer"
+                  ? "scale-110"
+                  : ""
+              }`}
             >
               {/* Gradient Background */}
               <div
@@ -213,14 +224,25 @@ export default function SelectRolePage() {
               disabled={isTransitioning}
               className={`card-glow group relative overflow-hidden rounded-2xl transition-all duration-500 transform cursor-pointer ${
                 selectedRole === "manufacturer" ? "active scale-100" : ""
-              } ${hoveredRole === "manufacturer" && selectedRole !== "consumer" ? "scale-105" : ""} ${
-                isTransitioning && selectedRole !== "manufacturer" ? "opacity-40 scale-95" : ""
-              } ${isTransitioning && selectedRole === "manufacturer" ? "scale-110" : ""}`}
+              } ${
+                hoveredRole === "manufacturer" && selectedRole !== "consumer"
+                  ? "scale-105"
+                  : ""
+              } ${
+                isTransitioning && selectedRole !== "manufacturer"
+                  ? "opacity-40 scale-95"
+                  : ""
+              } ${
+                isTransitioning && selectedRole === "manufacturer"
+                  ? "scale-110"
+                  : ""
+              }`}
             >
               {/* Gradient Background */}
               <div
                 className={`absolute inset-0 bg-gradient-to-br from-blue-500 via-indigo-500 to-violet-600 transition-all duration-500 ${
-                  hoveredRole === "manufacturer" || selectedRole === "manufacturer"
+                  hoveredRole === "manufacturer" ||
+                  selectedRole === "manufacturer"
                     ? "opacity-100"
                     : "opacity-80"
                 }`}
@@ -235,7 +257,8 @@ export default function SelectRolePage() {
               {/* Glow effect on hover */}
               <div
                 className={`absolute -inset-px rounded-2xl bg-gradient-to-r from-blue-400/0 via-blue-400/20 to-blue-400/0 blur-lg opacity-0 transition-opacity duration-500 ${
-                  hoveredRole === "manufacturer" || selectedRole === "manufacturer"
+                  hoveredRole === "manufacturer" ||
+                  selectedRole === "manufacturer"
                     ? "opacity-100"
                     : ""
                 }`}
@@ -302,7 +325,9 @@ export default function SelectRolePage() {
                       : "bg-white/20 text-white hover:bg-white/30"
                   }`}
                 >
-                  {selectedRole === "manufacturer" ? "✓ Selected" : "Choose Role"}
+                  {selectedRole === "manufacturer"
+                    ? "✓ Selected"
+                    : "Choose Role"}
                 </div>
               </div>
             </button>

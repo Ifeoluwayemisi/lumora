@@ -108,6 +108,7 @@ export const signup = async (req, res) => {
           verified: false,
           trustScore: 0,
           riskLevel: "MEDIUM",
+          plan: "BASIC", // Default to BASIC plan (50 codes/day)
         },
       });
     }
