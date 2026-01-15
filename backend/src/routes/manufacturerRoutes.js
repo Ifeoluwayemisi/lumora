@@ -11,6 +11,8 @@ import {
   addBatch,
   getBatches,
   getManufacturerHistory,
+  getBatchDetail,
+  downloadBatchCodes,
 } from "../controllers/manufacturerController.js";
 
 const router = express.Router();
@@ -30,6 +32,8 @@ router.delete("/products/:id", deleteProduct);
 
 // Batches & History
 router.get("/batches", getBatches);
+router.get("/batch/:id", getBatchDetail);
+router.get("/batch/:id/download", downloadBatchCodes);
 router.post("/batch", addBatch);
 router.get("/history", getManufacturerHistory);
 

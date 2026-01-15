@@ -108,6 +108,32 @@ export default function BatchesPage() {
     return products.find((p) => p.id === productId)?.name || "Unknown Product";
   };
 
+  const downloadBatchCodes = async (batchId) => {
+    try {
+      const response = await api.get(
+        `/manufacturer/batch/${batchId}/download`,
+        {
+          responseType: "blob",
+        }
+      );
+
+      // Create a blob URL and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `batch_${batchId}_codes.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentChild.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Codes downloaded successfully!");
+    } catch (err) {
+      console.error("[DOWNLOAD] Error:", err);
+      toast.error("Failed to download codes");
+    }
+  };
+
   const quotaPercentage = (quota.used / quota.limit) * 100;
 
   return (
@@ -272,9 +298,12 @@ export default function BatchesPage() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <td className="px-6 py-4">
-                      <p className="font-medium text-gray-900 dark:text-white">
+                      <Link
+                        href={`/dashboard/manufacturer/batch/${batch.id}`}
+                        className="font-medium text-gray-900 dark:text-white hover:text-green-600 dark:hover:text-green-400 transition-colors"
+                      >
                         {getProductName(batch.productId)}
-                      </p>
+                      </Link>
                       <p className="text-xs text-gray-600 dark:text-gray-400">
                         Batch ID: {batch.id.substring(0, 8)}...
                       </p>
@@ -291,17 +320,22 @@ export default function BatchesPage() {
                       {new Date(batch.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() =>
-                          toast.info(
-                            "Download feature coming soon. Download as CSV/PDF will be available shortly."
-                          )
-                        }
-                        className="px-3 py-1 text-sm rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
-                        title="Download codes"
-                      >
-                        ⬇ CSV
-                      </button>
+                      <div className="flex items-center gap-2 justify-end">
+                        <Link
+                          href={`/dashboard/manufacturer/batch/${batch.id}`}
+                          className="px-3 py-1 text-sm rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                          title="View batch details"
+                        >
+                          👁 View
+                        </Link>
+                        <button
+                          onClick={() => downloadBatchCodes(batch.id)}
+                          className="px-3 py-1 text-sm rounded-lg bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                          title="Download codes as CSV"
+                        >
+                          ⬇ CSV
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

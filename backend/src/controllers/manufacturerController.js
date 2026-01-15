@@ -700,6 +700,142 @@ export async function getBatches(req, res) {
 }
 
 /**
+ * Get batch detail with all codes
+ * Returns: batch info, product details, all associated codes
+ */
+export async function getBatchDetail(req, res) {
+  try {
+    const { id } = req.params;
+    const manufacturerId = req.user.id;
+
+    // Get batch with codes and product info
+    const batch = await prisma.batch.findFirst({
+      where: {
+        id,
+        manufacturerId, // Ensure ownership
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            category: true,
+            skuPrefix: true,
+          },
+        },
+        codes: {
+          select: {
+            id: true,
+            code: true,
+            status: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "asc" },
+        },
+        _count: {
+          select: { codes: true },
+        },
+      },
+    });
+
+    if (!batch) {
+      return res.status(404).json({ error: "Batch not found" });
+    }
+
+    return res.status(200).json({
+      batch: {
+        id: batch.id,
+        productId: batch.productId,
+        product: batch.product,
+        quantity: batch._count.codes,
+        productionDate: batch.productionDate,
+        expirationDate: batch.expirationDate,
+        createdAt: batch.createdAt,
+        codes: batch.codes, // Return all codes in batch
+      },
+    });
+  } catch (err) {
+    console.error("[GET_BATCH_DETAIL] Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to fetch batch detail",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
+ * Download batch codes as CSV
+ * Returns: CSV file with all codes in batch
+ */
+export async function downloadBatchCodes(req, res) {
+  try {
+    const { id } = req.params;
+    const manufacturerId = req.user.id;
+
+    // Get batch with codes
+    const batch = await prisma.batch.findFirst({
+      where: {
+        id,
+        manufacturerId, // Ensure ownership
+      },
+      include: {
+        product: {
+          select: {
+            name: true,
+            category: true,
+          },
+        },
+        codes: {
+          select: {
+            code: true,
+            status: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+
+    if (!batch) {
+      return res.status(404).json({ error: "Batch not found" });
+    }
+
+    // Generate CSV content
+    let csvContent =
+      "Code,Status,Created Date,Product,Batch ID,Expiration Date\n";
+
+    batch.codes.forEach((code) => {
+      const createdDate = new Date(code.createdAt).toLocaleDateString();
+      const expirationDate = new Date(
+        batch.expirationDate
+      ).toLocaleDateString();
+      csvContent += `"${code.code}","${code.status}","${createdDate}","${batch.product.name}","${id}","${expirationDate}"\n`;
+    });
+
+    // Set headers for file download
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="batch_${id}_codes.csv"`
+    );
+
+    return res.status(200).send(csvContent);
+  } catch (err) {
+    console.error("[DOWNLOAD_BATCH_CODES] Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to download codes",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
  * Get manufacturer verification history
  */
 export async function getManufacturerHistory(req, res) {
