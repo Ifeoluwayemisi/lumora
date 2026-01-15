@@ -134,6 +134,317 @@ export async function addBatch(req, res) {
 }
 
 /**
+ * Get all products owned by manufacturer
+ */
+export async function getManufacturerProducts(req, res) {
+  try {
+    const { page = 1, limit = 20, search = "" } = req.query;
+
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.min(Math.max(Number(limit), 1), 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    const where = {
+      manufacturerId: req.user.id,
+    };
+
+    // Search by product name
+    if (search) {
+      where.name = {
+        contains: search,
+        mode: "insensitive",
+      };
+    }
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        where,
+        include: {
+          batches: {
+            select: {
+              id: true,
+              batchNumber: true,
+              expirationDate: true,
+              createdAt: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limitNum,
+      }),
+      prisma.product.count({ where }),
+    ]);
+
+    // Enrich with batch count
+    const enrichedProducts = products.map((product) => ({
+      ...product,
+      batchCount: product.batches.length,
+      latestBatch: product.batches[0] || null,
+    }));
+
+    return res.status(200).json({
+      data: enrichedProducts,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (err) {
+    console.error("[GET_PRODUCTS] Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to fetch products",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
+ * Get all batches owned by manufacturer
+ */
+export async function getManufacturerBatches(req, res) {
+  try {
+    const { page = 1, limit = 20, productId, status } = req.query;
+
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.min(Math.max(Number(limit), 1), 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    const where = {
+      manufacturerId: req.user.id,
+    };
+
+    if (productId) {
+      where.productId = productId;
+    }
+
+    // Filter by expiration status
+    if (status === "expired") {
+      where.expirationDate = {
+        lt: new Date(),
+      };
+    } else if (status === "expiring") {
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      where.expirationDate = {
+        gte: new Date(),
+        lte: thirtyDaysFromNow,
+      };
+    } else if (status === "active") {
+      const thirtyDaysFromNow = new Date();
+      thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      where.expirationDate = {
+        gt: thirtyDaysFromNow,
+      };
+    }
+
+    const [batches, total] = await Promise.all([
+      prisma.batch.findMany({
+        where,
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+            },
+          },
+          codes: {
+            select: {
+              id: true,
+              isUsed: true,
+              usedCount: true,
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limitNum,
+      }),
+      prisma.batch.count({ where }),
+    ]);
+
+    // Enrich with code statistics
+    const enrichedBatches = batches.map((batch) => {
+      const totalCodes = batch.codes.length;
+      const usedCodes = batch.codes.filter((c) => c.isUsed).length;
+      const unusedCodes = totalCodes - usedCodes;
+      const isExpired = batch.expirationDate < new Date();
+      const daysUntilExpiry = Math.ceil(
+        (batch.expirationDate - new Date()) / (1000 * 60 * 60 * 24)
+      );
+
+      return {
+        ...batch,
+        codeStats: {
+          total: totalCodes,
+          used: usedCodes,
+          unused: unusedCodes,
+          usagePercentage: totalCodes > 0 ? (usedCodes / totalCodes) * 100 : 0,
+        },
+        status: isExpired ? "expired" : daysUntilExpiry <= 30 ? "expiring" : "active",
+        daysUntilExpiry: Math.max(daysUntilExpiry, 0),
+      };
+    });
+
+    return res.status(200).json({
+      data: enrichedBatches,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (err) {
+    console.error("[GET_BATCHES] Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to fetch batches",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
+ * Get specific product details with all batches
+ */
+export async function getProductDetails(req, res) {
+  try {
+    const { productId } = req.params;
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        batches: {
+          include: {
+            codes: {
+              select: {
+                id: true,
+                codeValue: true,
+                isUsed: true,
+                usedAt: true,
+                usedCount: true,
+                qrImagePath: true,
+                createdAt: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // Check ownership
+    if (product.manufacturerId !== req.user.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Enrich with statistics
+    const stats = {
+      totalBatches: product.batches.length,
+      totalCodes: 0,
+      usedCodes: 0,
+      unusedCodes: 0,
+      verificationCount: 0,
+    };
+
+    product.batches.forEach((batch) => {
+      stats.totalCodes += batch.codes.length;
+      stats.usedCodes += batch.codes.filter((c) => c.isUsed).length;
+      stats.unusedCodes += batch.codes.filter((c) => !c.isUsed).length;
+    });
+
+    return res.status(200).json({
+      product,
+      stats,
+    });
+  } catch (err) {
+    console.error("[GET_PRODUCT_DETAILS] Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to fetch product details",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
+ * Delete product (soft delete - archive)
+ */
+export async function deleteProduct(req, res) {
+  try {
+    const { productId } = req.params;
+
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // Check ownership
+    if (product.manufacturerId !== req.user.id) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    // Check if product has unused codes
+    const unusedCodes = await prisma.code.count({
+      where: {
+        batch: {
+          productId: productId,
+        },
+        isUsed: false,
+      },
+    });
+
+    if (unusedCodes > 0) {
+      return res.status(400).json({
+        error: "Cannot delete product with unused codes",
+        message: `This product has ${unusedCodes} unused codes. Archive batches or use all codes before deletion.`,
+      });
+    }
+
+    // Delete product
+    await prisma.product.delete({
+      where: { id: productId },
+    });
+
+    return res.status(200).json({
+      message: "Product deleted successfully",
+    });
+  } catch (err) {
+    console.error("[DELETE_PRODUCT] Error:", err.message);
+
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    return res.status(500).json({
+      error: "Failed to delete product",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
  * Get manufacturer verification history
  */
 export async function getManufacturerHistory(req, res) {

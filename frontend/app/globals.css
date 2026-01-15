@@ -60,6 +60,10 @@ body {
   background: transparent;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 
 :root {
   --background: #ffffff;
