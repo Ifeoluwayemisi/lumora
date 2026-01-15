@@ -1,5 +1,5 @@
 "use client";
-import { useState, useContext } from "react";
+import { useState, useContext, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { AuthContext } from "@/context/AuthContext";
 import { toast } from "react-toastify";
@@ -24,7 +24,7 @@ import api from "@/services/api";
  * - /dashboard/manufacturer (manufacturer role)
  * - /dashboard/user (user role)
  */
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
   const { login } = useContext(AuthContext);
   const [form, setForm] = useState({
@@ -413,5 +413,22 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-green-50 dark:bg-gray-900">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-genuine"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
   );
 }
