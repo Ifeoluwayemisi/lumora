@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export default function VerificationResultPage() {
+function VerificationResultContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const code = searchParams.get("code");
@@ -33,4 +33,18 @@ export default function VerificationResultPage() {
     );
 
   return null;
+}
+
+export default function VerificationResultPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen dark:bg-gray-900">
+          <p className="text-center dark:text-white">Loading verification result...</p>
+        </div>
+      }
+    >
+      <VerificationResultContent />
+    </Suspense>
+  );
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import api from "@/services/api";
 import { getLocationPermission } from "@/utils/geolocation";
 
-export default function ReportPage() {
+function ReportContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get("code") || "";
@@ -315,5 +315,22 @@ export default function ReportPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ReportPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading report form...</p>
+          </div>
+        </div>
+      }
+    >
+      <ReportContent />
+    </Suspense>
   );
 }

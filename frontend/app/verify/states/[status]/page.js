@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import api from "@/services/api";
@@ -10,7 +10,7 @@ import Invalid from "../Invalid";
 import Suspicious from "../Suspicious";
 import Unregistered from "../Unregistered";
 
-export default function StatePage() {
+function StatePageContent() {
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
   const isReverify = searchParams.get("reverify") === "true";
@@ -161,4 +161,21 @@ export default function StatePage() {
       </div>
     );
   }
+}
+
+export default function StatePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen dark:bg-gray-900">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading verification status...</p>
+          </div>
+        </div>
+      }
+    >
+      <StatePageContent />
+    </Suspense>
+  );
 }
