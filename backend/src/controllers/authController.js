@@ -1,0 +1,310 @@
+import prisma from "../models/prismaClient.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
+
+// Validate email configuration
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  console.warn(
+    "⚠️  Email service not configured - password reset emails will not be sent"
+  );
+}
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const BCRYPT_SALT = parseInt(process.env.BCRYPT_SALT || "10");
+
+/**
+ * Signup endpoint
+ * Creates a new user account
+ */
+export const signup = async (req, res) => {
+  const { name, email, password, role } = req.body;
+
+  // Input validation
+  if (!name || !email || !password) {
+    return res.status(400).json({
+      error: "Missing required fields",
+      required: ["name", "email", "password"],
+    });
+  }
+
+  if (password.length < 8) {
+    return res
+      .status(400)
+      .json({ error: "Password must be at least 8 characters long" });
+  }
+
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: "Invalid email format" });
+  }
+
+  try {
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(409).json({ error: "Email already registered" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_SALT);
+
+    // Map frontend roles to Prisma enum values
+    const roleMap = {
+      user: "CONSUMER",
+      consumer: "CONSUMER",
+      manufacturer: "MANUFACTURER",
+      admin: "ADMIN",
+      nafdac: "NAFDAC",
+    };
+
+    const normalizedRole = roleMap[role?.toLowerCase()] || "CONSUMER";
+
+    // Create the User
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        role: normalizedRole,
+      },
+    });
+
+    // If role is MANUFACTURER, auto-create a Manufacturer record
+    if (normalizedRole === "MANUFACTURER") {
+      await prisma.manufacturer.create({
+        data: {
+          id: user.id,
+          userId: user.id,
+          name: user.name,
+        },
+      });
+    }
+
+    return res.status(201).json({
+      message: "User created successfully",
+      userId: user.id,
+      role: normalizedRole.toLowerCase(),
+    });
+  } catch (error) {
+    console.error("[SIGNUP] Error:", error.message);
+
+    if (error.code === "P2002") {
+      return res.status(409).json({ error: "Email already registered" });
+    }
+
+    return res.status(500).json({
+      error: "Signup failed",
+      message:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Please try again later",
+    });
+  }
+};
+
+/**
+ * Login endpoint
+ * Authenticates user and returns JWT token
+ */
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      error: "Missing required fields",
+      required: ["email", "password"],
+    });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      // Don't reveal if email exists
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+    );
+
+    // Return user object with token (matching frontend expectations)
+    return res.status(200).json({
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role.toLowerCase(),
+        verified: user.verified,
+      },
+    });
+  } catch (error) {
+    console.error("[LOGIN] Error:", error.message);
+    return res.status(500).json({
+      error: "Login failed",
+      message:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Please try again later",
+    });
+  }
+};
+
+/**
+ * Forgot Password endpoint
+ * Initiates password reset flow
+ */
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Always return the same message for security (don't reveal if email exists)
+    if (!user) {
+      return res.status(200).json({
+        message:
+          "If an account with that email exists, a reset link has been sent",
+      });
+    }
+
+    // Generate secure token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const tokenHash = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+    const expiry = new Date(Date.now() + 3600 * 1000); // 1 hour
+
+    // Save hashed token to database
+    await prisma.user.update({
+      where: { email },
+      data: {
+        passwordResetToken: tokenHash,
+        passwordResetExpiry: expiry,
+      },
+    });
+
+    // Send reset email
+    try {
+      const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password?token=${resetToken}`;
+      await transporter.sendMail({
+        from: `"Lumora Support" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: "Reset Your Lumora Password",
+        html: `
+          <p>You requested a password reset. Click the link below to continue:</p>
+          <a href="${resetUrl}" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+            Reset Password
+          </a>
+          <p>This link will expire in 1 hour.</p>
+          <p>If you didn't request this, please ignore this email.</p>
+        `,
+      });
+    } catch (emailError) {
+      console.error("[FORGOT_PASSWORD] Email send failed:", emailError.message);
+      // Don't fail the request, but log the error
+    }
+
+    return res.status(200).json({
+      message:
+        "If an account with that email exists, a reset link has been sent",
+    });
+  } catch (error) {
+    console.error("[FORGOT_PASSWORD] Error:", error.message);
+    return res.status(500).json({
+      error: "Request failed",
+      message:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Please try again later",
+    });
+  }
+};
+
+/**
+ * Reset Password endpoint
+ * Completes password reset with valid token
+ */
+export const resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  if (!token || !newPassword) {
+    return res.status(400).json({
+      error: "Missing required fields",
+      required: ["token", "newPassword"],
+    });
+  }
+
+  if (newPassword.length < 8) {
+    return res
+      .status(400)
+      .json({ error: "New password must be at least 8 characters long" });
+  }
+
+  try {
+    // Hash the provided token to compare with stored hash
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    // Find the user with valid token
+    const user = await prisma.user.findFirst({
+      where: {
+        passwordResetToken: tokenHash,
+        passwordResetExpiry: { gte: new Date() }, // token not expired
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid or expired reset token" });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_SALT);
+
+    // Update user password and clear reset token
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpiry: null,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Password reset successful",
+    });
+  } catch (error) {
+    console.error("[RESET_PASSWORD] Error:", error.message);
+    return res.status(500).json({
+      error: "Reset password failed",
+      message:
+        process.env.NODE_ENV === "development"
+          ? error.message
+          : "Please try again later",
+    });
+  }
+};

@@ -1,0 +1,103 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  MANUFACTURER
+  ADMIN
+}
+
+enum VerifyStatus {
+  GENUINE      // Found in our system
+  USED         // Found, but scanned count > 1 (Alert!)
+  INVALID      // Malformed or known bad pattern
+  NON_NETWORK  // Code is plausible but not registered in our system
+}
+
+enum ApprovalStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  name      String
+  avatar    String?  // For profile updates
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  manufacturer Manufacturer?
+  scans        VerificationLog[]
+}
+
+model Manufacturer {
+  id              String         @id @default(uuid())
+  userId          String         @unique
+  companyName     String
+  nafdacNumber    String         @unique
+  certificatePath String
+  status          ApprovalStatus @default(PENDING)
+  aiScore         Float?         // 0.0 - 1.0 from HuggingFace/Gemini
+  aiAnalysis      String?        // Detailed text from Gemini
+  user            User           @relation(fields: [userId], references: [id])
+  products        Product[]
+}
+
+model Product {
+  id             String       @id @default(uuid())
+  manufacturerId String
+  name           String
+  category       String       // DRUG, SKINCARE, etc.
+  description    String?
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id])
+  batches        Batch[]
+  logs           VerificationLog[]
+}
+
+model Batch {
+  id             String   @id @default(uuid())
+  productId      String
+  batchNumber    String
+  productionDate DateTime
+  expiryDate     DateTime
+  quantity       Int
+  product        Product  @relation(fields: [productId], references: [id])
+  codes          ItemCode[]
+}
+
+model ItemCode {
+  id           String            @id @default(uuid())
+  batchId      String
+  fullCode     String            @unique // The unique 12-char ID
+  qrPath       String?
+  scannedCount Int               @default(0)
+  batch        Batch             @relation(fields: [batchId], references: [id])
+  logs         VerificationLog[]
+}
+
+model VerificationLog {
+  id          String       @id @default(uuid())
+  userId      String?
+  codeId      String?      @index // Nullable for NON_NETWORK/INVALID
+  productId   String?
+  batchId     String?
+  inputCode   String       @index
+  status      VerifyStatus
+  location    Json?        // {lat, lng, city}
+  metadata    Json?        // {device, ip, platform}
+  timestamp   DateTime     @default(now())
+
+  user        User?      @relation(fields: [userId], references: [id])
+  itemCode    ItemCode?  @relation(fields: [codeId], references: [id])
+  product     Product?   @relation(fields: [productId], references: [id])
+}
