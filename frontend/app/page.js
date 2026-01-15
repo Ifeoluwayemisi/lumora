@@ -55,10 +55,7 @@ export default function LandingPage() {
       });
 
       // Store result in localStorage so result page can access it
-      localStorage.setItem(
-        "verificationResult",
-        JSON.stringify(response.data)
-      );
+      localStorage.setItem("verificationResult", JSON.stringify(response.data));
 
       // Show success feedback
       setVerified(true);
