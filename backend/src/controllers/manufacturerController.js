@@ -139,13 +139,23 @@ export async function getDashboard(req, res) {
       },
     });
   } catch (err) {
-    console.error("[GET_DASHBOARD] Error:", err.message);
+    console.error("[GET_DASHBOARD] Error Details:", {
+      message: err.message,
+      code: err.code,
+      meta: err.meta,
+      stack: err.stack,
+      manufacturerId: req.user?.id,
+    });
     return res.status(500).json({
       error: "Failed to fetch dashboard",
       message:
         process.env.NODE_ENV === "development"
-          ? err.message
+          ? `${err.message} (${err.code})`
           : "Please try again later",
+      details:
+        process.env.NODE_ENV === "development"
+          ? err.meta || err.message
+          : undefined,
     });
   }
 }
