@@ -23,6 +23,7 @@ export async function getDashboard(req, res) {
     // Get manufacturer info
     let manufacturer = null;
     try {
+      // Try to fetch with all new fields first
       manufacturer = await prisma.manufacturer.findUnique({
         where: { id: manufacturerId },
         select: {
@@ -37,13 +38,36 @@ export async function getDashboard(req, res) {
         },
       });
     } catch (dbErr) {
-      // Log specific Prisma errors
-      console.error("[GET_DASHBOARD] Prisma Error:", {
-        code: dbErr.code,
-        message: dbErr.message,
-        meta: dbErr.meta,
-      });
-      throw dbErr;
+      // If error is about unknown fields (migration not applied), try with minimal fields
+      if (dbErr.message.includes("Unknown argument") || dbErr.message.includes("Unknown column")) {
+        console.warn("[GET_DASHBOARD] Migration not applied, using fallback query");
+        try {
+          const minimalMfg = await prisma.manufacturer.findUnique({
+            where: { id: manufacturerId },
+          });
+          // Map to expected response format with defaults
+          manufacturer = {
+            id: minimalMfg?.id,
+            name: minimalMfg?.name,
+            email: minimalMfg?.email || "", // Default if field doesn't exist
+            verified: minimalMfg?.verified || false,
+            accountStatus: "pending_verification", // Default
+            trustScore: 0, // Default
+            riskLevel: "MEDIUM", // Default
+            plan: "BASIC", // Default
+          };
+        } catch (fallbackErr) {
+          console.error("[GET_DASHBOARD] Fallback query failed:", fallbackErr.message);
+          throw fallbackErr;
+        }
+      } else {
+        console.error("[GET_DASHBOARD] Prisma Error:", {
+          code: dbErr.code,
+          message: dbErr.message,
+          meta: dbErr.meta,
+        });
+        throw dbErr;
+      }
     }
 
     if (!manufacturer) {

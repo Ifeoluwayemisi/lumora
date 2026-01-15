@@ -96,21 +96,47 @@ export const signup = async (req, res) => {
         });
       }
 
-      await prisma.manufacturer.create({
-        data: {
-          id: user.id,
-          userId: user.id,
-          name: companyName,
-          email: email,
-          phone: phone || null,
-          country: country,
-          accountStatus: "pending_verification", // Set to pending until admin approves
-          verified: false,
-          trustScore: 0,
-          riskLevel: "MEDIUM",
-          plan: "BASIC", // Default to BASIC plan (50 codes/day)
-        },
-      });
+      try {
+        // Try to create with new fields first (if migration has been applied)
+        await prisma.manufacturer.create({
+          data: {
+            id: user.id,
+            userId: user.id,
+            name: companyName,
+            email: email,
+            phone: phone || null,
+            country: country,
+            accountStatus: "pending_verification",
+            verified: false,
+            trustScore: 0,
+            riskLevel: "MEDIUM",
+            plan: "BASIC",
+          },
+        });
+      } catch (manufacturerErr) {
+        // If error is about unknown fields, create with minimal fields
+        if (manufacturerErr.message.includes("Unknown argument")) {
+          console.warn(
+            "[SIGNUP] Using fallback manufacturer creation (migration not applied yet)"
+          );
+          try {
+            await prisma.manufacturer.create({
+              data: {
+                id: user.id,
+                userId: user.id,
+                name: companyName,
+                verified: false,
+              },
+            });
+          } catch (fallbackErr) {
+            // Clean up user if manufacturer creation fails
+            await prisma.user.delete({ where: { id: user.id } });
+            throw fallbackErr;
+          }
+        } else {
+          throw manufacturerErr;
+        }
+      }
     }
 
     return res.status(201).json({
