@@ -54,6 +54,12 @@ export default function LandingPage() {
         codeValue: code.trim().toUpperCase(),
       });
 
+      // Store result in localStorage so result page can access it
+      localStorage.setItem(
+        "verificationResult",
+        JSON.stringify(response.data)
+      );
+
       // Show success feedback
       setVerified(true);
       toast.success("Product verified successfully!");

@@ -573,3 +573,108 @@ export async function getDashboardSummary(req, res) {
     res.status(500).json({ message: "Failed to fetch dashboard summary" });
   }
 }
+/**
+ * PATCH /profile-picture
+ * Upload or update user profile picture
+ */
+export async function uploadProfilePicture(req, res) {
+  try {
+    const userId = req.user.id;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file provided" });
+    }
+
+    // Validate file type
+    const allowedMimes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedMimes.includes(req.file.mimetype)) {
+      return res.status(400).json({
+        message: "Invalid file type. Only JPEG, PNG, WebP, and GIF are allowed",
+      });
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (req.file.size > maxSize) {
+      return res.status(400).json({
+        message: "File size exceeds 5MB limit",
+      });
+    }
+
+    // Generate filename
+    const filename = `profile_${userId}_${Date.now()}.${
+      req.file.mimetype.split("/")[1]
+    }`;
+    const filepath = `uploads/profiles/${filename}`;
+
+    // In production, you'd use cloud storage (S3, Cloudinary, etc.)
+    // For now, store locally
+    const fs = await import("fs");
+    const path = await import("path");
+
+    const uploadsDir = path.resolve("uploads/profiles");
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const fullPath = path.join(uploadsDir, filename);
+    fs.writeFileSync(fullPath, req.file.buffer);
+
+    // Update user profile picture in database
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        profilePicture: filepath,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profilePicture: true,
+      },
+    });
+
+    res.json({
+      message: "Profile picture uploaded successfully",
+      user: updatedUser,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Failed to upload profile picture",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+    });
+  }
+}
+
+/**
+ * GET /profile
+ * Get user profile including profile picture
+ */
+export async function getUserProfile(req, res) {
+  try {
+    const userId = req.user.id;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        profilePicture: true,
+        verified: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch user profile" });
+  }
+}

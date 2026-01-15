@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import {
   getUserHistory,
   addFavorite,
@@ -15,14 +16,31 @@ import {
   updateUserSettings,
   clearUserHistory,
   getDashboardSummary,
+  uploadProfilePicture,
+  getUserProfile,
 } from "../controllers/userController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { roleMiddleware } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 // Auth first, then role
 router.use(authMiddleware, roleMiddleware("CONSUMER", "ADMIN"));
+
+// Profile endpoints
+router.get("/profile", getUserProfile);
+router.patch("/profile", updateUserProfile);
+router.patch(
+  "/profile-picture",
+  upload.single("profilePicture"),
+  uploadProfilePicture
+);
+router.patch("/password", changeUserPassword);
+router.delete("/account", deleteUserAccount);
 
 // History endpoints
 router.get("/history", getUserHistory);
@@ -37,11 +55,6 @@ router.delete("/favorite/:id", removeFavorite);
 // Notifications endpoints
 router.get("/notifications", getNotifications);
 router.patch("/notifications/:id", markNotificationRead);
-
-// Profile endpoints
-router.patch("/profile", updateUserProfile);
-router.patch("/password", changeUserPassword);
-router.delete("/account", deleteUserAccount);
 
 // Settings endpoints
 router.get("/settings", getUserSettings);

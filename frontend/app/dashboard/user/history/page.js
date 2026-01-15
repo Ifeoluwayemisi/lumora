@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FiArrowLeft } from "react-icons/fi";
+import { FiArrowLeft, FiX } from "react-icons/fi";
 import api from "@/services/api";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
@@ -13,6 +13,7 @@ export default function HistoryPage() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   const fetchHistory = async () => {
     try {
@@ -46,8 +47,25 @@ export default function HistoryPage() {
       </p>
     );
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "GENUINE":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "CODE_ALREADY_USED":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+      case "INVALID":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "SUSPICIOUS_PATTERN":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "UNREGISTERED_PRODUCT":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+    }
+  };
+
   return (
-    <AuthGuard allowedRoles={["consumer"]}>
+    <AuthGuard allowedRoles={["CONSUMER"]}>
       <DashboardSidebar userRole="consumer" />
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">
@@ -79,25 +97,32 @@ export default function HistoryPage() {
               >
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900 dark:text-white">
-                    {item.productName || item.code}
+                    {item.codeValue}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
                     Status:{" "}
-                    {item.verificationStatus || item.status || "Unknown"}
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(
+                        item.verificationState
+                      )}`}
+                    >
+                      {item.verificationState?.replace(/_/g, " ") || "Unknown"}
+                    </span>
                   </p>
                   <p className="text-xs text-gray-400">
-                    {new Date(item.createdAt).toLocaleString()}
+                    {new Date(
+                      item.createdAt || item.timestamp
+                    ).toLocaleString()}
                   </p>
+                  {item.location && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      📍 {item.location}
+                    </p>
+                  )}
                 </div>
                 <button
-                  onClick={() =>
-                    router.push(
-                      `/verify/result?code=${item.code}&status=${
-                        item.verificationStatus || item.status
-                      }`
-                    )
-                  }
-                  className="px-4 py-2 bg-genuine text-white rounded-lg text-sm hover:bg-green-600 transition font-medium whitespace-nowrap ml-4"
+                  onClick={() => setSelectedItem(item)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition font-medium whitespace-nowrap ml-4"
                 >
                   View Details
                 </button>
@@ -106,6 +131,107 @@ export default function HistoryPage() {
           </div>
         </div>
       </div>
+
+      {/* Details Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-white dark:bg-gray-800 p-6 border-b dark:border-gray-700 flex justify-between items-center">
+              <h2 className="text-2xl font-bold dark:text-white">
+                Verification Details
+              </h2>
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Code Value
+                </label>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {selectedItem.codeValue}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Verification Status
+                </label>
+                <p
+                  className={`inline-block px-3 py-1 rounded text-sm font-medium ${getStatusColor(
+                    selectedItem.verificationState
+                  )}`}
+                >
+                  {selectedItem.verificationState?.replace(/_/g, " ")}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                  Date & Time
+                </label>
+                <p className="text-gray-900 dark:text-white">
+                  {new Date(
+                    selectedItem.createdAt || selectedItem.timestamp
+                  ).toLocaleString()}
+                </p>
+              </div>
+
+              {selectedItem.location && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Location
+                  </label>
+                  <p className="text-gray-900 dark:text-white">
+                    {selectedItem.location}
+                  </p>
+                </div>
+              )}
+
+              {selectedItem.latitude !== null &&
+                selectedItem.longitude !== null && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Coordinates
+                    </label>
+                    <p className="text-gray-900 dark:text-white">
+                      {selectedItem.latitude}, {selectedItem.longitude}
+                    </p>
+                  </div>
+                )}
+
+              {selectedItem.riskScore !== null &&
+                selectedItem.riskScore !== undefined && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Risk Score
+                    </label>
+                    <p className="text-gray-900 dark:text-white">
+                      {(selectedItem.riskScore * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                )}
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 dark:bg-gray-700 p-6 border-t dark:border-gray-600">
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="w-full px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-900 dark:text-white rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition font-medium"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AuthGuard>
   );
 }

@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   /* config options here */
   onDemandEntries: {
     maxInactiveAge: 60 * 1000,
-    maxSize: 50,
   },
 };
 
