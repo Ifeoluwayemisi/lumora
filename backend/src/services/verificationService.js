@@ -26,7 +26,6 @@ export async function verifyCode({
     include: {
       batch: {
         include: {
-          product: true,
           manufacturer: true,
         },
       },
@@ -107,11 +106,33 @@ export async function verifyCode({
         data: {
           isUsed: true,
           usedAt: new Date(),
+          usedCount: {
+            increment: 1,
+          },
+          firstVerifiedAt: code.firstVerifiedAt || new Date(),
         },
       });
     } catch (updateError) {
       console.error(
         "[VERIFY] Failed to mark code as used:",
+        updateError.message
+      );
+      // Don't fail the verification if this fails
+    }
+  } else if (code && code.isUsed) {
+    // If code already used, still increment usedCount on subsequent verifications
+    try {
+      await prisma.code.update({
+        where: { id: code.id },
+        data: {
+          usedCount: {
+            increment: 1,
+          },
+        },
+      });
+    } catch (updateError) {
+      console.error(
+        "[VERIFY] Failed to increment code usage count:",
         updateError.message
       );
       // Don't fail the verification if this fails
@@ -144,16 +165,48 @@ export async function verifyCode({
     }
   }
 
-  // Return verification result
+  // Return verification result with complete product information
+  // Note: For GENUINE codes, isUsed will become true after verification, but we return the actual updated state
+  const codeIsUsedAfterVerification =
+    verificationState === "GENUINE" ? true : code?.isUsed || false;
+
   return {
     codeValue: normalizedCode,
-    product: code?.batch?.product?.name || "Unregistered Product",
-    manufacturer: code?.manufacturer?.name || null,
-    batch: code?.batch?.batchNumber || null,
-    verificationState,
-    riskScore,
-    advisory,
-    trustDecision,
-    timestamp: new Date().toISOString(),
+    product: {
+      name: "Unregistered Product",
+      description: null,
+      category: null,
+      manufacturer:
+        code?.batch?.manufacturer?.name ||
+        code?.batch?.manufacturer?.company ||
+        "Unknown",
+      manufacturerEmail: code?.batch?.manufacturer?.email || null,
+      manufacturerPhone: code?.batch?.manufacturer?.phone || null,
+    },
+    batch: {
+      batchNumber: code?.batch?.batchNumber || null,
+      expirationDate: code?.batch?.expirationDate?.toISOString() || null,
+      manufacturingDate: code?.batch?.manufacturingDate?.toISOString() || null,
+      quantity: code?.batch?.quantity || null,
+    },
+    code: {
+      codeValue: normalizedCode,
+      isUsed: codeIsUsedAfterVerification,
+      usedCount:
+        (code?.usedCount || 0) + (verificationState === "GENUINE" ? 1 : 0),
+      usedAt:
+        verificationState === "GENUINE"
+          ? new Date().toISOString()
+          : code?.usedAt?.toISOString() || null,
+      firstVerifiedAt:
+        code?.firstVerifiedAt?.toISOString() || new Date().toISOString(),
+    },
+    verification: {
+      state: verificationState,
+      riskScore,
+      advisory,
+      trustDecision,
+      timestamp: new Date().toISOString(),
+    },
   };
 }

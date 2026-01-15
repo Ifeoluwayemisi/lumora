@@ -132,7 +132,10 @@ Analyze for suspicious patterns. Return this JSON:
               advisories.push(`AI: ${parsed.advisory}`);
             }
           } catch (parseErr) {
-            console.warn("[AI_RISK] Failed to parse AI response:", parseErr.message);
+            console.warn(
+              "[AI_RISK] Failed to parse AI response:",
+              parseErr.message
+            );
             // Continue with rule-based scoring
           }
         }

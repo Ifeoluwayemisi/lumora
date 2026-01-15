@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import api from "@/services/api";
 
 /**
  * Reset Password Page Component
@@ -56,17 +57,10 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, password }),
-        }
-      );
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const response = await api.post("/auth/reset-password", {
+        token,
+        password,
+      });
 
       const msg = "Password reset successful. Redirecting to login…";
       setSuccess(msg);
@@ -76,7 +70,11 @@ export default function ResetPasswordPage() {
         router.push("/auth/login");
       }, 2000);
     } catch (err) {
-      const errorMsg = err.message || "Reset failed";
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Reset failed";
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {

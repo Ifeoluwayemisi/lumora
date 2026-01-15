@@ -1,6 +1,7 @@
 "use client";
 import { CSVLink } from "react-csv";
 import { useEffect, useState } from "react";
+import api from "@/services/api";
 
 export default function ExportCodes() {
   const [codes, setCodes] = useState([]);
@@ -9,9 +10,8 @@ export default function ExportCodes() {
   useEffect(() => {
     const fetchCodes = async () => {
       try {
-        const res = await fetch("/api/manufacturer/codes");
-        const data = await res.json();
-        setCodes(data);
+        const response = await api.get("/manufacturer/codes");
+        setCodes(response.data || []);
       } catch (err) {
         console.error(err);
       } finally {

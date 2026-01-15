@@ -3,6 +3,7 @@ import { useState, useContext, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthContext } from "@/context/AuthContext";
 import { toast } from "react-toastify";
+import api from "@/services/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,55 +28,51 @@ export default function LoginPage() {
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const response = await api.post("/auth/login", form);
+      const data = response.data;
 
-    const data = await res.json();
-    console.log("Login API response:", data); // 🔹 Debug API response
+      // Check if user exists in response
+      if (!data.user) {
+        const msg = "Login failed. Please check your credentials.";
+        setError(msg);
+        toast.error(msg);
+        return;
+      }
 
-    // Check if user exists in response
-    if (!res.ok || !data.user) {
-      const msg =
-        data.message || "Login failed. Please check your credentials.";
-      setError(msg);
-      toast.error(msg);
-      return; // stop further execution
+      // Store user data and token via AuthContext
+      await login(data.user, data.token);
+      toast.success("Login successful! Redirecting...");
+
+      // Redirect safely based on role
+      switch (data.user.role) {
+        case "manufacturer":
+          router.push("/dashboard/manufacturer");
+          break;
+        case "admin":
+          router.push("/dashboard/admin");
+          break;
+        default:
+          router.push("/dashboard/user");
+          break;
+      }
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "An unexpected error occurred. Please try again.";
+      setError(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setLoading(false);
     }
-
-    // Store user data and token via AuthContext
-    await login(data.user, data.token);
-    toast.success("Login successful! Redirecting...");
-
-    // Redirect safely based on role
-    switch (data.user.role) {
-      case "manufacturer":
-        router.push("/dashboard/manufacturer");
-        break;
-      case "admin":
-        router.push("/dashboard/admin");
-        break;
-      default:
-        router.push("/dashboard/user");
-        break;
-    }
-  } catch (err) {
-    const errorMsg =
-      err.message || "An unexpected error occurred. Please try again.";
-    setError(errorMsg);
-    toast.error(errorMsg);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-50 dark:bg-gray-900 px-4 py-16">

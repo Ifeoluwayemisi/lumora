@@ -5,6 +5,27 @@ export default function UnregisteredProduct({ code }) {
   const router = useRouter();
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      {/* Back Button */}
+      <button
+        onClick={() => router.push("/verify")}
+        className="fixed top-4 left-4 p-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors shadow-sm"
+        aria-label="Back to verify"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+
       <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
         {/* Warning Icon */}
         <div className="text-center mb-6">
@@ -50,10 +71,14 @@ export default function UnregisteredProduct({ code }) {
             ← Try Another Code
           </button>
           <button
-            onClick={() => (window.location.href = "/support")}
-            className="w-full px-4 py-3 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+            onClick={() =>
+              router.push(
+                `/report?code=${encodeURIComponent(code)}&type=unregistered`
+              )
+            }
+            className="w-full px-4 py-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition"
           >
-            📞 Report Issue
+            🚩 Report Counterfeit
           </button>
         </div>
 

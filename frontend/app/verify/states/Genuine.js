@@ -1,10 +1,15 @@
 "use client";
-import ExpiryBadge from "@/components/ExpiryBadge";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
 
-export default function Genuine({ code, product }) {
+export default function Genuine({
+  code,
+  product,
+  batch,
+  verification,
+  codeInfo,
+}) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -35,6 +40,27 @@ export default function Genuine({ code, product }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      {/* Back Button */}
+      <button
+        onClick={() => router.push("/verify")}
+        className="fixed top-4 left-4 p-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors shadow-sm"
+        aria-label="Back to verify"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </button>
+
       <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
         {/* Success Icon */}
         <div className="text-center mb-6">
@@ -60,6 +86,26 @@ export default function Genuine({ code, product }) {
                 {product.name || "N/A"}
               </p>
             </div>
+            {product.description && (
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Description
+                </p>
+                <p className="text-sm text-gray-900 dark:text-white">
+                  {product.description}
+                </p>
+              </div>
+            )}
+            {product.category && (
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Category
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {product.category}
+                </p>
+              </div>
+            )}
             {product.manufacturer && (
               <div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -70,18 +116,65 @@ export default function Genuine({ code, product }) {
                 </p>
               </div>
             )}
-            {product.batch && (
+            {product.manufacturerEmail && (
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Manufacturer Email
+                </p>
+                <p className="text-sm text-gray-900 dark:text-white break-all">
+                  {product.manufacturerEmail}
+                </p>
+              </div>
+            )}
+            {product.manufacturerPhone && (
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Manufacturer Phone
+                </p>
+                <p className="text-sm text-gray-900 dark:text-white">
+                  {product.manufacturerPhone}
+                </p>
+              </div>
+            )}
+            {batch && batch.batchNumber && (
               <div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
                   Batch Number
                 </p>
                 <p className="font-semibold text-gray-900 dark:text-white">
-                  {product.batch}
+                  {batch.batchNumber}
                 </p>
               </div>
             )}
-            {product.expiryDate && (
-              <ExpiryBadge expiryDate={product.expiryDate} />
+            {batch && batch.expirationDate && (
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Expiration Date
+                </p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {new Date(batch.expirationDate).toLocaleDateString()}
+                </p>
+              </div>
+            )}
+            {batch && batch.manufacturingDate && (
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Manufacturing Date
+                </p>
+                <p className="text-sm text-gray-900 dark:text-white">
+                  {new Date(batch.manufacturingDate).toLocaleDateString()}
+                </p>
+              </div>
+            )}
+            {batch && batch.quantity && (
+              <div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Batch Quantity
+                </p>
+                <p className="text-sm text-gray-900 dark:text-white">
+                  {batch.quantity} units
+                </p>
+              </div>
             )}
           </div>
         )}

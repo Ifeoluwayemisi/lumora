@@ -47,6 +47,11 @@ export async function verifyManual(req, res, next) {
   try {
     const { codeValue, latitude, longitude } = req.body;
 
+    console.log("[VERIFY_MANUAL] Location data received:", {
+      latitude,
+      longitude,
+    });
+
     // Input validation
     if (!codeValue || typeof codeValue !== "string") {
       return res.status(400).json({

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "react-toastify";
+import api from "@/services/api";
 
 /**
  * Forgot Password Page Component
@@ -29,23 +30,19 @@ export default function ForgotPasswordPage() {
     setSuccess("");
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
+      const response = await api.post("/auth/forgot-password", { email });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
-      const msg = "If this email exists, a password reset link has been sent.";
+      const msg =
+        response.data?.message ||
+        "If this email exists, a password reset link has been sent.";
       setSuccess(msg);
       toast.success(msg);
     } catch (err) {
-      const errorMsg = err.message || "Something went wrong";
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Something went wrong";
       setError(errorMsg);
       toast.error(errorMsg);
     } finally {
@@ -55,6 +52,27 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-50 dark:bg-gray-900 px-4">
+      {/* Back Button */}
+      <a
+        href="/auth/login"
+        className="fixed top-4 left-4 p-2 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors shadow-sm"
+        aria-label="Back to login"
+      >
+        <svg
+          className="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </a>
+
       <div className="max-w-md w-full bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg">
         <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-4">
           Forgot Password

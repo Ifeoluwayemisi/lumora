@@ -1,20 +1,28 @@
 "use client";
 import { useState } from "react";
 import QRCode from "qrcode.react";
+import api from "@/services/api";
+import { toast } from "react-toastify";
 
 export default function GenerateBatch({ dailyLimit, codesToday }) {
   const [batchSize, setBatchSize] = useState(1);
   const [generated, setGenerated] = useState([]);
 
   const generateCodes = async () => {
-    const res = await fetch("/api/manufacturer/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ count: batchSize }),
-    });
-    const data = await res.json();
-    if (!res.ok) alert(data.message || "Error generating codes");
-    else setGenerated(data.codes);
+    try {
+      const response = await api.post("/manufacturer/generate", {
+        count: batchSize,
+      });
+      setGenerated(response.data?.codes || []);
+      toast.success("Codes generated successfully!");
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Error generating codes";
+      toast.error(errorMsg);
+    }
   };
 
   return (

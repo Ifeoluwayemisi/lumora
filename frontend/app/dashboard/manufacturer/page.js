@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import api from "@/services/api";
 import {
   BarChart,
   Bar,
@@ -16,9 +17,8 @@ export default function ManufacturerDashboard() {
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const res = await fetch("/api/manufacturer/dashboard-summary");
-        const data = await res.json();
-        setSummary(data);
+        const response = await api.get("/manufacturer/dashboard-summary");
+        setSummary(response.data);
       } catch (err) {
         console.error(err);
       } finally {
