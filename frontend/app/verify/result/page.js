@@ -40,7 +40,9 @@ export default function VerificationResultPage() {
     <Suspense
       fallback={
         <div className="flex items-center justify-center min-h-screen dark:bg-gray-900">
-          <p className="text-center dark:text-white">Loading verification result...</p>
+          <p className="text-center dark:text-white">
+            Loading verification result...
+          </p>
         </div>
       }
     >
