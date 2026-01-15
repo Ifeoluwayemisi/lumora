@@ -1,6 +1,6 @@
 "use client";
-import { useState, useContext, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useContext, Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AuthContext } from "@/context/AuthContext";
 import { toast } from "react-toastify";
 import api from "@/services/api";
@@ -28,9 +28,7 @@ import api from "@/services/api";
  */
 function RegisterContent() {
   const router = useRouter();
-  const searchParams = new URLSearchParams(
-    typeof window !== "undefined" ? window.location.search : ""
-  );
+  const searchParams = useSearchParams();
   const queryRole = searchParams.get("role") || "consumer";
 
   const { login } = useContext(AuthContext);
@@ -48,6 +46,15 @@ function RegisterContent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const isManufacturer = form.role === "manufacturer";
+
+  // Update form role when query parameter changes
+  useEffect(() => {
+    const newRole = queryRole === "manufacturer" ? "manufacturer" : "consumer";
+    setForm((prev) => ({
+      ...prev,
+      role: newRole,
+    }));
+  }, [queryRole]);
 
   /**
    * Calculate password strength
