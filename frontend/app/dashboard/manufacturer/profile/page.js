@@ -64,6 +64,8 @@ export default function ManufacturerProfilePage() {
   const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [manufacturer, setManufacturer] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [uploadingDoc, setUploadingDoc] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -75,7 +77,17 @@ export default function ManufacturerProfilePage() {
 
   useEffect(() => {
     fetchManufacturer();
+    fetchDocuments();
   }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      const response = await api.get("/manufacturer/documents");
+      setDocuments(response.data.documents);
+    } catch (err) {
+      console.error("[DOCUMENTS] Fetch error:", err);
+    }
+  };
 
   const fetchManufacturer = async () => {
     setLoading(true);
@@ -113,6 +125,35 @@ export default function ManufacturerProfilePage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleDocumentUpload = async (documentType, file) => {
+    if (!file) return;
+
+    setUploadingDoc(documentType);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("documentType", documentType);
+
+      const response = await api.post("/manufacturer/documents/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success(`${documentType} uploaded successfully`);
+      await fetchDocuments();
+    } catch (err) {
+      console.error("[UPLOAD] Error:", err);
+      const message = err.response?.data?.message || "Upload failed";
+      toast.error(message);
+    } finally {
+      setUploadingDoc(null);
+    }
+  };
+
+  const getDocumentStatus = (docType) => {
+    const doc = documents.find((d) => d.type === docType);
+    return doc ? { ...doc } : null;
   };
 
   if (loading) {
@@ -261,11 +302,51 @@ export default function ManufacturerProfilePage() {
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                         {doc.description}
                       </p>
-                      <button className="text-sm px-3 py-1 rounded-lg bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
-                        Upload File
-                      </button>
+                      
+                      {/* Document Status */}
+                      {getDocumentStatus(doc.id) ? (
+                        <div className="mb-2">
+                          <span
+                            className={`px-3 py-1 text-xs rounded-full font-semibold ${
+                              getDocumentStatus(doc.id).status === "approved"
+                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                                : getDocumentStatus(doc.id).status === "rejected"
+                                ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                                : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                            }`}
+                          >
+                            {getDocumentStatus(doc.id).status === "approved" && "✓ Approved"}
+                            {getDocumentStatus(doc.id).status === "rejected" && "✗ Rejected"}
+                            {getDocumentStatus(doc.id).status === "pending_review" && "⏳ Pending Review"}
+                          </span>
+                        </div>
+                      ) : null}
+
+                      {/* File Input */}
+                      <div className="relative">
+                        <input
+                          type="file"
+                          id={`file-${doc.id}`}
+                          onChange={(e) => handleDocumentUpload(doc.id, e.target.files?.[0])}
+                          disabled={uploadingDoc === doc.id}
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor={`file-${doc.id}`}
+                          className="inline-block text-sm px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold transition-colors cursor-pointer"
+                        >
+                          {uploadingDoc === doc.id ? "Uploading..." : "Upload File"}
+                        </label>
+                      </div>
                     </div>
-                    <div className="text-3xl">📄</div>
+                    <div className="text-3xl">
+                      {getDocumentStatus(doc.id) ? (
+                        getDocumentStatus(doc.id).status === "approved" ? "✅" : "📄"
+                      ) : (
+                        "📄"
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

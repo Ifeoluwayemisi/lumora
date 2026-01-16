@@ -41,6 +41,7 @@ model Manufacturer {
   batches               Batch[]
   codes                 Code[]
   verificationLogs      VerificationLog[]
+  documents             Document[]
 
   @@index([userId])
   @@index([email])
@@ -217,4 +218,20 @@ enum VerificationState {
   INVALID
   UNREGISTERED_PRODUCT
   SUSPICIOUS_PATTERN
+}
+model Document {
+  id                String   @id @default(uuid())
+  manufacturerId    String
+  type              String   // cac, trademark, regulatory, factory, website, contract, authorization
+  filename          String
+  filepath          String
+  status            String   @default("pending_review") // pending_review, approved, rejected
+  uploadedAt        DateTime @default(now())
+  approvedAt        DateTime?
+  rejectionReason   String?
+  manufacturer      Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  @@unique([manufacturerId, type])
+  @@index([manufacturerId])
+  @@index([status])
 }
