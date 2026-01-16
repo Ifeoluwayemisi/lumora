@@ -35,6 +35,8 @@ const BCRYPT_SALT = parseInt(process.env.BCRYPT_SALT || "10");
 export const signup = async (req, res) => {
   const { name, email, password, role, companyName, country, phone } = req.body;
 
+  console.log("[SIGNUP] Received payload - role:", role, "companyName:", companyName, "country:", country);
+  
   // Input validation
   if (!name || !email || !password) {
     return res.status(400).json({
@@ -74,6 +76,7 @@ export const signup = async (req, res) => {
     };
 
     const normalizedRole = roleMap[role?.toLowerCase()] || "CONSUMER";
+    console.log("[SIGNUP] Role mapping:", { input: role, normalized: normalizedRole, companyName, country });
 
     // Create the User
     const user = await prisma.user.create({
@@ -84,6 +87,9 @@ export const signup = async (req, res) => {
         role: normalizedRole,
       },
     });
+
+    console.log("[SIGNUP] User created with role:", user.role);
+
 
     // If role is MANUFACTURER, create Manufacturer record with pending verification
     if (normalizedRole === "MANUFACTURER") {
@@ -186,6 +192,7 @@ export const login = async (req, res) => {
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
+    console.log("[LOGIN] User lookup for email:", email, "Found:", !!user, "Role:", user?.role);
     if (!user) {
       // Don't reveal if email exists
       return res.status(401).json({ error: "Invalid email or password" });
@@ -203,7 +210,7 @@ export const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
 
-    // Build user response
+    // Return user object with token (matching frontend expectations)
     const userResponse = {
       id: user.id,
       name: user.name,
@@ -211,14 +218,7 @@ export const login = async (req, res) => {
       role: user.role.toLowerCase(),
       verified: user.verified,
     };
-
-    console.log("[LOGIN] User authenticated:", {
-      email: user.email,
-      dbRole: user.role,
-      responseSent: userResponse.role,
-    });
-
-    // Return user object with token (matching frontend expectations)
+    console.log("[LOGIN] Returning user with role:", userResponse.role);
     return res.status(200).json({
       token,
       user: userResponse,

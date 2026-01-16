@@ -154,6 +154,7 @@ function RegisterContent() {
         payload.country = form.country;
       }
 
+      console.log("[SIGNUP FRONTEND] Sending payload with role:", payload.role, "isManufacturer:", isManufacturer);
       const response = await api.post("/auth/signup", payload);
 
       toast.success(
