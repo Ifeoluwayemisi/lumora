@@ -29,7 +29,7 @@ import api from "@/services/api";
 function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
+
   // Get initial role from query params or default to consumer
   const [form, setForm] = useState({
     fullName: "",
@@ -51,7 +51,9 @@ function RegisterContent() {
   useEffect(() => {
     if (searchParams) {
       const queryRole = searchParams.get("role");
+      console.log("[REGISTER PAGE] URL role param:", queryRole);
       if (queryRole === "manufacturer" || queryRole === "consumer") {
+        console.log("[REGISTER PAGE] Setting form role to:", queryRole);
         setForm((prev) => ({
           ...prev,
           role: queryRole,
@@ -154,7 +156,12 @@ function RegisterContent() {
         payload.country = form.country;
       }
 
-      console.log("[SIGNUP FRONTEND] Sending payload with role:", payload.role, "isManufacturer:", isManufacturer);
+      console.log(
+        "[SIGNUP FRONTEND] Sending payload with role:",
+        payload.role,
+        "isManufacturer:",
+        isManufacturer
+      );
       const response = await api.post("/auth/signup", payload);
 
       toast.success(
@@ -213,7 +220,9 @@ function RegisterContent() {
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
             <div className="px-8 py-12 text-center">
               <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
-              <p className="mt-4 text-gray-600 dark:text-gray-400">Loading form...</p>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">
+                Loading form...
+              </p>
             </div>
           </div>
         ) : (
@@ -236,295 +245,295 @@ function RegisterContent() {
 
             {/* Form Container */}
             <div className="p-8 max-h-[85vh] overflow-y-auto">
-            {/* Error Message */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-red-700 dark:text-red-300 text-sm font-medium">
-                  ⚠️ {error}
-                </p>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              {/* Full Name Input */}
-              <div>
-                <label
-                  htmlFor="fullName"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Full Name
-                </label>
-                <input
-                  id="fullName"
-                  type="text"
-                  name="fullName"
-                  placeholder="John Doe"
-                  value={form.fullName}
-                  onChange={handleChange}
-                  disabled={loading}
-                  required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  aria-label="Full name"
-                />
-              </div>
-
-              {/* Email Input */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  name="email"
-                  placeholder="you@example.com"
-                  value={form.email}
-                  onChange={handleChange}
-                  disabled={loading}
-                  required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  aria-label="Email address"
-                />
-              </div>
-
-              {/* Phone Input */}
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Phone Number {isManufacturer ? "" : "(Optional)"}
-                </label>
-                <input
-                  id="phone"
-                  type="tel"
-                  name="phone"
-                  placeholder="+234 (0) 123 456 7890"
-                  value={form.phone}
-                  onChange={handleChange}
-                  disabled={loading}
-                  required={isManufacturer}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  aria-label="Phone number"
-                />
-              </div>
-
-              {/* Manufacturer-Specific Fields */}
-              {isManufacturer && (
-                <>
-                  {/* Company Name */}
-                  <div>
-                    <label
-                      htmlFor="companyName"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Company Name *
-                    </label>
-                    <input
-                      id="companyName"
-                      type="text"
-                      name="companyName"
-                      placeholder="Your Company Ltd."
-                      value={form.companyName}
-                      onChange={handleChange}
-                      disabled={loading}
-                      required
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      aria-label="Company name"
-                    />
-                  </div>
-
-                  {/* Country Selection */}
-                  <div>
-                    <label
-                      htmlFor="country"
-                      className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                    >
-                      Country *
-                    </label>
-                    <select
-                      id="country"
-                      name="country"
-                      value={form.country}
-                      onChange={handleChange}
-                      disabled={loading}
-                      required
-                      className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      aria-label="Country"
-                    >
-                      <option value="">Select your country</option>
-                      <option value="Nigeria">Nigeria</option>
-                      <option value="Ghana">Ghana</option>
-                      <option value="Kenya">Kenya</option>
-                      <option value="South Africa">South Africa</option>
-                      <option value="Egypt">Egypt</option>
-                      <option value="Ethiopia">Ethiopia</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  {/* Info Box */}
-                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <p className="text-sm text-blue-900 dark:text-blue-300">
-                      ℹ️ After signing up, you'll need to upload verification
-                      documents (CAC, Trademark, Regulatory approval, etc.) for
-                      NAFDAC review before generating codes.
-                    </p>
-                  </div>
-                </>
+              {/* Error Message */}
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-red-700 dark:text-red-300 text-sm font-medium">
+                    ⚠️ {error}
+                  </p>
+                </div>
               )}
 
-              {/* Password Input with Strength Indicator */}
-              <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  name="password"
-                  placeholder="••••••••"
-                  value={form.password}
-                  onChange={handleChange}
-                  disabled={loading}
-                  required
-                  minLength={8}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  aria-label="Password"
-                  aria-describedby="password-strength"
-                />
-                {form.password && (
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                        Strength:
-                      </span>
-                      <span
-                        className={`text-xs font-bold ${
-                          passwordStrength === 0
-                            ? "text-red-600"
-                            : passwordStrength === 1
-                            ? "text-yellow-600"
-                            : passwordStrength === 2
-                            ? "text-blue-600"
-                            : "text-green-600"
-                        }`}
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                {/* Full Name Input */}
+                <div>
+                  <label
+                    htmlFor="fullName"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    id="fullName"
+                    type="text"
+                    name="fullName"
+                    placeholder="John Doe"
+                    value={form.fullName}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    aria-label="Full name"
+                  />
+                </div>
+
+                {/* Email Input */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Email Address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    value={form.email}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    aria-label="Email address"
+                  />
+                </div>
+
+                {/* Phone Input */}
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  >
+                    Phone Number {isManufacturer ? "" : "(Optional)"}
+                  </label>
+                  <input
+                    id="phone"
+                    type="tel"
+                    name="phone"
+                    placeholder="+234 (0) 123 456 7890"
+                    value={form.phone}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required={isManufacturer}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    aria-label="Phone number"
+                  />
+                </div>
+
+                {/* Manufacturer-Specific Fields */}
+                {isManufacturer && (
+                  <>
+                    {/* Company Name */}
+                    <div>
+                      <label
+                        htmlFor="companyName"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                       >
-                        {strengthLabels[passwordStrength]}
-                      </span>
+                        Company Name *
+                      </label>
+                      <input
+                        id="companyName"
+                        type="text"
+                        name="companyName"
+                        placeholder="Your Company Ltd."
+                        value={form.companyName}
+                        onChange={handleChange}
+                        disabled={loading}
+                        required
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        aria-label="Company name"
+                      />
                     </div>
-                    <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${strengthColors[passwordStrength]} transition-all duration-300`}
-                        style={{
-                          width: `${((passwordStrength + 1) / 4) * 100}%`,
-                        }}
-                      ></div>
+
+                    {/* Country Selection */}
+                    <div>
+                      <label
+                        htmlFor="country"
+                        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                      >
+                        Country *
+                      </label>
+                      <select
+                        id="country"
+                        name="country"
+                        value={form.country}
+                        onChange={handleChange}
+                        disabled={loading}
+                        required
+                        className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        aria-label="Country"
+                      >
+                        <option value="">Select your country</option>
+                        <option value="Nigeria">Nigeria</option>
+                        <option value="Ghana">Ghana</option>
+                        <option value="Kenya">Kenya</option>
+                        <option value="South Africa">South Africa</option>
+                        <option value="Egypt">Egypt</option>
+                        <option value="Ethiopia">Ethiopia</option>
+                        <option value="Other">Other</option>
+                      </select>
                     </div>
-                    <p
-                      className="text-xs text-gray-500 dark:text-gray-400 mt-1"
-                      id="password-strength"
-                    >
-                      Mix letters, numbers & symbols for strength
-                    </p>
-                  </div>
+
+                    {/* Info Box */}
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <p className="text-sm text-blue-900 dark:text-blue-300">
+                        ℹ️ After signing up, you'll need to upload verification
+                        documents (CAC, Trademark, Regulatory approval, etc.)
+                        for NAFDAC review before generating codes.
+                      </p>
+                    </div>
+                  </>
                 )}
-              </div>
 
-              {/* Confirm Password Input */}
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Confirm Password
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="••••••••"
-                  value={form.confirmPassword}
-                  onChange={handleChange}
-                  disabled={loading}
-                  required
-                  className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  aria-label="Confirm password"
-                />
-                {form.confirmPassword &&
-                  form.password !== form.confirmPassword && (
-                    <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                      ✗ Passwords do not match
-                    </p>
-                  )}
-                {form.confirmPassword &&
-                  form.password === form.confirmPassword && (
-                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                      ✓ Passwords match
-                    </p>
-                  )}
-              </div>
-
-              {/* Terms & Conditions Checkbox */}
-              <div className="flex items-start gap-3">
-                <input
-                  id="agreeToTerms"
-                  type="checkbox"
-                  name="agreeToTerms"
-                  checked={form.agreeToTerms}
-                  onChange={handleChange}
-                  disabled={loading}
-                  className="mt-1 w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-genuine focus:ring-2 focus:ring-genuine disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                  aria-label="Agree to terms and conditions"
-                />
-                <label
-                  htmlFor="agreeToTerms"
-                  className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer"
-                >
-                  I agree to the{" "}
-                  <a
-                    href="#"
-                    className="text-genuine hover:underline font-medium"
+                {/* Password Input with Strength Indicator */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
-                    Terms of Service
-                  </a>{" "}
-                  and{" "}
-                  <a
-                    href="#"
-                    className="text-genuine hover:underline font-medium"
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    placeholder="••••••••"
+                    value={form.password}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                    minLength={8}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    aria-label="Password"
+                    aria-describedby="password-strength"
+                  />
+                  {form.password && (
+                    <div className="mt-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                          Strength:
+                        </span>
+                        <span
+                          className={`text-xs font-bold ${
+                            passwordStrength === 0
+                              ? "text-red-600"
+                              : passwordStrength === 1
+                              ? "text-yellow-600"
+                              : passwordStrength === 2
+                              ? "text-blue-600"
+                              : "text-green-600"
+                          }`}
+                        >
+                          {strengthLabels[passwordStrength]}
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${strengthColors[passwordStrength]} transition-all duration-300`}
+                          style={{
+                            width: `${((passwordStrength + 1) / 4) * 100}%`,
+                          }}
+                        ></div>
+                      </div>
+                      <p
+                        className="text-xs text-gray-500 dark:text-gray-400 mt-1"
+                        id="password-strength"
+                      >
+                        Mix letters, numbers & symbols for strength
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Confirm Password Input */}
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
-                    Privacy Policy
-                  </a>
-                </label>
+                    Confirm Password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="••••••••"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    disabled={loading}
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-genuine focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    aria-label="Confirm password"
+                  />
+                  {form.confirmPassword &&
+                    form.password !== form.confirmPassword && (
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                        ✗ Passwords do not match
+                      </p>
+                    )}
+                  {form.confirmPassword &&
+                    form.password === form.confirmPassword && (
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        ✓ Passwords match
+                      </p>
+                    )}
+                </div>
+
+                {/* Terms & Conditions Checkbox */}
+                <div className="flex items-start gap-3">
+                  <input
+                    id="agreeToTerms"
+                    type="checkbox"
+                    name="agreeToTerms"
+                    checked={form.agreeToTerms}
+                    onChange={handleChange}
+                    disabled={loading}
+                    className="mt-1 w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-genuine focus:ring-2 focus:ring-genuine disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    aria-label="Agree to terms and conditions"
+                  />
+                  <label
+                    htmlFor="agreeToTerms"
+                    className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer"
+                  >
+                    I agree to the{" "}
+                    <a
+                      href="#"
+                      className="text-genuine hover:underline font-medium"
+                    >
+                      Terms of Service
+                    </a>{" "}
+                    and{" "}
+                    <a
+                      href="#"
+                      className="text-genuine hover:underline font-medium"
+                    >
+                      Privacy Policy
+                    </a>
+                  </label>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="mt-4 w-full py-3 px-4 bg-genuine text-white font-semibold rounded-lg hover:bg-green-600 active:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  aria-busy={loading}
+                >
+                  {loading ? "Creating Account..." : "Create Account"}
+                </button>
+              </form>
+
+              {/* Footer Link */}
+              <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+                Already have an account?{" "}
+                <a
+                  href="/auth/login"
+                  className="text-genuine hover:text-green-600 font-medium transition-colors"
+                >
+                  Sign in
+                </a>
               </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-4 w-full py-3 px-4 bg-genuine text-white font-semibold rounded-lg hover:bg-green-600 active:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                aria-busy={loading}
-              >
-                {loading ? "Creating Account..." : "Create Account"}
-              </button>
-            </form>
-
-            {/* Footer Link */}
-            <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-              Already have an account?{" "}
-              <a
-                href="/auth/login"
-                className="text-genuine hover:text-green-600 font-medium transition-colors"
-              >
-                Sign in
-              </a>
-            </div>
             </div>
           </div>
         )}

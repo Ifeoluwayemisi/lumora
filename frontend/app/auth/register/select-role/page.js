@@ -22,12 +22,15 @@ export default function SelectRolePage() {
   const [hoveredRole, setHoveredRole] = useState(null);
 
   const handleRoleSelect = (role) => {
+    console.log("[ROLE SELECTION] User selected role:", role);
     setIsTransitioning(true);
     setSelectedRole(role);
 
     // Redirect to signup form with role query param
     setTimeout(() => {
-      router.push(`/auth/register?role=${role}`);
+      const redirectUrl = `/auth/register?role=${role}`;
+      console.log("[ROLE SELECTION] Redirecting to:", redirectUrl);
+      router.push(redirectUrl);
     }, 400);
   };
 
