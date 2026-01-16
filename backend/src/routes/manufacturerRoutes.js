@@ -26,6 +26,12 @@ import {
   getHotspots,
   exportAnalytics,
 } from "../controllers/analyticsController.js";
+import {
+  initiatePayment,
+  verifyAndUpgradePlan,
+  getPaymentConfig,
+  getBillingHistory,
+} from "../controllers/paymentController.js";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -159,6 +165,27 @@ router.delete(
   authMiddleware,
   roleMiddleware("manufacturer"),
   deleteDocument
+);
+
+// Billing & Payment
+router.get("/billing/config", getPaymentConfig);
+router.post(
+  "/billing/initiate-payment",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  initiatePayment
+);
+router.post(
+  "/billing/verify-payment",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  verifyAndUpgradePlan
+);
+router.get(
+  "/billing/history",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getBillingHistory
 );
 
 export default router;

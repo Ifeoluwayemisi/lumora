@@ -57,6 +57,7 @@ export default function BillingPage() {
   const [processing, setProcessing] = useState(false);
   const [billingHistory, setBillingHistory] = useState([]);
   const [openFAQ, setOpenFAQ] = useState(null);
+  const [paystackPublicKey, setPaystackPublicKey] = useState(null);
 
   const faqs = [
     {
@@ -86,7 +87,55 @@ export default function BillingPage() {
 
   useEffect(() => {
     fetchDashboard();
+    loadPaymentConfig();
+    loadPaystackScript();
   }, []);
+
+  const loadPaymentConfig = async () => {
+    try {
+      console.log("[LOAD_CONFIG] Fetching payment config...");
+      const response = await api.get("/manufacturer/billing/config");
+      console.log("[LOAD_CONFIG] Response:", response.data);
+
+      if (!response.data.success) {
+        console.error(
+          "[LOAD_CONFIG] Response not successful:",
+          response.data.error
+        );
+        toast.error(`Configuration error: ${response.data.error}`);
+        return;
+      }
+
+      const publicKey = response.data.data?.publicKey;
+      if (!publicKey) {
+        console.error("[LOAD_CONFIG] No publicKey in response:", response.data);
+        toast.error(
+          "Payment configuration error: Missing public key. Check console."
+        );
+        return;
+      }
+
+      console.log("[LOAD_CONFIG] Public key loaded successfully");
+      setPaystackPublicKey(publicKey);
+    } catch (err) {
+      console.error("[LOAD_CONFIG] Error:", err);
+      console.error(
+        "[LOAD_CONFIG] Error details:",
+        err.response?.data || err.message
+      );
+      toast.error(
+        `Failed to load payment config: ${
+          err.response?.data?.error || err.message
+        }`
+      );
+    }
+  };
+
+  const loadPaystackScript = () => {
+    const script = document.createElement("script");
+    script.src = "https://js.paystack.co/v1/inline.js";
+    document.body.appendChild(script);
+  };
 
   const fetchDashboard = async () => {
     try {
@@ -101,25 +150,71 @@ export default function BillingPage() {
   };
 
   const handleUpgrade = async (planId) => {
+    if (planId === "basic") {
+      toast.info("You are already on the Basic plan");
+      return;
+    }
+
+    if (!paystackPublicKey) {
+      toast.error("Payment configuration not loaded. Please refresh the page.");
+      return;
+    }
+
     setProcessing(true);
     try {
-      // Initialize Paystack payment
-      // In a real app, you would:
-      // 1. Create a payment record in your DB
-      // 2. Initialize Paystack with Paystack.pop()
-      // 3. Handle callback to verify payment and update plan
-
-      toast.info(
-        "Paystack integration would be initialized here. This is a demo."
+      // Step 1: Initiate payment with backend
+      const initResponse = await api.post(
+        "/manufacturer/billing/initiate-payment",
+        {
+          planId,
+        }
       );
 
-      // For now, just show a message
-      // In production, integrate with Paystack SDK
-      window.open("https://paystack.com", "_blank");
+      const { authorization_url, reference } = initResponse.data.data;
+
+      // Step 2: Open Paystack popup
+      const handler = window.PaystackPop.setup({
+        key: paystackPublicKey,
+        email: dashboard?.manufacturer?.email,
+        amount: PLANS.find((p) => p.id === planId).price * 100, // Convert to kobo
+        ref: reference,
+        currency: "NGN",
+        onClose: () => {
+          setProcessing(false);
+          toast.info("Payment cancelled");
+        },
+        onSuccess: async (response) => {
+          // Step 3: Verify payment with backend
+          try {
+            const verifyResponse = await api.post(
+              "/manufacturer/billing/verify-payment",
+              { reference }
+            );
+
+            toast.success("🎉 Plan upgraded successfully!");
+
+            // Refresh dashboard to show updated plan
+            await fetchDashboard();
+
+            // Redirect to dashboard after 2 seconds
+            setTimeout(() => {
+              router.push("/dashboard/manufacturer");
+            }, 2000);
+          } catch (err) {
+            console.error("[VERIFY] Error:", err);
+            toast.error(
+              "Payment verified but plan update failed. Please contact support."
+            );
+          } finally {
+            setProcessing(false);
+          }
+        },
+      });
+
+      handler.openIframe();
     } catch (err) {
       console.error("[UPGRADE] Error:", err);
-      toast.error("Failed to initiate upgrade");
-    } finally {
+      toast.error(err.response?.data?.error || "Failed to initiate payment");
       setProcessing(false);
     }
   };
