@@ -113,14 +113,14 @@ export default function ManufacturerDashboard() {
                       toast.success("Dashboard refreshed");
                     });
                   }}
-                  className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-semibold"
+                  className="px-2 py-1 rounded-lg text-sm bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 >
-                  🔄 Refresh
+                  🔄
                 </button>
 
-                {/* Status Badge */}
+                {/* Status Badge - Compact */}
                 <div
-                  className={`px-4 py-3 rounded-xl font-semibold text-white text-center ${
+                  className={`px-3 py-1 rounded-lg font-semibold text-white text-xs ${
                     isVerified
                       ? "bg-gradient-to-r from-genuine to-green-600"
                       : accountStatus === "pending_verification"
@@ -128,22 +128,11 @@ export default function ManufacturerDashboard() {
                       : "bg-gradient-to-r from-red-500 to-red-600"
                   }`}
                 >
-                  {isVerified ? (
-                    <div>
-                      <div className="text-2xl">✓</div>
-                      <div className="text-sm">Verified</div>
-                    </div>
-                ) : accountStatus === "pending_verification" ? (
-                  <div>
-                    <div className="text-2xl">⏳</div>
-                    <div className="text-sm">Pending Review</div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="text-2xl">✗</div>
-                    <div className="text-sm">Rejected</div>
-                  </div>
-                )}
+                  {isVerified
+                    ? "✓ Verified"
+                    : accountStatus === "pending_verification"
+                    ? "⏳ Pending"
+                    : "✗ Rejected"}
                 </div>
               </div>
             </div>
@@ -496,7 +485,7 @@ export default function ManufacturerDashboard() {
                 </Link>
 
                 <Link
-                  href="/dashboard/manufacturer/profile"
+                  href="/dashboard/manufacturer/products"
                   className="p-6 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/30 border border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all group"
                 >
                   <div className="p-3 rounded-lg bg-blue-600 w-fit mb-3 group-hover:scale-110 transition-transform">
@@ -510,23 +499,23 @@ export default function ManufacturerDashboard() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        d="M20 7l-8-4-8 4m0 0l8 4m-8-4v10l8 4m0-10l8 4m-8-4v10m0-10l8-4"
                       />
                     </svg>
                   </div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                    View Status
+                    Manage Products
                   </h3>
                   <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Check verification progress
+                    Add and update your products
                   </p>
                 </Link>
 
                 <Link
-                  href="/dashboard/manufacturer/profile"
-                  className="p-6 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-900/30 border border-purple-200 dark:border-purple-800 hover:shadow-lg transition-all group"
+                  href="/dashboard/manufacturer/batches"
+                  className="p-6 rounded-xl bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/30 border border-green-200 dark:border-green-800 hover:shadow-lg transition-all group"
                 >
-                  <div className="p-3 rounded-lg bg-purple-600 w-fit mb-3 group-hover:scale-110 transition-transform">
+                  <div className="p-3 rounded-lg bg-green-600 w-fit mb-3 group-hover:scale-110 transition-transform">
                     <svg
                       className="w-6 h-6 text-white"
                       fill="none"
@@ -537,15 +526,15 @@ export default function ManufacturerDashboard() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
                   </div>
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-                    Contact Support
+                    Generate Codes
                   </h3>
                   <p className="text-sm text-gray-700 dark:text-gray-300">
-                    Get help from our team
+                    Create verification codes for products
                   </p>
                 </Link>
               </>

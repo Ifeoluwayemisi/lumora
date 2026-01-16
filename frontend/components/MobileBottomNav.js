@@ -2,16 +2,54 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiCheck, FiClock, FiUser } from "react-icons/fi";
+import {
+  FiCheck,
+  FiClock,
+  FiUser,
+  FiHome,
+  FiPackage,
+  FiTrendingUp,
+  FiBell,
+} from "react-icons/fi";
 
-export default function MobileBottomNav() {
+export default function MobileBottomNav({ userRole }) {
   const pathname = usePathname();
 
-  const navItems = [
-    { href: "/verify", label: "Verify", icon: FiCheck },
-    { href: "/dashboard/user", label: "History", icon: FiClock },
-    { href: "/dashboard/user/profile", label: "Profile", icon: FiUser },
-  ];
+  const getNavItems = () => {
+    if (userRole === "manufacturer") {
+      return [
+        { href: "/dashboard/manufacturer", label: "Home", icon: FiHome },
+        {
+          href: "/dashboard/manufacturer/products",
+          label: "Products",
+          icon: FiPackage,
+        },
+        {
+          href: "/dashboard/manufacturer/analytics",
+          label: "Analytics",
+          icon: FiTrendingUp,
+        },
+        {
+          href: "/dashboard/manufacturer/notifications",
+          label: "Alerts",
+          icon: FiBell,
+        },
+        {
+          href: "/dashboard/manufacturer/profile",
+          label: "Profile",
+          icon: FiUser,
+        },
+      ];
+    }
+
+    return [
+      { href: "/verify", label: "Verify", icon: FiCheck },
+      { href: "/dashboard/user", label: "History", icon: FiClock },
+      { href: "/dashboard/user/profile", label: "Profile", icon: FiUser },
+    ];
+  };
+
+  const navItems = getNavItems();
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 md:hidden z-50">

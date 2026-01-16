@@ -930,3 +930,43 @@ export async function getManufacturerHistory(req, res) {
     });
   }
 }
+/**
+ * Update manufacturer profile information
+ */
+export async function updateProfile(req, res) {
+  try {
+    const manufacturerId = req.user?.id;
+    const { name, email, phone, country, website } = req.body;
+
+    if (!manufacturerId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Update manufacturer
+    const updated = await prisma.manufacturer.update({
+      where: { id: manufacturerId },
+      data: {
+        ...(name && { name }),
+        ...(email && { email }),
+        ...(phone && { phone }),
+        ...(country && { country }),
+        ...(website && { website }),
+      },
+    });
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updated,
+    });
+  } catch (err) {
+    console.error("[UPDATE_PROFILE] Error:", err);
+    res.status(500).json({
+      error: "Failed to update profile",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}

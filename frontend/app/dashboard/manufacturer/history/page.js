@@ -5,6 +5,7 @@ import { FiArrowLeft, FiX } from "react-icons/fi";
 import api from "@/services/api";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 function ManufacturerHistoryContent() {
   const router = useRouter();
@@ -65,6 +66,7 @@ function ManufacturerHistoryContent() {
   return (
     <AuthGuard allowedRoles={["manufacturer"]}>
       <DashboardSidebar userRole="manufacturer" />
+      <MobileBottomNav userRole="manufacturer" />
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">
         {/* Header */}

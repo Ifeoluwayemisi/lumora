@@ -1,8 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import DashboardSidebar from "@/components/DashboardSidebar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import api from "@/services/api";
 import { toast } from "react-toastify";
 import Link from "next/link";
+import { FiArrowLeft } from "react-icons/fi";
 
 /**
  * Products Management Page
@@ -57,11 +61,21 @@ export default function ProductsPage() {
       });
 
       const response = await api.get(`/manufacturer/products?${params}`);
-      setProducts(response.data.data);
-      setPagination(response.data.pagination);
+      
+      // Handle API response
+      if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        setProducts(response.data.data);
+      } else {
+        setProducts([]);
+      }
+      
+      if (response.data && response.data.pagination) {
+        setPagination(response.data.pagination);
+      }
     } catch (err) {
-      console.error("[FETCH_PRODUCTS] Error:", err);
-      toast.error("Failed to load products");
+      console.error("[FETCH_PRODUCTS] Error:", err.response?.data || err.message);
+      setProducts([]);
+      toast.error("Failed to load products - " + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -160,40 +174,54 @@ export default function ProductsPage() {
   };
 
   return (
-    <div className="p-4 pt-12 md:pt-16 pb-20 md:pb-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1">
-            Products
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage your products and generate verification codes
-          </p>
-        </div>
-
-        <button
-          onClick={() => openModal()}
-          className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold transition-all flex items-center gap-2 w-fit"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+    <>
+      <DashboardSidebar userRole="manufacturer" />
+      <MobileBottomNav userRole="manufacturer" />
+      
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">
+        <div className="p-4 pt-12 md:pt-16">
+          {/* Back Button */}
+          <Link
+            href="/dashboard/manufacturer"
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg mb-4"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Add Product
-        </button>
-      </div>
+            <FiArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </Link>
 
-      {/* Search & Filter */}
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                Products
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400">
+                Manage your products and generate verification codes
+              </p>
+            </div>
+
+            <button
+              onClick={() => openModal()}
+              className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold transition-all flex items-center gap-2 w-fit"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add Product
+            </button>
+          </div>
+
+          {/* Search & Filter */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <input
           type="text"
@@ -640,6 +668,8 @@ export default function ProductsPage() {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </div>
+    </>
   );
 }

@@ -146,7 +146,9 @@ export const signup = async (req, res) => {
 
         // If it's a schema mismatch, provide clear message
         if (manufacturerErr.message.includes("Unknown argument")) {
-          console.log("[SIGNUP] Database schema mismatch - new fields not deployed yet");
+          console.log(
+            "[SIGNUP] Database schema mismatch - new fields not deployed yet"
+          );
           return res.status(503).json({
             error: "Service temporarily unavailable",
             message:

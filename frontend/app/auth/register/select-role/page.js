@@ -102,7 +102,6 @@ export default function SelectRolePage() {
             <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto">
               Choose your role to protect and verify authenticity
             </p>
-
           </div>
 
           {/* Role Selection Cards */}

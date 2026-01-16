@@ -14,12 +14,18 @@ import {
   getManufacturerHistory,
   getBatchDetail,
   downloadBatchCodes,
+  updateProfile,
 } from "../controllers/manufacturerController.js";
 import {
   uploadDocument,
   getDocuments,
   deleteDocument,
 } from "../controllers/documentController.js";
+import {
+  getAnalytics,
+  getHotspots,
+  exportAnalytics,
+} from "../controllers/analyticsController.js";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -42,25 +48,117 @@ const router = express.Router();
 router.use(authMiddleware, roleMiddleware("MANUFACTURER"));
 
 // Dashboard
-router.get("/dashboard", getDashboard);
+router.get(
+  "/dashboard",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getDashboard
+);
+router.patch(
+  "/profile",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  updateProfile
+);
+
+// Analytics
+router.get(
+  "/analytics",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getAnalytics
+);
+router.get(
+  "/analytics/hotspots",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getHotspots
+);
+router.get(
+  "/analytics/export",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  exportAnalytics
+);
 
 // Products CRUD
-router.get("/products", getProducts);
-router.post("/products", addProduct);
-router.get("/products/:id", getProduct);
-router.patch("/products/:id", updateProduct);
-router.delete("/products/:id", deleteProduct);
+router.get(
+  "/products",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getProducts
+);
+router.post(
+  "/products",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  addProduct
+);
+router.get(
+  "/products/:id",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getProduct
+);
+router.patch(
+  "/products/:id",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  updateProduct
+);
+router.delete(
+  "/products/:id",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  deleteProduct
+);
 
 // Batches & History
-router.get("/batches", getBatches);
-router.get("/batch/:id", getBatchDetail);
-router.get("/batch/:id/download", downloadBatchCodes);
-router.post("/batch", addBatch);
-router.get("/history", getManufacturerHistory);
+router.get(
+  "/batches",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getBatches
+);
+router.get(
+  "/batch/:id",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getBatchDetail
+);
+router.get(
+  "/batch/:id/download",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  downloadBatchCodes
+);
+router.post("/batch", authMiddleware, roleMiddleware("manufacturer"), addBatch);
+router.get(
+  "/history",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getManufacturerHistory
+);
 
 // Document Management
-router.post("/documents/upload", upload.single("file"), uploadDocument);
-router.get("/documents", getDocuments);
-router.delete("/documents/:documentId", deleteDocument);
+router.post(
+  "/documents/upload",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  upload.single("file"),
+  uploadDocument
+);
+router.get(
+  "/documents",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getDocuments
+);
+router.delete(
+  "/documents/:documentId",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  deleteDocument
+);
 
 export default router;

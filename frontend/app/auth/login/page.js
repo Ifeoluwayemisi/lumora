@@ -49,12 +49,21 @@ function LoginContent() {
       await login(data.user, data.token);
       toast.success("Login successful! Redirecting...");
 
-      console.log("[LOGIN FRONTEND] Response received:", { role: data.user.role, userId: data.user.id, email: data.user.email });
-      
+      console.log("[LOGIN FRONTEND] Response received:", {
+        role: data.user.role,
+        userId: data.user.id,
+        email: data.user.email,
+      });
+
       // Redirect safely based on role
       const userRole = data.user.role;
-      console.log("[LOGIN FRONTEND] Original role from API:", userRole, "Type:", typeof userRole);
-      
+      console.log(
+        "[LOGIN FRONTEND] Original role from API:",
+        userRole,
+        "Type:",
+        typeof userRole
+      );
+
       switch (userRole) {
         case "manufacturer":
           console.log("[LOGIN FRONTEND] Redirecting to manufacturer dashboard");
@@ -65,7 +74,10 @@ function LoginContent() {
           router.push("/dashboard/admin");
           break;
         default:
-          console.log("[LOGIN FRONTEND] Redirecting to user dashboard (default). Role was:", userRole);
+          console.log(
+            "[LOGIN FRONTEND] Redirecting to user dashboard (default). Role was:",
+            userRole
+          );
           router.push("/dashboard/user");
           break;
       }
