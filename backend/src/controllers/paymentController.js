@@ -11,23 +11,37 @@ import {
  */
 export async function initiatePayment(req, res) {
   try {
+    console.log("[INITIATE_PAYMENT] Called");
     const manufacturerId = req.user?.id;
     const { planId } = req.body;
 
+    console.log("[INITIATE_PAYMENT] manufacturerId:", manufacturerId);
+    console.log("[INITIATE_PAYMENT] planId:", planId);
+
     if (!manufacturerId) {
+      console.warn("[INITIATE_PAYMENT] No manufacturer ID - not authenticated");
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     if (!planId) {
+      console.warn("[INITIATE_PAYMENT] No planId provided");
       return res.status(400).json({ error: "Plan ID required" });
     }
 
     // Get manufacturer
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
     });
 
+    console.log("[INITIATE_PAYMENT] Manufacturer:", manufacturer?.id);
+
     if (!manufacturer) {
+      console.warn("[INITIATE_PAYMENT] Manufacturer not found");
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
@@ -42,10 +56,17 @@ export async function initiatePayment(req, res) {
 
     const selectedPlan = plans[planId];
     if (!selectedPlan) {
+      console.warn("[INITIATE_PAYMENT] Invalid plan:", planId);
       return res.status(400).json({ error: "Invalid plan" });
     }
 
+    console.log("[INITIATE_PAYMENT] Selected plan:", selectedPlan);
+
     // Initialize Paystack payment
+    console.log(
+      "[INITIATE_PAYMENT] Calling Paystack with email:",
+      manufacturer.email
+    );
     const paymentData = await initializePayment(
       manufacturer.email,
       selectedPlan.amount,
@@ -55,6 +76,16 @@ export async function initiatePayment(req, res) {
         planName: selectedPlan.name,
       }
     );
+
+    console.log("[INITIATE_PAYMENT] Paystack response:", paymentData.status);
+
+    if (!paymentData.status) {
+      console.error("[INITIATE_PAYMENT] Paystack error:", paymentData.message);
+      return res.status(400).json({
+        error: "Failed to initialize payment with Paystack",
+        message: paymentData.message,
+      });
+    }
 
     // Store payment intent in database
     const payment = await prisma.payment.create({
@@ -69,6 +100,8 @@ export async function initiatePayment(req, res) {
       },
     });
 
+    console.log("[INITIATE_PAYMENT] Payment created:", payment.reference);
+
     res.json({
       success: true,
       data: {
@@ -79,6 +112,7 @@ export async function initiatePayment(req, res) {
     });
   } catch (err) {
     console.error("[INITIATE_PAYMENT] Error:", err);
+    console.error("[INITIATE_PAYMENT] Error stack:", err.stack);
     res.status(500).json({
       error: "Failed to initiate payment",
       message:
