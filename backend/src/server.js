@@ -1,31 +1,11 @@
 import dotenv from "dotenv";
 import app from "./app.js";
 import prisma from "./models/prismaClient.js";
-import { execSync } from "child_process";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
-
-/**
- * Run pending database migrations
- */
-async function runMigrations() {
-  try {
-    console.log("Checking for pending database migrations...");
-    
-    // Run prisma migrate deploy to apply any pending migrations
-    execSync("npx prisma migrate deploy", { 
-      stdio: "inherit",
-      env: { ...process.env }
-    });
-    
-    console.log("✅ Database migrations completed successfully");
-  } catch (error) {
-    console.warn("⚠️ Migration check completed (may already be up to date):", error.message.split('\n')[0]);
-  }
-}
 
 /**
  * Production startup checks
@@ -68,13 +48,6 @@ async function startServer() {
   try {
     // Validate environment in all envs, but be strict in production
     validateEnvironment();
-    
-    // Run migrations before checking database connection
-    if (NODE_ENV === "production") {
-      console.log("🔄 Production environment detected - running migrations...");
-      await runMigrations();
-    }
-    
     await testDatabaseConnection();
 
     const server = app.listen(PORT, () => {

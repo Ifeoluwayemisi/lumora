@@ -115,9 +115,6 @@ export const signup = async (req, res) => {
 
       try {
         // Create manufacturer with all fields
-        // Note: If "Unknown argument" error occurs, it means the database migration
-        // hasn't been applied yet. In that case, redeploy the backend on Render
-        // to trigger the migration via "prisma migrate deploy"
         await prisma.manufacturer.create({
           data: {
             id: user.id,
@@ -142,57 +139,23 @@ export const signup = async (req, res) => {
         console.error("[SIGNUP] Manufacturer creation failed:", {
           message: manufacturerErr.message,
           code: manufacturerErr.code,
-          meta: manufacturerErr.meta,
         });
 
-        // If it's a schema mismatch (Unknown argument), try with fallback minimal fields
+        // Always clean up the user if manufacturer creation fails
+        await prisma.user.delete({ where: { id: user.id } });
+
+        // If it's a schema mismatch, provide clear message
         if (manufacturerErr.message.includes("Unknown argument")) {
-          console.log(
-            "[SIGNUP] Database schema not updated - trying minimal fields"
-          );
-          try {
-            // Try creating with only original fields (no new fields)
-            await prisma.manufacturer.create({
-              data: {
-                id: user.id,
-                userId: user.id,
-                name: companyName,
-                verified: false,
-              },
-            });
-
-            console.log(
-              "[SIGNUP] Manufacturer created with fallback (minimal fields)"
-            );
-
-            // Still return error to let user know to wait for migration
-            return res.status(500).json({
-              error: "Database schema not updated",
-              message:
-                "The database is being updated. Please wait a moment and try again.",
-              action: "Please refresh the page and try signing up again in 1-2 minutes.",
-            });
-          } catch (fallbackErr) {
-            console.error("[SIGNUP] Fallback manufacturer creation also failed:", {
-              message: fallbackErr.message,
-              code: fallbackErr.code,
-            });
-
-            // Clean up user
-            await prisma.user.delete({ where: { id: user.id } });
-
-            return res.status(500).json({
-              error: "Database schema not updated",
-              message:
-                "The database schema is being updated. This is temporary.",
-              action: "Please wait 2-3 minutes for the backend to redeploy, then try again.",
-              timestamp: new Date().toISOString(),
-            });
-          }
+          console.log("[SIGNUP] Database schema mismatch - new fields not deployed yet");
+          return res.status(503).json({
+            error: "Service temporarily unavailable",
+            message:
+              "The manufacturer system is being updated. Please try again in 1-2 minutes.",
+            retryAfter: 120,
+          });
         }
 
-        // For other errors, clean up and throw
-        await prisma.user.delete({ where: { id: user.id } });
+        // For other errors, throw
         throw manufacturerErr;
       }
     }
