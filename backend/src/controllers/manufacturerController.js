@@ -26,11 +26,12 @@ export async function getDashboard(req, res) {
       const manufacturerData = await prisma.manufacturer.findUnique({
         where: { id: manufacturerId },
       });
-      
+
       if (!manufacturerData) {
         return res.status(404).json({
           error: "Manufacturer not found",
-          message: "No manufacturer record found. Please complete manufacturer registration.",
+          message:
+            "No manufacturer record found. Please complete manufacturer registration.",
         });
       }
 
@@ -40,7 +41,8 @@ export async function getDashboard(req, res) {
         name: manufacturerData?.name,
         email: manufacturerData?.email || "", // Will be populated once migration runs
         verified: manufacturerData?.verified || false,
-        accountStatus: manufacturerData?.accountStatus || "pending_verification",
+        accountStatus:
+          manufacturerData?.accountStatus || "pending_verification",
         trustScore: manufacturerData?.trustScore ?? 0,
         riskLevel: manufacturerData?.riskLevel || "MEDIUM",
         plan: manufacturerData?.plan || "BASIC",

@@ -49,15 +49,22 @@ function LoginContent() {
       await login(data.user, data.token);
       toast.success("Login successful! Redirecting...");
 
+      // Debug: log the role to see what's being returned
+      console.log("[LOGIN] User role received:", data.user.role);
+      console.log("[LOGIN] Full user data:", data.user);
+
       // Redirect safely based on role
       switch (data.user.role) {
         case "manufacturer":
+          console.log("[LOGIN] Redirecting to manufacturer dashboard");
           router.push("/dashboard/manufacturer");
           break;
         case "admin":
+          console.log("[LOGIN] Redirecting to admin dashboard");
           router.push("/dashboard/admin");
           break;
         default:
+          console.log("[LOGIN] Redirecting to user dashboard (default)");
           router.push("/dashboard/user");
           break;
       }

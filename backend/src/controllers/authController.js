@@ -116,27 +116,31 @@ export const signup = async (req, res) => {
             plan: "BASIC",
           },
         });
-        
-        console.log("[SIGNUP] Manufacturer created successfully with all fields");
+
+        console.log(
+          "[SIGNUP] Manufacturer created successfully with all fields"
+        );
       } catch (manufacturerErr) {
         // Clean up user if manufacturer creation fails
         await prisma.user.delete({ where: { id: user.id } });
-        
+
         // Log detailed error for debugging
         console.error("[SIGNUP] Manufacturer creation failed:", {
           message: manufacturerErr.message,
           code: manufacturerErr.code,
         });
-        
+
         // If it's a schema mismatch, provide helpful error message
         if (manufacturerErr.message.includes("Unknown argument")) {
           return res.status(500).json({
             error: "Database schema not updated",
-            message: "The database is being updated. Please try again in a few moments after the backend redeploys.",
-            details: "If this persists, contact support to trigger a manual migration.",
+            message:
+              "The database is being updated. Please try again in a few moments after the backend redeploys.",
+            details:
+              "If this persists, contact support to trigger a manual migration.",
           });
         }
-        
+
         throw manufacturerErr;
       }
     }
@@ -199,16 +203,25 @@ export const login = async (req, res) => {
       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
     );
 
+    // Build user response
+    const userResponse = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role.toLowerCase(),
+      verified: user.verified,
+    };
+
+    console.log("[LOGIN] User authenticated:", {
+      email: user.email,
+      dbRole: user.role,
+      responseSent: userResponse.role,
+    });
+
     // Return user object with token (matching frontend expectations)
     return res.status(200).json({
       token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role.toLowerCase(),
-        verified: user.verified,
-      },
+      user: userResponse,
     });
   } catch (error) {
     console.error("[LOGIN] Error:", error.message);
