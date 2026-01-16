@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
+import DashboardSidebar from "@/components/DashboardSidebar";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import api from "@/services/api";
 import { toast } from "react-toastify";
 import Link from "next/link";
@@ -69,7 +71,12 @@ export default function ManufacturerDashboard() {
   const quotaRemaining = quota?.limit - quota?.used;
 
   return (
-    <div className="p-4 pt-12 md:pt-16 pb-20 md:pb-4">
+    <>
+      <DashboardSidebar userRole="manufacturer" />
+      <MobileBottomNav userRole="manufacturer" />
+      
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">
+        <div className="p-4 pt-12 md:pt-16">{/* Content */}
       {/* Header with Status Badge */}
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -563,6 +570,8 @@ export default function ManufacturerDashboard() {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
