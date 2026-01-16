@@ -35,8 +35,15 @@ const BCRYPT_SALT = parseInt(process.env.BCRYPT_SALT || "10");
 export const signup = async (req, res) => {
   const { name, email, password, role, companyName, country, phone } = req.body;
 
-  console.log("[SIGNUP] Received payload - role:", role, "companyName:", companyName, "country:", country);
-  
+  console.log(
+    "[SIGNUP] Received payload - role:",
+    role,
+    "companyName:",
+    companyName,
+    "country:",
+    country
+  );
+
   // Input validation
   if (!name || !email || !password) {
     return res.status(400).json({
@@ -76,7 +83,12 @@ export const signup = async (req, res) => {
     };
 
     const normalizedRole = roleMap[role?.toLowerCase()] || "CONSUMER";
-    console.log("[SIGNUP] Role mapping:", { input: role, normalized: normalizedRole, companyName, country });
+    console.log("[SIGNUP] Role mapping:", {
+      input: role,
+      normalized: normalizedRole,
+      companyName,
+      country,
+    });
 
     // Create the User
     const user = await prisma.user.create({
@@ -89,7 +101,6 @@ export const signup = async (req, res) => {
     });
 
     console.log("[SIGNUP] User created with role:", user.role);
-
 
     // If role is MANUFACTURER, create Manufacturer record with pending verification
     if (normalizedRole === "MANUFACTURER") {
@@ -127,26 +138,61 @@ export const signup = async (req, res) => {
           "[SIGNUP] Manufacturer created successfully with all fields"
         );
       } catch (manufacturerErr) {
-        // Clean up user if manufacturer creation fails
-        await prisma.user.delete({ where: { id: user.id } });
-
         // Log detailed error for debugging
         console.error("[SIGNUP] Manufacturer creation failed:", {
           message: manufacturerErr.message,
           code: manufacturerErr.code,
+          meta: manufacturerErr.meta,
         });
 
-        // If it's a schema mismatch, provide helpful error message
+        // If it's a schema mismatch (Unknown argument), try with fallback minimal fields
         if (manufacturerErr.message.includes("Unknown argument")) {
-          return res.status(500).json({
-            error: "Database schema not updated",
-            message:
-              "The database is being updated. Please try again in a few moments after the backend redeploys.",
-            details:
-              "If this persists, contact support to trigger a manual migration.",
-          });
+          console.log(
+            "[SIGNUP] Database schema not updated - trying minimal fields"
+          );
+          try {
+            // Try creating with only original fields (no new fields)
+            await prisma.manufacturer.create({
+              data: {
+                id: user.id,
+                userId: user.id,
+                name: companyName,
+                verified: false,
+              },
+            });
+
+            console.log(
+              "[SIGNUP] Manufacturer created with fallback (minimal fields)"
+            );
+
+            // Still return error to let user know to wait for migration
+            return res.status(500).json({
+              error: "Database schema not updated",
+              message:
+                "The database is being updated. Please wait a moment and try again.",
+              action: "Please refresh the page and try signing up again in 1-2 minutes.",
+            });
+          } catch (fallbackErr) {
+            console.error("[SIGNUP] Fallback manufacturer creation also failed:", {
+              message: fallbackErr.message,
+              code: fallbackErr.code,
+            });
+
+            // Clean up user
+            await prisma.user.delete({ where: { id: user.id } });
+
+            return res.status(500).json({
+              error: "Database schema not updated",
+              message:
+                "The database schema is being updated. This is temporary.",
+              action: "Please wait 2-3 minutes for the backend to redeploy, then try again.",
+              timestamp: new Date().toISOString(),
+            });
+          }
         }
 
+        // For other errors, clean up and throw
+        await prisma.user.delete({ where: { id: user.id } });
         throw manufacturerErr;
       }
     }
@@ -192,7 +238,14 @@ export const login = async (req, res) => {
 
   try {
     const user = await prisma.user.findUnique({ where: { email } });
-    console.log("[LOGIN] User lookup for email:", email, "Found:", !!user, "Role:", user?.role);
+    console.log(
+      "[LOGIN] User lookup for email:",
+      email,
+      "Found:",
+      !!user,
+      "Role:",
+      user?.role
+    );
     if (!user) {
       // Don't reveal if email exists
       return res.status(401).json({ error: "Invalid email or password" });
