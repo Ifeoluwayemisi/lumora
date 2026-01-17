@@ -71,10 +71,7 @@ export async function initiatePayment(req, res) {
     console.log("[INITIATE_PAYMENT] Selected plan:", selectedPlan);
 
     // Initialize Paystack payment
-    console.log(
-      "[INITIATE_PAYMENT] Calling Paystack with email:",
-      user.email
-    );
+    console.log("[INITIATE_PAYMENT] Calling Paystack with email:", user.email);
     const paymentData = await initializePayment(
       user.email,
       selectedPlan.amount,
@@ -82,7 +79,7 @@ export async function initiatePayment(req, res) {
         manufacturerId,
         planId,
         planName: selectedPlan.name,
-      }
+      },
     );
 
     console.log("[INITIATE_PAYMENT] Paystack response:", paymentData.status);
@@ -226,12 +223,12 @@ export async function getPaymentConfig(req, res) {
     console.log("[GET_PAYMENT_CONFIG] Called");
     const publicKey = getPublicKey();
     console.log(
-      `[GET_PAYMENT_CONFIG] publicKey: ${publicKey ? "✓ Set" : "✗ MISSING"}`
+      `[GET_PAYMENT_CONFIG] publicKey: ${publicKey ? "✓ Set" : "✗ MISSING"}`,
     );
 
     if (!publicKey) {
       console.error(
-        "[GET_PAYMENT_CONFIG] ERROR: PAYSTACK_PUBLIC_KEY not found in environment"
+        "[GET_PAYMENT_CONFIG] ERROR: PAYSTACK_PUBLIC_KEY not found in environment",
       );
       return res.status(500).json({
         success: false,

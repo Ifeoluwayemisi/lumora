@@ -42,6 +42,8 @@ model Manufacturer {
   codes                 Code[]
   verificationLogs      VerificationLog[]
   documents             Document[]
+  payments              Payment[]
+  billingHistory        BillingHistory[]
 
   @@index([userId])
   @@index([email])
@@ -234,4 +236,37 @@ model Document {
   @@unique([manufacturerId, type])
   @@index([manufacturerId])
   @@index([status])
+}
+
+model Payment {
+  id                String   @id @default(uuid())
+  manufacturerId    String
+  reference         String   @unique
+  amount            Int      // Amount in NGN (kobo)
+  planId            String
+  status            String   @default("pending") // pending, success, failed
+  accessCode        String?
+  authorizationUrl  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  manufacturer      Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturerId])
+  @@index([reference])
+  @@index([status])
+}
+
+model BillingHistory {
+  id                String   @id @default(uuid())
+  manufacturerId    String
+  reference         String
+  amount            Int      // Amount in NGN
+  planId            String
+  status            String   @default("completed") // completed, failed, refunded
+  transactionDate   DateTime @default(now())
+  createdAt         DateTime @default(now())
+  manufacturer      Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturerId])
+  @@index([reference])
 }
