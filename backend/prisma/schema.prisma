@@ -8,19 +8,21 @@ datasource db {
 }
 
 model User {
-  id                  String            @id @default(uuid())
-  email               String            @unique
-  password            String
-  role                Role
-  name                String
-  profilePicture      String?           // URL to profile picture
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-  verified            Boolean           @default(false)
-  verifications       VerificationLog[]
-  favorites           UserFavorites[]
-  notifications       UserNotifications[]
-  reports             Report[]
+  id                    String            @id @default(uuid())
+  email                 String            @unique
+  password              String
+  role                  Role
+  name                  String
+  profilePicture        String?           // URL to profile picture
+  passwordResetToken    String?           // Hashed token for password reset
+  passwordResetExpiry   DateTime?         // Expiration time for reset token
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  verified              Boolean           @default(false)
+  verifications         VerificationLog[]
+  favorites             UserFavorites[]
+  notifications         UserNotifications[]
+  reports               Report[]
 }
 
 model Manufacturer {

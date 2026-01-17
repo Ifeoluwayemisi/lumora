@@ -269,7 +269,8 @@ export const forgotPassword = async (req, res) => {
     console.warn("[FORGOT_PASSWORD] Email service not configured");
     return res.status(503).json({
       error: "Email service unavailable",
-      message: "Password reset emails cannot be sent at this time. Please contact support.",
+      message:
+        "Password reset emails cannot be sent at this time. Please contact support.",
     });
   }
 
