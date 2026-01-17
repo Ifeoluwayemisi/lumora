@@ -158,6 +158,7 @@ model Product {
   description    String?
   createdAt      DateTime @default(now())
   batches        Batch[]
+  category       String
 }
 
 model UserFavorites {
