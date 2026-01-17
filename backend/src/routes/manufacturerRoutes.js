@@ -295,6 +295,6 @@ router.delete(
 );
 
 // Public endpoint for accepting invites
-router.post("/team/invite/:token/accept", acceptTeamInvite);
+router.post("/team/invite/:token/accept", acceptInvite);
 
 export default router;
