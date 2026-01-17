@@ -32,6 +32,10 @@ import {
   getPaymentConfig,
   getBillingHistory,
 } from "../controllers/paymentController.js";
+import {
+  getQuotaStatus,
+  checkCanCreateCode,
+} from "../controllers/quotaController.js";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -58,13 +62,13 @@ router.get(
   "/dashboard",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  getDashboard
+  getDashboard,
 );
 router.patch(
   "/profile",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  updateProfile
+  updateProfile,
 );
 
 // Analytics
@@ -72,19 +76,19 @@ router.get(
   "/analytics",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  getAnalytics
+  getAnalytics,
 );
 router.get(
   "/analytics/hotspots",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  getHotspots
+  getHotspots,
 );
 router.get(
   "/analytics/export",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  exportAnalytics
+  exportAnalytics,
 );
 
 // Products CRUD
@@ -92,31 +96,31 @@ router.get(
   "/products",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  getProducts
+  getProducts,
 );
 router.post(
   "/products",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  addProduct
+  addProduct,
 );
 router.get(
   "/products/:id",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  getProduct
+  getProduct,
 );
 router.patch(
   "/products/:id",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  updateProduct
+  updateProduct,
 );
 router.delete(
   "/products/:id",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  deleteProduct
+  deleteProduct,
 );
 
 // Batches & History
@@ -124,26 +128,26 @@ router.get(
   "/batches",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  getBatches
+  getBatches,
 );
 router.get(
   "/batch/:id",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  getBatchDetail
+  getBatchDetail,
 );
 router.get(
   "/batch/:id/download",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  downloadBatchCodes
+  downloadBatchCodes,
 );
 router.post("/batch", authMiddleware, roleMiddleware("manufacturer"), addBatch);
 router.get(
   "/history",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  getManufacturerHistory
+  getManufacturerHistory,
 );
 
 // Document Management
@@ -152,19 +156,19 @@ router.post(
   authMiddleware,
   roleMiddleware("manufacturer"),
   upload.single("file"),
-  uploadDocument
+  uploadDocument,
 );
 router.get(
   "/documents",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  getDocuments
+  getDocuments,
 );
 router.delete(
   "/documents/:documentId",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  deleteDocument
+  deleteDocument,
 );
 
 // Billing & Payment
@@ -173,19 +177,34 @@ router.post(
   "/billing/initiate-payment",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  initiatePayment
+  initiatePayment,
 );
 router.post(
   "/billing/verify-payment",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  verifyAndUpgradePlan
+  verifyAndUpgradePlan,
 );
 router.get(
   "/billing/history",
   authMiddleware,
   roleMiddleware("manufacturer"),
-  getBillingHistory
+  getBillingHistory,
+);
+
+// Quota management routes
+router.get(
+  "/quota",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getQuotaStatus,
+);
+
+router.get(
+  "/can-create",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  checkCanCreateCode,
 );
 
 export default router;

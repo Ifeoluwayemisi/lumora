@@ -3,6 +3,7 @@ import {
   createProduct,
   createBatchWithCodes,
 } from "../services/manufacturerService.js";
+import { canCreateCode, getQuotaInfo } from "../services/quotaService.js";
 import { parseISO, isValid } from "date-fns";
 
 /**
@@ -131,7 +132,7 @@ export async function getDashboard(req, res) {
         alert.verificationState === "SUSPICIOUS_PATTERN"
           ? `Multiple rapid verifications of code ${alert.code?.substring(
               0,
-              8
+              8,
             )}...`
           : `Code ${alert.code?.substring(0, 8)}... was already verified`,
       severity:
@@ -630,6 +631,25 @@ export async function addBatch(req, res) {
       });
     }
 
+    // Check quota before creating codes
+    const quotaCheck = await canCreateCode(manufacturerId);
+    if (!quotaCheck.canCreate) {
+      return res.status(429).json({
+        error: "Daily quota exceeded",
+        message: `You have reached your daily limit of ${quotaCheck.limit} codes for the ${quotaCheck.plan} plan. Please upgrade to Premium for unlimited codes.`,
+        quota: quotaCheck,
+      });
+    }
+
+    // Check if creating this batch would exceed quota
+    if (quotaCheck.remaining < quantity) {
+      return res.status(429).json({
+        error: "Insufficient quota for this batch",
+        message: `You can only create ${quotaCheck.remaining} more codes today. Your ${quotaCheck.plan} plan allows ${quotaCheck.limit} codes/day.`,
+        quota: quotaCheck,
+      });
+    }
+
     // Create batch and codes
     const { batch, createdCodes } = await createBatchWithCodes({
       productId,
@@ -846,7 +866,7 @@ export async function downloadBatchCodes(req, res) {
     batch.codes.forEach((code) => {
       const createdDate = new Date(code.createdAt).toLocaleDateString();
       const expirationDate = new Date(
-        batch.expirationDate
+        batch.expirationDate,
       ).toLocaleDateString();
       csvContent += `"${code.code}","${code.status}","${createdDate}","${batch.product.name}","${id}","${expirationDate}"\n`;
     });
@@ -855,7 +875,7 @@ export async function downloadBatchCodes(req, res) {
     res.setHeader("Content-Type", "text/csv");
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="batch_${id}_codes.csv"`
+      `attachment; filename="batch_${id}_codes.csv"`,
     );
 
     return res.status(200).send(csvContent);
