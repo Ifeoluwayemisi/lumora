@@ -9,10 +9,10 @@ const PAYSTACK_API_URL = "https://api.paystack.co";
 if (!PAYSTACK_SECRET_KEY || !PAYSTACK_PUBLIC_KEY) {
   console.warn("[PAYSTACK] Warning: Missing Paystack keys in environment");
   console.warn(
-    `PAYSTACK_PUBLIC_KEY: ${PAYSTACK_PUBLIC_KEY ? "✓ Set" : "✗ MISSING"}`
+    `PAYSTACK_PUBLIC_KEY: ${PAYSTACK_PUBLIC_KEY ? "✓ Set" : "✗ MISSING"}`,
   );
   console.warn(
-    `PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY ? "✓ Set" : "✗ MISSING"}`
+    `PAYSTACK_SECRET_KEY: ${PAYSTACK_SECRET_KEY ? "✓ Set" : "✗ MISSING"}`,
   );
 }
 
@@ -22,26 +22,39 @@ if (!PAYSTACK_SECRET_KEY || !PAYSTACK_PUBLIC_KEY) {
  */
 export const initializePayment = async (email, amount, metadata) => {
   try {
+    console.log("[PAYSTACK_INIT] Initializing payment:");
+    console.log("[PAYSTACK_INIT] Email:", email);
+    console.log("[PAYSTACK_INIT] Email type:", typeof email);
+    console.log("[PAYSTACK_INIT] Email length:", email?.length);
+    console.log("[PAYSTACK_INIT] Amount (kobo):", amount * 100);
+    console.log("[PAYSTACK_INIT] Metadata:", metadata);
+
+    const payload = {
+      email,
+      amount: amount * 100, // Convert to kobo
+      metadata,
+    };
+
+    console.log("[PAYSTACK_INIT] Full payload:", JSON.stringify(payload));
+
     const response = await axios.post(
       `${PAYSTACK_API_URL}/transaction/initialize`,
-      {
-        email,
-        amount: amount * 100, // Convert to kobo
-        metadata,
-      },
+      payload,
       {
         headers: {
           Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
+    console.log("[PAYSTACK_INIT] Success:", response.data.status);
     return response.data;
   } catch (error) {
     console.error("[PAYSTACK_INIT] Error:", error.message);
+    console.error("[PAYSTACK_INIT] Response:", error.response?.data);
     throw new Error(
-      error.response?.data?.message || "Failed to initialize payment"
+      error.response?.data?.message || "Failed to initialize payment",
     );
   }
 };
@@ -58,14 +71,14 @@ export const verifyPayment = async (reference) => {
         headers: {
           Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
         },
-      }
+      },
     );
 
     return response.data;
   } catch (error) {
     console.error("[PAYSTACK_VERIFY] Error:", error.message);
     throw new Error(
-      error.response?.data?.message || "Failed to verify payment"
+      error.response?.data?.message || "Failed to verify payment",
     );
   }
 };
@@ -102,7 +115,7 @@ export const createPlan = async (name, interval, amount, description) => {
           Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     return response.data;

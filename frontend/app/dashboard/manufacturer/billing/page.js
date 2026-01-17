@@ -172,10 +172,14 @@ export default function BillingPage() {
 
       const { authorization_url, reference } = initResponse.data.data;
 
+      console.log("[UPGRADE] Payment initiated");
+      console.log("[UPGRADE] User email:", user?.email);
+      console.log("[UPGRADE] Paystack public key:", paystackPublicKey);
+
       // Step 2: Open Paystack popup
       const handler = window.PaystackPop.setup({
         key: paystackPublicKey,
-        email: dashboard?.manufacturer?.email,
+        email: user?.email, // Use authenticated user email from context
         amount: PLANS.find((p) => p.id === planId).price * 100, // Convert to kobo
         ref: reference,
         currency: "NGN",
