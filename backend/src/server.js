@@ -1,33 +1,26 @@
 import dotenv from "dotenv";
+import { execSync } from "child_process";
 import app from "./app.js";
 import prisma from "./models/prismaClient.js";
-import { exec } from "child_process";
-import { promisify } from "util";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || "development";
-const execPromise = promisify(exec);
 
 /**
- * Regenerate Prisma client and run migrations
+ * Ensure Prisma client is regenerated at startup
  */
-async function setupDatabase() {
+function ensurePrismaClient() {
   try {
-    console.log("🔄 Regenerating Prisma client...");
-    await execPromise("npx prisma generate");
-    console.log("✓ Prisma client regenerated");
-
-    console.log("🔄 Running database migrations...");
-    await execPromise("npx prisma migrate deploy");
-    console.log("✓ Database migrations completed");
+    console.log("🔄 Ensuring Prisma client is up to date...");
+    execSync("npx prisma generate", { stdio: "inherit" });
+    console.log("✓ Prisma client verified");
   } catch (error) {
     console.warn(
-      "⚠️  Database setup warning (may be expected in development):",
-      error.message.split("\n")[0],
+      "⚠️  Prisma client generation warning (may be cached):",
+      error.message.split("\n")[0]
     );
-    // Don't fail - may fail if Prisma is locked or no pending migrations
   }
 }
 
@@ -73,8 +66,8 @@ async function startServer() {
     // Validate environment in all envs, but be strict in production
     validateEnvironment();
 
-    // Setup database (regenerate client and run migrations)
-    await setupDatabase();
+    // Ensure Prisma client is up to date BEFORE using it
+    ensurePrismaClient();
 
     await testDatabaseConnection();
 
