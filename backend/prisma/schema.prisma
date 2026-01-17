@@ -8,44 +8,44 @@ datasource db {
 }
 
 model User {
-  id                    String            @id @default(uuid())
-  email                 String            @unique
-  password              String
-  role                  Role
-  name                  String
-  profilePicture        String?           // URL to profile picture
-  passwordResetToken    String?           // Hashed token for password reset
-  passwordResetExpiry   DateTime?         // Expiration time for reset token
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-  verified              Boolean           @default(false)
-  verifications         VerificationLog[]
-  favorites             UserFavorites[]
-  notifications         UserNotifications[]
-  reports               Report[]
+  id                  String              @id @default(uuid())
+  email               String              @unique
+  password            String
+  role                Role
+  name                String
+  profilePicture      String? // URL to profile picture
+  passwordResetToken  String? // Hashed token for password reset
+  passwordResetExpiry DateTime? // Expiration time for reset token
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  verified            Boolean             @default(false)
+  verifications       VerificationLog[]
+  favorites           UserFavorites[]
+  notifications       UserNotifications[]
+  reports             Report[]
 }
 
 model Manufacturer {
-  id                    String             @id @default(uuid())
-  userId                String             @unique
-  name                  String
-  email                 String             @default("")
-  phone                 String?
-  country               String             @default("")
-  verified              Boolean            @default(false)
-  accountStatus         String             @default("pending_verification") // pending_verification, verified, rejected
-  trustScore            Float              @default(0)
-  riskLevel             String             @default("MEDIUM") // LOW, MEDIUM, HIGH
-  plan                  String             @default("BASIC") // BASIC (50/day), PREMIUM (1000/day)
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
-  drugs                 Drug[]
-  batches               Batch[]
-  codes                 Code[]
-  verificationLogs      VerificationLog[]
-  documents             Document[]
-  payments              Payment[]
-  billingHistory        BillingHistory[]
+  id               String            @id @default(uuid())
+  userId           String            @unique
+  name             String
+  email            String            @default("")
+  phone            String?
+  country          String            @default("")
+  verified         Boolean           @default(false)
+  accountStatus    String            @default("pending_verification") // pending_verification, verified, rejected
+  trustScore       Float             @default(0)
+  riskLevel        String            @default("MEDIUM") // LOW, MEDIUM, HIGH
+  plan             String            @default("BASIC") // BASIC (50/day), PREMIUM (1000/day)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  drugs            Drug[]
+  batches          Batch[]
+  codes            Code[]
+  verificationLogs VerificationLog[]
+  documents        Document[]
+  payments         Payment[]
+  billingHistory   BillingHistory[]
 
   @@index([userId])
   @@index([email])
@@ -65,18 +65,18 @@ model Drug {
 }
 
 model Batch {
-  id                String             @id @default(uuid())
-  batchNumber       String
-  productId         String
-  productionDate    DateTime
-  expirationDate    DateTime
-  manufacturerId    String
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  manufacturer      Manufacturer       @relation(fields: [manufacturerId], references: [id])
-  product           Product            @relation(fields: [productId], references: [id])
-  codes             Code[]
-  verificationLogs  VerificationLog[]
+  id               String            @id @default(uuid())
+  batchNumber      String
+  productId        String
+  productionDate   DateTime
+  expirationDate   DateTime
+  manufacturerId   String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  manufacturer     Manufacturer      @relation(fields: [manufacturerId], references: [id])
+  product          Product           @relation(fields: [productId], references: [id])
+  codes            Code[]
+  verificationLogs VerificationLog[]
 
   @@index([batchNumber])
   @@index([expirationDate])
@@ -98,6 +98,8 @@ model Code {
   batch            Batch             @relation(fields: [batchId], references: [id])
   manufacturer     Manufacturer      @relation(fields: [manufacturerId], references: [id])
   verificationLogs VerificationLog[]
+  Product          Product?          @relation(fields: [productId], references: [id])
+  productId        String?
 
   @@index([codeValue])
   @@index([isUsed])
@@ -110,10 +112,10 @@ model VerificationLog {
   batchId           String?
   manufacturerId    String?
   codeValue         String
-  userId            String?           // nullable for guest verification
+  userId            String? // nullable for guest verification
   timestamp         DateTime          @default(now())
   createdAt         DateTime          @default(now())
-  location          String?           // optional geo
+  location          String? // optional geo
   verificationState VerificationState
   latitude          Float?
   longitude         Float?
@@ -159,26 +161,27 @@ model Product {
   createdAt      DateTime @default(now())
   batches        Batch[]
   category       String
-  skuPrefix     String?
+  skuPrefix      String?
+  codes          Code[]
 }
 
 model UserFavorites {
-  id        String   @id @default(uuid())
-  userId    String
-  codeValue String
+  id          String   @id @default(uuid())
+  userId      String
+  codeValue   String
   productName String?
-  productId String?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId   String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
   @@unique([userId, codeValue])
+  @@index([userId])
 }
 
 model UserNotifications {
   id        String   @id @default(uuid())
   userId    String
-  type      String   // VERIFICATION, ALERT, GENERAL
+  type      String // VERIFICATION, ALERT, GENERAL
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -189,22 +192,22 @@ model UserNotifications {
 }
 
 model Report {
-  id                String   @id @default(uuid())
-  codeValue         String
-  productName       String?
-  reportType        String   // counterfeit, fake_packaging, invalid_code, quality_issue, other
-  description       String   @db.Text
-  location          String?
-  purchaseDate      DateTime?
-  purchaseLocation  String?
-  contact           String?
-  userId            String?
-  latitude          Float?   // Reporter's location latitude
-  longitude         Float?   // Reporter's location longitude
-  status            String   @default("OPEN") // OPEN, UNDER_REVIEW, RESOLVED, DISMISSED
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  user              User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id               String    @id @default(uuid())
+  codeValue        String
+  productName      String?
+  reportType       String // counterfeit, fake_packaging, invalid_code, quality_issue, other
+  description      String    @db.Text
+  location         String?
+  purchaseDate     DateTime?
+  purchaseLocation String?
+  contact          String?
+  userId           String?
+  latitude         Float? // Reporter's location latitude
+  longitude        Float? // Reporter's location longitude
+  status           String    @default("OPEN") // OPEN, UNDER_REVIEW, RESOLVED, DISMISSED
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([createdAt])
@@ -225,17 +228,18 @@ enum VerificationState {
   UNREGISTERED_PRODUCT
   SUSPICIOUS_PATTERN
 }
+
 model Document {
-  id                String   @id @default(uuid())
-  manufacturerId    String
-  type              String   // cac, trademark, regulatory, factory, website, contract, authorization
-  filename          String
-  filepath          String
-  status            String   @default("pending_review") // pending_review, approved, rejected
-  uploadedAt        DateTime @default(now())
-  approvedAt        DateTime?
-  rejectionReason   String?
-  manufacturer      Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  id              String       @id @default(uuid())
+  manufacturerId  String
+  type            String // cac, trademark, regulatory, factory, website, contract, authorization
+  filename        String
+  filepath        String
+  status          String       @default("pending_review") // pending_review, approved, rejected
+  uploadedAt      DateTime     @default(now())
+  approvedAt      DateTime?
+  rejectionReason String?
+  manufacturer    Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
 
   @@unique([manufacturerId, type])
   @@index([manufacturerId])
@@ -243,17 +247,17 @@ model Document {
 }
 
 model Payment {
-  id                String   @id @default(uuid())
-  manufacturerId    String
-  reference         String   @unique
-  amount            Int      // Amount in NGN (kobo)
-  planId            String
-  status            String   @default("pending") // pending, success, failed
-  accessCode        String?
-  authorizationUrl  String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  manufacturer      Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  id               String       @id @default(uuid())
+  manufacturerId   String
+  reference        String       @unique
+  amount           Int // Amount in NGN (kobo)
+  planId           String
+  status           String       @default("pending") // pending, success, failed
+  accessCode       String?
+  authorizationUrl String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
 
   @@index([manufacturerId])
   @@index([reference])
@@ -261,15 +265,15 @@ model Payment {
 }
 
 model BillingHistory {
-  id                String   @id @default(uuid())
-  manufacturerId    String
-  reference         String
-  amount            Int      // Amount in NGN
-  planId            String
-  status            String   @default("completed") // completed, failed, refunded
-  transactionDate   DateTime @default(now())
-  createdAt         DateTime @default(now())
-  manufacturer      Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  id              String       @id @default(uuid())
+  manufacturerId  String
+  reference       String
+  amount          Int // Amount in NGN
+  planId          String
+  status          String       @default("completed") // completed, failed, refunded
+  transactionDate DateTime     @default(now())
+  createdAt       DateTime     @default(now())
+  manufacturer    Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
 
   @@index([manufacturerId])
   @@index([reference])

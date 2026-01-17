@@ -212,18 +212,15 @@ export async function getProducts(req, res) {
       where.category = category.trim();
     }
 
-    // Fetch products with code count
+    // Fetch products with batch and code count
     const products = await prisma.product.findMany({
       where,
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        category: true,
-        skuPrefix: true,
-        createdAt: true,
-        _count: {
-          select: { batches: true, codes: true },
+      include: {
+        batches: {
+          select: { id: true },
+        },
+        codes: {
+          select: { id: true },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -234,17 +231,17 @@ export async function getProducts(req, res) {
     // Get total count
     const total = await prisma.product.count({ where });
 
-    // Transform response
+    // Transform response with counts
     const data = products.map((p) => ({
       id: p.id,
       name: p.name,
       description: p.description,
       category: p.category,
       skuPrefix: p.skuPrefix,
-      batchCount: p._count.batches,
-      codeCount: p._count.codes,
+      batchCount: p.batches?.length || 0,
+      codeCount: p.codes?.length || 0,
       createdAt: p.createdAt,
-      canEdit: p._count.codes === 0, // Can edit if no codes generated
+      canEdit: (p.codes?.length || 0) === 0, // Can edit if no codes generated
       canDelete: false, // Generally safer to not allow deletion
     }));
 
