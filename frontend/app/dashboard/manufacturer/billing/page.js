@@ -243,12 +243,20 @@ export default function BillingPage() {
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">
         <div className="p-4 pt-12 md:pt-16">
-          <Link
-            href="/dashboard/manufacturer"
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 dark:hover:text-blue-400 font-medium mb-6"
-          >
-            <FiArrowLeft /> Back to Dashboard
-          </Link>
+          <div className="flex justify-between items-center mb-6">
+            <Link
+              href="/dashboard/manufacturer"
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 dark:hover:text-blue-400 font-medium"
+            >
+              <FiArrowLeft /> Back to Dashboard
+            </Link>
+            <Link
+              href="/dashboard/manufacturer/billing/history"
+              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg font-medium transition"
+            >
+              View Billing History
+            </Link>
+          </div>
 
           {/* Header */}
           <div className="mb-12">
