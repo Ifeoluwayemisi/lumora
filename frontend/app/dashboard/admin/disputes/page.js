@@ -85,7 +85,9 @@ export default function DisputesPage() {
           break;
         case "refund":
           endpoint += "/refund";
-          body = { refundAmount: modalData.refundAmount || selectedDispute.amount };
+          body = {
+            refundAmount: modalData.refundAmount || selectedDispute.amount,
+          };
           break;
         case "reject":
           endpoint += "/reject";
@@ -149,8 +151,12 @@ export default function DisputesPage() {
       <div className="flex-1 overflow-auto">
         {/* Header */}
         <div className="bg-white border-b border-gray-200 p-6">
-          <h1 className="text-3xl font-bold text-gray-900">Dispute Resolution</h1>
-          <p className="text-gray-600 mt-2">Manage and resolve customer disputes</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Dispute Resolution
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Manage and resolve customer disputes
+          </p>
         </div>
 
         {/* Stats Cards */}
@@ -158,7 +164,9 @@ export default function DisputesPage() {
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-6">
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="text-sm text-gray-600">Open Disputes</div>
-              <div className="text-3xl font-bold text-red-600">{stats.openCount}</div>
+              <div className="text-3xl font-bold text-red-600">
+                {stats.openCount}
+              </div>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="text-sm text-gray-600">Under Investigation</div>
@@ -174,7 +182,9 @@ export default function DisputesPage() {
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="text-sm text-gray-600">Refunded</div>
-              <div className="text-3xl font-bold text-green-600">{stats.refundedCount}</div>
+              <div className="text-3xl font-bold text-green-600">
+                {stats.refundedCount}
+              </div>
             </div>
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
               <div className="text-sm text-gray-600">Total Refunded</div>
@@ -191,33 +201,44 @@ export default function DisputesPage() {
             {/* Filter */}
             <div className="p-6 border-b border-gray-200">
               <div className="flex flex-wrap gap-2">
-                {["all", "OPEN", "UNDER_INVESTIGATION", "RESOLVED", "REFUNDED", "REJECTED"].map(
-                  (status) => (
-                    <button
-                      key={status}
-                      onClick={() => {
-                        setFilter(status);
-                        setPage(1);
-                      }}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                        filter === status
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {status === "all" ? "All Disputes" : status.replace(/_/g, " ")}
-                    </button>
-                  )
-                )}
+                {[
+                  "all",
+                  "OPEN",
+                  "UNDER_INVESTIGATION",
+                  "RESOLVED",
+                  "REFUNDED",
+                  "REJECTED",
+                ].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      setFilter(status);
+                      setPage(1);
+                    }}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+                      filter === status
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {status === "all"
+                      ? "All Disputes"
+                      : status.replace(/_/g, " ")}
+                  </button>
+                ))}
               </div>
             </div>
 
             {/* Table */}
             <div className="overflow-x-auto">
               {loading ? (
-                <div className="p-8 text-center text-gray-500">Loading disputes...</div>
+                <div className="p-8 text-center text-gray-500">
+                  Loading disputes...
+                </div>
               ) : disputes.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">No disputes found</div>
+                <div className="p-8 text-center text-gray-500">
+                  No disputes found
+                </div>
               ) : (
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
@@ -247,21 +268,26 @@ export default function DisputesPage() {
                   </thead>
                   <tbody>
                     {disputes.map((dispute) => (
-                      <tr key={dispute.id} className="border-b border-gray-200 hover:bg-gray-50">
+                      <tr
+                        key={dispute.id}
+                        className="border-b border-gray-200 hover:bg-gray-50"
+                      >
                         <td className="px-6 py-4 text-sm font-mono text-gray-900">
                           {dispute.payment.reference}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           {dispute.manufacturer.name}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-700">{dispute.reason}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {dispute.reason}
+                        </td>
                         <td className="px-6 py-4 text-sm font-semibold text-gray-900">
                           {formatAmount(dispute.amount)}
                         </td>
                         <td className="px-6 py-4">
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                              dispute.status
+                              dispute.status,
                             )}`}
                           >
                             {dispute.status.replace(/_/g, " ")}
@@ -318,7 +344,9 @@ export default function DisputesPage() {
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
               <h2 className="text-xl font-bold text-gray-900">
-                {modalAction === "view" ? "Dispute Details" : `${modalAction.charAt(0).toUpperCase() + modalAction.slice(1)} Dispute`}
+                {modalAction === "view"
+                  ? "Dispute Details"
+                  : `${modalAction.charAt(0).toUpperCase() + modalAction.slice(1)} Dispute`}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
@@ -334,13 +362,17 @@ export default function DisputesPage() {
                 <div className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-semibold text-gray-600">Payment Reference</label>
+                      <label className="text-sm font-semibold text-gray-600">
+                        Payment Reference
+                      </label>
                       <p className="text-gray-900 font-mono mt-1">
                         {selectedDispute.payment.reference}
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-gray-600">Amount</label>
+                      <label className="text-sm font-semibold text-gray-600">
+                        Amount
+                      </label>
                       <p className="text-gray-900 font-bold mt-1">
                         {formatAmount(selectedDispute.amount)}
                       </p>
@@ -349,21 +381,31 @@ export default function DisputesPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-semibold text-gray-600">Manufacturer</label>
-                      <p className="text-gray-900 mt-1">{selectedDispute.manufacturer.name}</p>
+                      <label className="text-sm font-semibold text-gray-600">
+                        Manufacturer
+                      </label>
+                      <p className="text-gray-900 mt-1">
+                        {selectedDispute.manufacturer.name}
+                      </p>
                     </div>
                     <div>
-                      <label className="text-sm font-semibold text-gray-600">Email</label>
-                      <p className="text-gray-900 mt-1">{selectedDispute.manufacturer.email}</p>
+                      <label className="text-sm font-semibold text-gray-600">
+                        Email
+                      </label>
+                      <p className="text-gray-900 mt-1">
+                        {selectedDispute.manufacturer.email}
+                      </p>
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold text-gray-600">Status</label>
+                    <label className="text-sm font-semibold text-gray-600">
+                      Status
+                    </label>
                     <p className="mt-1">
                       <span
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${getStatusColor(
-                          selectedDispute.status
+                          selectedDispute.status,
                         )}`}
                       >
                         {selectedDispute.status.replace(/_/g, " ")}
@@ -372,12 +414,18 @@ export default function DisputesPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold text-gray-600">Reason</label>
-                    <p className="text-gray-900 mt-1">{selectedDispute.reason}</p>
+                    <label className="text-sm font-semibold text-gray-600">
+                      Reason
+                    </label>
+                    <p className="text-gray-900 mt-1">
+                      {selectedDispute.reason}
+                    </p>
                   </div>
 
                   <div>
-                    <label className="text-sm font-semibold text-gray-600">Description</label>
+                    <label className="text-sm font-semibold text-gray-600">
+                      Description
+                    </label>
                     <p className="text-gray-900 mt-1 p-3 bg-gray-50 rounded-lg">
                       {selectedDispute.description}
                     </p>
@@ -409,7 +457,9 @@ export default function DisputesPage() {
                           Refunded At
                         </label>
                         <p className="text-gray-900 mt-1">
-                          {new Date(selectedDispute.refundedAt).toLocaleString()}
+                          {new Date(
+                            selectedDispute.refundedAt,
+                          ).toLocaleString()}
                         </p>
                       </div>
                     </div>
@@ -419,19 +469,25 @@ export default function DisputesPage() {
                     {selectedDispute.status === "OPEN" && (
                       <>
                         <button
-                          onClick={() => handleAction(selectedDispute, "investigate")}
+                          onClick={() =>
+                            handleAction(selectedDispute, "investigate")
+                          }
                           className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700"
                         >
                           Start Investigation
                         </button>
                         <button
-                          onClick={() => handleAction(selectedDispute, "refund")}
+                          onClick={() =>
+                            handleAction(selectedDispute, "refund")
+                          }
                           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                         >
                           Approve Refund
                         </button>
                         <button
-                          onClick={() => handleAction(selectedDispute, "reject")}
+                          onClick={() =>
+                            handleAction(selectedDispute, "reject")
+                          }
                           className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
                         >
                           Reject
@@ -441,19 +497,25 @@ export default function DisputesPage() {
                     {selectedDispute.status === "UNDER_INVESTIGATION" && (
                       <>
                         <button
-                          onClick={() => handleAction(selectedDispute, "resolve")}
+                          onClick={() =>
+                            handleAction(selectedDispute, "resolve")
+                          }
                           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                         >
                           Resolve
                         </button>
                         <button
-                          onClick={() => handleAction(selectedDispute, "refund")}
+                          onClick={() =>
+                            handleAction(selectedDispute, "refund")
+                          }
                           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                         >
                           Approve Refund
                         </button>
                         <button
-                          onClick={() => handleAction(selectedDispute, "reject")}
+                          onClick={() =>
+                            handleAction(selectedDispute, "reject")
+                          }
                           className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
                         >
                           Reject
@@ -506,11 +568,17 @@ export default function DisputesPage() {
                       <input
                         type="number"
                         placeholder={`Full amount: ${selectedDispute.amount / 100}`}
-                        value={modalData.refundAmount ? modalData.refundAmount / 100 : ""}
+                        value={
+                          modalData.refundAmount
+                            ? modalData.refundAmount / 100
+                            : ""
+                        }
                         onChange={(e) =>
                           setModalData({
                             ...modalData,
-                            refundAmount: Math.round(parseFloat(e.target.value) * 100),
+                            refundAmount: Math.round(
+                              parseFloat(e.target.value) * 100,
+                            ),
                           })
                         }
                         className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

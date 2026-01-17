@@ -36,6 +36,15 @@ import {
   getQuotaStatus,
   checkCanCreateCode,
 } from "../controllers/quotaController.js";
+import {
+  getAllTeamMembers,
+  getPendingTeamInvites,
+  sendTeamInvite,
+  updateTeamMemberRole,
+  deleteTeamMember,
+  cancelTeamInvite,
+  acceptTeamInvite,
+} from "../controllers/teamController.js";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -206,5 +215,51 @@ router.get(
   roleMiddleware("manufacturer"),
   checkCanCreateCode,
 );
+
+// Team Management
+router.get(
+  "/:manufacturerId/team",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getAllTeamMembers,
+);
+
+router.get(
+  "/:manufacturerId/team/invites",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getPendingTeamInvites,
+);
+
+router.post(
+  "/:manufacturerId/team/invite",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  sendTeamInvite,
+);
+
+router.patch(
+  "/:manufacturerId/team/:memberId/role",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  updateTeamMemberRole,
+);
+
+router.delete(
+  "/:manufacturerId/team/:memberId",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  deleteTeamMember,
+);
+
+router.delete(
+  "/:manufacturerId/team/invites/:inviteId",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  cancelTeamInvite,
+);
+
+// Public endpoint for accepting invites
+router.post("/team/invite/:token/accept", acceptTeamInvite);
 
 export default router;

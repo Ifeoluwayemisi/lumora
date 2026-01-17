@@ -47,6 +47,8 @@ model Manufacturer {
   payments         Payment[]
   billingHistory   BillingHistory[]
   disputes         Dispute[]
+  teamMembers      TeamMember[]
+  teamInvites      TeamInvite[]
 
   @@index([userId])
   @@index([email])
@@ -303,4 +305,39 @@ model Dispute {
   @@index([manufacturerId])
   @@index([status])
   @@index([createdAt])
+}
+
+model TeamMember {
+  id               String       @id @default(uuid())
+  manufacturerId   String
+  email            String
+  name             String
+  role             String       @default("viewer") // admin, editor, viewer
+  status           String       @default("active") // active, inactive, removed
+  joinedAt         DateTime     @default(now())
+  lastActiveAt     DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  @@unique([manufacturerId, email])
+  @@index([manufacturerId])
+  @@index([role])
+}
+
+model TeamInvite {
+  id               String       @id @default(uuid())
+  manufacturerId   String
+  email            String
+  role             String       @default("viewer") // admin, editor, viewer
+  token            String       @unique
+  status           String       @default("pending") // pending, accepted, expired
+  expiresAt        DateTime
+  acceptedAt       DateTime?
+  createdAt        DateTime     @default(now())
+  manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  @@unique([manufacturerId, email])
+  @@index([manufacturerId])
+  @@index([token])
 }
