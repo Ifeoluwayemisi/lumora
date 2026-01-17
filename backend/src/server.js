@@ -25,7 +25,7 @@ async function setupDatabase() {
   } catch (error) {
     console.warn(
       "⚠️  Database setup warning (may be expected in development):",
-      error.message.split("\n")[0]
+      error.message.split("\n")[0],
     );
     // Don't fail - may fail if Prisma is locked or no pending migrations
   }
@@ -45,7 +45,7 @@ function validateEnvironment() {
   const missing = requiredEnvVars.filter((v) => !process.env[v]);
   if (missing.length > 0) {
     console.error(
-      `CRITICAL: Missing environment variables: ${missing.join(", ")}`
+      `CRITICAL: Missing environment variables: ${missing.join(", ")}`,
     );
     process.exit(1);
   }
@@ -72,15 +72,15 @@ async function startServer() {
   try {
     // Validate environment in all envs, but be strict in production
     validateEnvironment();
-    
+
     // Setup database (regenerate client and run migrations)
     await setupDatabase();
-    
+
     await testDatabaseConnection();
 
     const server = app.listen(PORT, () => {
       console.log(
-        `\n🚀 Lumora backend running on port ${PORT} (${NODE_ENV})\n`
+        `\n🚀 Lumora backend running on port ${PORT} (${NODE_ENV})\n`,
       );
       if (NODE_ENV === "development") {
         console.log("Environment info:");
