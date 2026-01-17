@@ -19,8 +19,8 @@ export async function getNotifications(req, res) {
 
     // Build query filters
     const where = { userId };
-    if (status) where.status = status;
-    if (type) where.type = type;
+    if (status) where.read = status === "read";
+    if (type) where.type = type.toUpperCase();
 
     // Fetch notifications
     const [notifications, total] = await Promise.all([
@@ -82,7 +82,7 @@ export async function markNotificationRead(req, res) {
     // Update status
     const updated = await prisma.userNotifications.update({
       where: { id },
-      data: { status: "read" },
+      data: { read: true },
     });
 
     return res.status(200).json({
@@ -156,9 +156,9 @@ export async function markAllNotificationsRead(req, res) {
     const result = await prisma.userNotifications.updateMany({
       where: {
         userId,
-        status: "unread",
+        read: false,
       },
-      data: { status: "read" },
+      data: { read: true },
     });
 
     return res.status(200).json({
@@ -189,7 +189,7 @@ export async function clearReadNotifications(req, res) {
     const result = await prisma.userNotifications.deleteMany({
       where: {
         userId,
-        status: "read",
+        read: true,
       },
     });
 
@@ -221,7 +221,7 @@ export async function getUnreadCount(req, res) {
     const count = await prisma.userNotifications.count({
       where: {
         userId,
-        status: "unread",
+        read: false,
       },
     });
 

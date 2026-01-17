@@ -80,16 +80,9 @@ export async function sendVerificationNotification(verificationData) {
     await prisma.userNotifications.create({
       data: {
         userId: user.id,
-        title: subject,
-        message,
-        type: "verification",
-        status: "unread",
-        metadata: {
-          codeValue,
-          verificationState,
-          location,
-          timestamp: new Date().toISOString(),
-        },
+        type: "VERIFICATION",
+        message: `${subject} - ${message}`,
+        read: false,
       },
     });
 
@@ -151,17 +144,9 @@ export async function sendPaymentNotification(paymentData) {
     await prisma.userNotifications.create({
       data: {
         userId: user.id,
-        title: subject,
-        message,
-        type: "payment",
-        status: "unread",
-        metadata: {
-          amount,
-          planId,
-          status,
-          reference,
-          timestamp: new Date().toISOString(),
-        },
+        type: "PAYMENT",
+        message: `${subject} - ₦${(amount / 100).toLocaleString()} for ${planId}`,
+        read: false,
       },
     });
 
@@ -216,11 +201,10 @@ export async function sendAccountStatusNotification(userId, status, message) {
     await prisma.userNotifications.create({
       data: {
         userId,
-        title: subject,
+        type: "ACCOUNT",
         message:
           message || `Your account status has been updated to: ${status}`,
-        type: "account",
-        status: "unread",
+        read: false,
       },
     });
 
@@ -268,10 +252,9 @@ export async function sendSuspiciousActivityAlert(manufacturerId, details) {
     await prisma.userNotifications.create({
       data: {
         userId: user.id,
-        title: subject,
+        type: "ALERT",
         message,
-        type: "alert",
-        status: "unread",
+        read: false,
       },
     });
 

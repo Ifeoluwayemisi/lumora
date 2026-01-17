@@ -19,6 +19,13 @@ import {
   uploadProfilePicture,
   getUserProfile,
 } from "../controllers/userController.js";
+import {
+  deleteNotification,
+  markAllNotificationsRead,
+  clearReadNotifications,
+  getUnreadCount,
+} from "../controllers/notificationController.js";
+} from "../controllers/userController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { roleMiddleware } from "../middleware/roleMiddleware.js";
 
@@ -54,7 +61,11 @@ router.delete("/favorite/:id", removeFavorite);
 
 // Notifications endpoints
 router.get("/notifications", getNotifications);
+router.get("/notifications/unread-count", getUnreadCount);
 router.patch("/notifications/:id", markNotificationRead);
+router.delete("/notifications/:id", deleteNotification);
+router.patch("/notifications/mark-all-read", markAllNotificationsRead);
+router.delete("/notifications/clear-read", clearReadNotifications);
 
 // Settings endpoints
 router.get("/settings", getUserSettings);
