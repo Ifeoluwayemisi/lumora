@@ -28,14 +28,9 @@ export async function initiatePayment(req, res) {
       return res.status(400).json({ error: "Plan ID required" });
     }
 
-    // Get manufacturer
+    // Get manufacturer with user details
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-      },
     });
 
     console.log("[INITIATE_PAYMENT] Manufacturer:", manufacturer?.id);
@@ -44,6 +39,19 @@ export async function initiatePayment(req, res) {
       console.warn("[INITIATE_PAYMENT] Manufacturer not found");
       return res.status(404).json({ error: "Manufacturer not found" });
     }
+
+    // Get user email
+    const user = await prisma.user.findUnique({
+      where: { id: manufacturer.userId },
+      select: { email: true },
+    });
+
+    if (!user || !user.email) {
+      console.warn("[INITIATE_PAYMENT] User email not found");
+      return res.status(404).json({ error: "User email not found" });
+    }
+
+    console.log("[INITIATE_PAYMENT] User email:", user.email);
 
     // Define plans
     const plans = {
@@ -65,10 +73,10 @@ export async function initiatePayment(req, res) {
     // Initialize Paystack payment
     console.log(
       "[INITIATE_PAYMENT] Calling Paystack with email:",
-      manufacturer.email
+      user.email
     );
     const paymentData = await initializePayment(
-      manufacturer.email,
+      user.email,
       selectedPlan.amount,
       {
         manufacturerId,
