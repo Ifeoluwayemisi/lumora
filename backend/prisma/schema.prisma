@@ -46,6 +46,7 @@ model Manufacturer {
   documents        Document[]
   payments         Payment[]
   billingHistory   BillingHistory[]
+  disputes         Dispute[]
 
   @@index([userId])
   @@index([email])
@@ -258,6 +259,7 @@ model Payment {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  dispute          Dispute?
 
   @@index([manufacturerId])
   @@index([reference])
@@ -277,4 +279,28 @@ model BillingHistory {
 
   @@index([manufacturerId])
   @@index([reference])
+}
+
+model Dispute {
+  id               String       @id @default(uuid())
+  paymentId        String       @unique
+  manufacturerId   String
+  reference        String
+  amount           Int // Amount in NGN
+  reason           String // Unauthorized charge, duplicate transaction, services not rendered, product issue, other
+  description      String       @db.Text
+  status           String       @default("OPEN") // OPEN, UNDER_INVESTIGATION, RESOLVED, REFUNDED, REJECTED
+  resolutionNotes  String?      @db.Text
+  refundAmount     Int? // Refund amount in kobo (can be partial)
+  refundedAt       DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  resolvedBy       String? // Admin userId who resolved the dispute
+  resolvedAt       DateTime?
+  manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  payment          Payment      @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturerId])
+  @@index([status])
+  @@index([createdAt])
 }

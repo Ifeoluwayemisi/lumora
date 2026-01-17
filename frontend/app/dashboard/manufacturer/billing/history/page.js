@@ -67,11 +67,11 @@ export default function BillingHistoryPage() {
     const element = document.createElement("a");
     element.setAttribute(
       "href",
-      `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`
+      `data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`,
     );
     element.setAttribute(
       "download",
-      `billing-history-${new Date().toISOString().split("T")[0]}.csv`
+      `billing-history-${new Date().toISOString().split("T")[0]}.csv`,
     );
     element.style.display = "none";
     document.body.appendChild(element);
@@ -91,13 +91,13 @@ export default function BillingHistoryPage() {
     if (dateRange.from) {
       const fromDate = new Date(dateRange.from);
       filtered = filtered.filter(
-        (item) => new Date(item.transactionDate) >= fromDate
+        (item) => new Date(item.transactionDate) >= fromDate,
       );
     }
     if (dateRange.to) {
       const toDate = new Date(dateRange.to);
       filtered = filtered.filter(
-        (item) => new Date(item.transactionDate) <= toDate
+        (item) => new Date(item.transactionDate) <= toDate,
       );
     }
 
@@ -114,7 +114,7 @@ export default function BillingHistoryPage() {
 
   const totalTransactions = filteredHistory.length;
   const completedTransactions = filteredHistory.filter(
-    (item) => item.status === "completed"
+    (item) => item.status === "completed",
   ).length;
 
   if (loading) {

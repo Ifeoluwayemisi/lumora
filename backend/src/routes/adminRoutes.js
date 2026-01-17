@@ -23,6 +23,17 @@ import {
   getAllManufacturers,
 } from "../controllers/manufacturerReviewController.js";
 
+import {
+  getAllDisputes,
+  getDisputeDetails,
+  fileDispute,
+  startInvestigation,
+  resolveDispute,
+  approveRefund,
+  rejectDisputeRequest,
+  getStats,
+} from "../controllers/disputeController.js";
+
 const router = express.Router();
 
 //auth and admin routes
@@ -46,5 +57,15 @@ router.patch("/manufacturers/:manufacturerId/reject", rejectManufacturer);
 // System management endpoints
 router.post("/system/migrate", triggerMigrations);
 router.get("/system/database-status", checkDatabaseStatus);
+
+// Dispute Resolution Endpoints
+router.get("/disputes/stats/overview", getStats);
+router.get("/disputes", getAllDisputes);
+router.get("/disputes/:id", getDisputeDetails);
+router.post("/disputes", fileDispute);
+router.patch("/disputes/:id/investigate", startInvestigation);
+router.patch("/disputes/:id/resolve", resolveDispute);
+router.patch("/disputes/:id/refund", approveRefund);
+router.patch("/disputes/:id/reject", rejectDisputeRequest);
 
 export default router;
