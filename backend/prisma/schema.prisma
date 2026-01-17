@@ -159,6 +159,7 @@ model Product {
   createdAt      DateTime @default(now())
   batches        Batch[]
   category       String
+  skuPrefix     String?
 }
 
 model UserFavorites {
