@@ -118,7 +118,13 @@ export default function Navbar() {
           {mounted && isHydrated && user ? (
             <>
               <Link
-                href="/dashboard/user"
+                href={
+                  user.role === "MANUFACTURER"
+                    ? "/dashboard/manufacturer"
+                    : user.role === "ADMIN"
+                    ? "/dashboard/admin"
+                    : "/dashboard/user"
+                }
                 className="hidden md:inline text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors"
               >
                 Dashboard

@@ -100,7 +100,7 @@ export default function BillingPage() {
       if (!response.data.success) {
         console.error(
           "[LOAD_CONFIG] Response not successful:",
-          response.data.error
+          response.data.error,
         );
         toast.error(`Configuration error: ${response.data.error}`);
         return;
@@ -110,7 +110,7 @@ export default function BillingPage() {
       if (!publicKey) {
         console.error("[LOAD_CONFIG] No publicKey in response:", response.data);
         toast.error(
-          "Payment configuration error: Missing public key. Check console."
+          "Payment configuration error: Missing public key. Check console.",
         );
         return;
       }
@@ -121,12 +121,12 @@ export default function BillingPage() {
       console.error("[LOAD_CONFIG] Error:", err);
       console.error(
         "[LOAD_CONFIG] Error details:",
-        err.response?.data || err.message
+        err.response?.data || err.message,
       );
       toast.error(
         `Failed to load payment config: ${
           err.response?.data?.error || err.message
-        }`
+        }`,
       );
     }
   };
@@ -167,7 +167,7 @@ export default function BillingPage() {
         "/manufacturer/billing/initiate-payment",
         {
           planId,
-        }
+        },
       );
 
       const { authorization_url, reference } = initResponse.data.data;
@@ -192,7 +192,7 @@ export default function BillingPage() {
           try {
             const verifyResponse = await api.post(
               "/manufacturer/billing/verify-payment",
-              { reference }
+              { reference },
             );
 
             toast.success("🎉 Plan upgraded successfully!");
@@ -207,7 +207,7 @@ export default function BillingPage() {
           } catch (err) {
             console.error("[VERIFY] Error:", err);
             toast.error(
-              "Payment verified but plan update failed. Please contact support."
+              "Payment verified but plan update failed. Please contact support.",
             );
           } finally {
             setProcessing(false);
@@ -340,8 +340,8 @@ export default function BillingPage() {
                     {processing
                       ? "Processing..."
                       : plan.price === 0
-                      ? "Downgrade"
-                      : "Upgrade"}
+                        ? "Downgrade"
+                        : "Upgrade"}
                   </button>
                 )}
 
