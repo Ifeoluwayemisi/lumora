@@ -22,7 +22,7 @@ export default function NotificationsPage() {
   const fetchNotifications = async () => {
     try {
       const response = await api.get("/user/notifications");
-      setNotifications(response.data?.data || []);
+      setNotifications(response.data?.notifications || []);
     } catch (err) {
       console.error("[FETCH_NOTIFICATIONS] Error:", err);
       toast.error("Failed to load notifications");
@@ -36,8 +36,8 @@ export default function NotificationsPage() {
       await api.patch(`/user/notifications/${notificationId}`, { read: true });
       setNotifications(
         notifications.map((n) =>
-          n.id === notificationId ? { ...n, read: true } : n
-        )
+          n.id === notificationId ? { ...n, read: true } : n,
+        ),
       );
       toast.success("Marked as read");
     } catch (err) {
@@ -150,10 +150,10 @@ export default function NotificationsPage() {
                             notification.type === "alert"
                               ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
                               : notification.type === "warning"
-                              ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
-                              : notification.type === "info"
-                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                              : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                                ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                                : notification.type === "info"
+                                  ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                                  : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
                           }`}
                         >
                           {notification.type?.toUpperCase() || "INFO"}

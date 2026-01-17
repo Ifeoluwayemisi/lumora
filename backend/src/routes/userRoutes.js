@@ -25,7 +25,6 @@ import {
   clearReadNotifications,
   getUnreadCount,
 } from "../controllers/notificationController.js";
-} from "../controllers/userController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
 import { roleMiddleware } from "../middleware/roleMiddleware.js";
 
