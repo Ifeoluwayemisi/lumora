@@ -7,7 +7,7 @@ import nodemailer from "nodemailer";
 // Validate email configuration
 if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
   console.warn(
-    "⚠️  Email service not configured - password reset emails will not be sent"
+    "⚠️  Email service not configured - password reset emails will not be sent",
   );
 }
 
@@ -41,7 +41,7 @@ export const signup = async (req, res) => {
     "companyName:",
     companyName,
     "country:",
-    country
+    country,
   );
 
   // Input validation
@@ -132,7 +132,7 @@ export const signup = async (req, res) => {
         });
 
         console.log(
-          "[SIGNUP] Manufacturer created successfully with all fields"
+          "[SIGNUP] Manufacturer created successfully with all fields",
         );
       } catch (manufacturerErr) {
         // Log detailed error for debugging
@@ -147,7 +147,7 @@ export const signup = async (req, res) => {
         // If it's a schema mismatch, provide clear message
         if (manufacturerErr.message.includes("Unknown argument")) {
           console.log(
-            "[SIGNUP] Database schema mismatch - new fields not deployed yet"
+            "[SIGNUP] Database schema mismatch - new fields not deployed yet",
           );
           return res.status(503).json({
             error: "Service temporarily unavailable",
@@ -209,7 +209,7 @@ export const login = async (req, res) => {
       "Found:",
       !!user,
       "Role:",
-      user?.role
+      user?.role,
     );
     if (!user) {
       // Don't reveal if email exists
@@ -225,7 +225,7 @@ export const login = async (req, res) => {
     const token = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
     );
 
     // Return user object with token (matching frontend expectations)
@@ -264,6 +264,15 @@ export const forgotPassword = async (req, res) => {
     return res.status(400).json({ error: "Email is required" });
   }
 
+  // Check if email service is configured
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn("[FORGOT_PASSWORD] Email service not configured");
+    return res.status(503).json({
+      error: "Email service unavailable",
+      message: "Password reset emails cannot be sent at this time. Please contact support.",
+    });
+  }
+
   try {
     const user = await prisma.user.findUnique({ where: { email } });
 
@@ -294,7 +303,13 @@ export const forgotPassword = async (req, res) => {
 
     // Send reset email
     try {
-      const resetUrl = `${process.env.FRONTEND_URL}/auth/reset-password?token=${resetToken}`;
+      const frontendUrl =
+        process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app";
+      const resetUrl = `${frontendUrl}/auth/reset-password?token=${resetToken}`;
+
+      console.log("[FORGOT_PASSWORD] Sending reset email to:", email);
+      console.log("[FORGOT_PASSWORD] Reset URL:", resetUrl);
+
       await transporter.sendMail({
         from: `"Lumora Support" <${process.env.EMAIL_USER}>`,
         to: email,
@@ -308,6 +323,7 @@ export const forgotPassword = async (req, res) => {
           <p>If you didn't request this, please ignore this email.</p>
         `,
       });
+      console.log("[FORGOT_PASSWORD] Email sent successfully to:", email);
     } catch (emailError) {
       console.error("[FORGOT_PASSWORD] Email send failed:", emailError.message);
       // Don't fail the request, but log the error
