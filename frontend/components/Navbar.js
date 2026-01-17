@@ -51,7 +51,7 @@ export default function Navbar() {
           }
         });
       },
-      { rootMargin: "-50% 0px -50% 0px" }
+      { rootMargin: "-50% 0px -50% 0px" },
     );
 
     sections.forEach((sec) => observer.observe(sec));
@@ -119,11 +119,11 @@ export default function Navbar() {
             <>
               <Link
                 href={
-                  user.role === "MANUFACTURER"
+                  user.role?.toUpperCase() === "MANUFACTURER"
                     ? "/dashboard/manufacturer"
-                    : user.role === "ADMIN"
-                    ? "/dashboard/admin"
-                    : "/dashboard/user"
+                    : user.role?.toUpperCase() === "ADMIN"
+                      ? "/dashboard/admin"
+                      : "/dashboard/user"
                 }
                 className="hidden md:inline text-gray-700 dark:text-gray-300 hover:text-green-500 transition-colors"
               >
