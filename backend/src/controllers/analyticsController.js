@@ -9,7 +9,6 @@ import {
   getProductData,
   getHotspotData,
   exportAsCSV,
-  createPDFWithCharts,
 } from "../services/analyticsExportService.js";
 import { Parser } from "json2csv";
 

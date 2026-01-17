@@ -1,6 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
-const { Parser } = require("json2csv");
-const PDFDocument = require("pdfkit");
+import { PrismaClient } from "@prisma/client";
+import { Parser } from "json2csv";
+import PDFDocument from "pdfkit";
+
 const prisma = new PrismaClient();
 
 /**
@@ -350,7 +351,7 @@ async function createPDFWithCharts(title, data, summary, canvas) {
   });
 }
 
-module.exports = {
+export {
   getRevenueData,
   getVerificationData,
   getProductData,
