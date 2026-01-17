@@ -4,6 +4,7 @@ import {
   verifyPayment,
   getPublicKey,
 } from "../services/paystackService.js";
+import { sendPaymentNotification } from "../services/notificationService.js";
 
 /**
  * Initiate Paystack payment for plan upgrade
@@ -193,6 +194,19 @@ export async function verifyAndUpgradePlan(req, res) {
         transactionDate: new Date(),
       },
     });
+
+    // Send payment notification
+    try {
+      await sendPaymentNotification({
+        manufacturerId,
+        amount: payment.amount,
+        planId: payment.planId,
+        status: "success",
+        reference,
+      });
+    } catch (notifError) {
+      console.warn("[VERIFY_PAYMENT] Notification error:", notifError.message);
+    }
 
     res.json({
       success: true,

@@ -1,6 +1,7 @@
 import { verifyCode } from "../services/verificationService.js";
 import { checkRateLimit } from "../services/rateLimitService.js";
 import { decodeQRcode } from "../utils/qrDecoder.js";
+import { sendVerificationNotification } from "../services/notificationService.js";
 import prisma from "../models/prismaClient.js";
 
 /* Helpers */
@@ -76,6 +77,22 @@ export async function verifyManual(req, res, next) {
       longitude,
     });
 
+    // Send notification to manufacturer if code is found
+    if (result.code?.manufacturerId) {
+      try {
+        await sendVerificationNotification({
+          manufacturerId: result.code.manufacturerId,
+          codeValue,
+          verificationState: result.verificationState,
+          userEmail: req.user?.email,
+          location: { latitude, longitude },
+        });
+      } catch (notifError) {
+        console.warn("[VERIFY_MANUAL] Notification error:", notifError.message);
+        // Don't fail verification because of notification error
+      }
+    }
+
     // Return the verification result always, even if UNREGISTERED_PRODUCT
     return res.status(200).json(result);
   } catch (err) {
@@ -132,6 +149,22 @@ export async function verifyQR(req, res, next) {
       latitude,
       longitude,
     });
+
+    // Send notification to manufacturer if code is found
+    if (result.code?.manufacturerId) {
+      try {
+        await sendVerificationNotification({
+          manufacturerId: result.code.manufacturerId,
+          codeValue,
+          verificationState: result.verificationState,
+          userEmail: req.user?.email,
+          location: { latitude, longitude },
+        });
+      } catch (notifError) {
+        console.warn("[VERIFY_QR] Notification error:", notifError.message);
+        // Don't fail verification because of notification error
+      }
+    }
 
     return res.status(200).json(result);
   } catch (err) {

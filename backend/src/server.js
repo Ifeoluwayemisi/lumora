@@ -19,7 +19,7 @@ function ensurePrismaClient() {
   } catch (error) {
     console.warn(
       "⚠️  Prisma client generation warning (may be cached):",
-      error.message.split("\n")[0]
+      error.message.split("\n")[0],
     );
   }
 }
