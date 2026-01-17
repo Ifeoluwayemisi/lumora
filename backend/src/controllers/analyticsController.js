@@ -3,6 +3,14 @@ import {
   getHotspotPredictions,
   getExportData,
 } from "../services/analyticsService.js";
+import {
+  getRevenueData,
+  getVerificationData,
+  getProductData,
+  getHotspotData,
+  exportAsCSV,
+  createPDFWithCharts,
+} from "../services/analyticsExportService.js";
 import { Parser } from "json2csv";
 
 /**
@@ -72,7 +80,7 @@ export async function exportAnalytics(req, res) {
         res.setHeader("Content-Type", "text/csv");
         res.setHeader(
           "Content-Disposition",
-          "attachment; filename=analytics.csv"
+          "attachment; filename=analytics.csv",
         );
         res.send(csv);
       } catch (err) {
@@ -82,7 +90,7 @@ export async function exportAnalytics(req, res) {
       res.setHeader("Content-Type", "application/json");
       res.setHeader(
         "Content-Disposition",
-        "attachment; filename=analytics.json"
+        "attachment; filename=analytics.json",
       );
       res.json(data);
     } else if (format === "pdf") {
@@ -95,5 +103,173 @@ export async function exportAnalytics(req, res) {
   } catch (err) {
     console.error("[EXPORT_ANALYTICS] Error:", err);
     res.status(500).json({ error: "Failed to export analytics" });
+  }
+}
+
+/**
+ * Export revenue data as CSV
+ */
+export async function exportRevenueCSV(req, res) {
+  try {
+    const manufacturerId = req.user?.id;
+    const { startDate, endDate } = req.query;
+
+    if (!manufacturerId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : new Date();
+
+    const { data, summary } = await getRevenueData(manufacturerId, start, end);
+    const csv = await exportAsCSV(data, summary, "revenue");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=revenue-export.csv",
+    );
+    res.send(csv);
+  } catch (error) {
+    console.error("[EXPORT_REVENUE] Error:", error);
+    res.status(500).json({ error: "Failed to export revenue data" });
+  }
+}
+
+/**
+ * Export verification data as CSV
+ */
+export async function exportVerificationCSV(req, res) {
+  try {
+    const manufacturerId = req.user?.id;
+    const { startDate, endDate } = req.query;
+
+    if (!manufacturerId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : new Date();
+
+    const { data, summary } = await getVerificationData(
+      manufacturerId,
+      start,
+      end,
+    );
+    const csv = await exportAsCSV(data, summary, "verifications");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=verification-export.csv",
+    );
+    res.send(csv);
+  } catch (error) {
+    console.error("[EXPORT_VERIFICATION] Error:", error);
+    res.status(500).json({ error: "Failed to export verification data" });
+  }
+}
+
+/**
+ * Export product data as CSV
+ */
+export async function exportProductCSV(req, res) {
+  try {
+    const manufacturerId = req.user?.id;
+
+    if (!manufacturerId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const { data, summary } = await getProductData(manufacturerId);
+    const csv = await exportAsCSV(data, summary, "products");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=products-export.csv",
+    );
+    res.send(csv);
+  } catch (error) {
+    console.error("[EXPORT_PRODUCTS] Error:", error);
+    res.status(500).json({ error: "Failed to export product data" });
+  }
+}
+
+/**
+ * Export hotspot data as CSV
+ */
+export async function exportHotspotCSV(req, res) {
+  try {
+    const manufacturerId = req.user?.id;
+    const { startDate, endDate } = req.query;
+
+    if (!manufacturerId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : new Date();
+
+    const { data, summary } = await getHotspotData(manufacturerId, start, end);
+    const csv = await exportAsCSV(data, summary, "hotspots");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=hotspots-export.csv",
+    );
+    res.send(csv);
+  } catch (error) {
+    console.error("[EXPORT_HOTSPOTS] Error:", error);
+    res.status(500).json({ error: "Failed to export hotspot data" });
+  }
+}
+
+/**
+ * Get all export data in JSON format (for frontend PDF generation)
+ */
+export async function getAllExportData(req, res) {
+  try {
+    const manufacturerId = req.user?.id;
+    const { startDate, endDate } = req.query;
+
+    if (!manufacturerId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const start = startDate
+      ? new Date(startDate)
+      : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const end = endDate ? new Date(endDate) : new Date();
+
+    const [revenue, verification, products, hotspots] = await Promise.all([
+      getRevenueData(manufacturerId, start, end),
+      getVerificationData(manufacturerId, start, end),
+      getProductData(manufacturerId),
+      getHotspotData(manufacturerId, start, end),
+    ]);
+
+    res.json({
+      success: true,
+      exportDate: new Date(),
+      dateRange: {
+        start: start.toLocaleDateString(),
+        end: end.toLocaleDateString(),
+      },
+      revenue,
+      verification,
+      products,
+      hotspots,
+    });
+  } catch (error) {
+    console.error("[GET_EXPORT_DATA] Error:", error);
+    res.status(500).json({ error: "Failed to fetch export data" });
   }
 }

@@ -25,6 +25,11 @@ import {
   getAnalytics,
   getHotspots,
   exportAnalytics,
+  exportRevenueCSV,
+  exportVerificationCSV,
+  exportProductCSV,
+  exportHotspotCSV,
+  getAllExportData,
 } from "../controllers/analyticsController.js";
 import {
   initiatePayment,
@@ -43,7 +48,7 @@ import {
   updateTeamMemberRole,
   deleteTeamMember,
   cancelTeamInvite,
-  acceptTeamInvite,
+  acceptInvite,
 } from "../controllers/teamController.js";
 
 // Configure multer for file uploads
@@ -98,6 +103,36 @@ router.get(
   authMiddleware,
   roleMiddleware("manufacturer"),
   exportAnalytics,
+);
+router.get(
+  "/analytics/export/data",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getAllExportData,
+);
+router.get(
+  "/analytics/export/revenue",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  exportRevenueCSV,
+);
+router.get(
+  "/analytics/export/verification",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  exportVerificationCSV,
+);
+router.get(
+  "/analytics/export/products",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  exportProductCSV,
+);
+router.get(
+  "/analytics/export/hotspots",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  exportHotspotCSV,
 );
 
 // Products CRUD
