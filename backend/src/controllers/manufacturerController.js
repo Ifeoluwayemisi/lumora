@@ -5,7 +5,6 @@ import {
 } from "../services/manufacturerService.js";
 import { canCreateCode, getQuotaInfo } from "../services/quotaService.js";
 import { parseISO, isValid } from "date-fns";
-import { sendAccountStatusNotification } from "../services/notificationService.js";
 
 /**
  * Get manufacturer dashboard overview
@@ -122,10 +121,6 @@ export async function getDashboard(req, res) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    console.log(
-      `[DASHBOARD-${requestId}] Checking codes from: ${today.toISOString()}`,
-    );
-
     const codesGeneratedToday = await prisma.code.count({
       where: {
         manufacturerId,
@@ -136,21 +131,9 @@ export async function getDashboard(req, res) {
       `[DASHBOARD-${requestId}] Codes generated today: ${codesGeneratedToday}`,
     );
 
-    // Debug: Check all codes for this manufacturer to verify they exist
-    const allCodes = await prisma.code.count({
-      where: { manufacturerId },
-    });
-    console.log(
-      `[DASHBOARD-${requestId}] Total codes for manufacturer: ${allCodes}`,
-    );
-
     // Determine daily limit based on plan
     const dailyLimit = manufacturer.plan === "PREMIUM" ? 1000 : 50;
     const quotaRemaining = Math.max(dailyLimit - codesGeneratedToday, 0);
-
-    console.log(
-      `[DASHBOARD-${requestId}] Plan: ${manufacturer.plan}, Limit: ${dailyLimit}, Remaining: ${quotaRemaining}`,
-    );
 
     // Get recent alerts (last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -265,7 +248,19 @@ export async function getDashboard(req, res) {
 export async function getProducts(req, res) {
   try {
     const { page = 1, limit = 10, search, category } = req.query;
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     const pageNum = Math.max(Number(page), 1);
     const limitNum = Math.min(Math.max(Number(limit), 1), 100);
@@ -343,7 +338,19 @@ export async function getProducts(req, res) {
 export async function getProduct(req, res) {
   try {
     const { id } = req.params;
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     const product = await prisma.product.findFirst({
       where: { id, manufacturerId },
@@ -389,7 +396,19 @@ export async function getProduct(req, res) {
 export async function addProduct(req, res) {
   try {
     const { name, description, category, skuPrefix } = req.body;
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true, verified: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     // Input validation
     if (!name || typeof name !== "string" || name.trim().length === 0) {
@@ -409,11 +428,6 @@ export async function addProduct(req, res) {
     }
 
     // Check manufacturer is verified
-    const manufacturer = await prisma.manufacturer.findUnique({
-      where: { id: manufacturerId },
-      select: { verified: true },
-    });
-
     if (!manufacturer?.verified) {
       return res.status(403).json({
         error: "Unauthorized",
@@ -463,7 +477,19 @@ export async function updateProduct(req, res) {
   try {
     const { id } = req.params;
     const { name, description, category, skuPrefix } = req.body;
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     // Verify product exists and belongs to manufacturer
     const product = await prisma.product.findFirst({
@@ -546,7 +572,19 @@ export async function updateProduct(req, res) {
 export async function deleteProduct(req, res) {
   try {
     const { id } = req.params;
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     // Verify product exists and belongs to manufacturer
     const product = await prisma.product.findFirst({
@@ -609,7 +647,23 @@ export async function deleteProduct(req, res) {
 export async function addBatch(req, res) {
   try {
     const { productId, productionDate, expiryDate, quantity } = req.body;
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        verified: true,
+        plan: true,
+      },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     // Input validation
     if (!productId || !expiryDate) {
@@ -625,20 +679,7 @@ export async function addBatch(req, res) {
       });
     }
 
-    // Check manufacturer exists and is verified
-    const manufacturer = await prisma.manufacturer.findUnique({
-      where: { id: manufacturerId },
-      select: {
-        id: true,
-        verified: true,
-        plan: true,
-      },
-    });
-
-    if (!manufacturer) {
-      return res.status(404).json({ error: "Manufacturer not found" });
-    }
-
+    // Check if manufacturer is verified
     if (!manufacturer.verified) {
       return res.status(403).json({
         error: "Unauthorized",
@@ -727,37 +768,6 @@ export async function addBatch(req, res) {
       quantity,
     });
 
-    // Send notification that codes were generated
-    try {
-      const user = await prisma.user.findFirst({
-        where: { manufacturer: { id: manufacturerId } },
-        select: { id: true },
-      });
-
-      if (user) {
-        await sendAccountStatusNotification(
-          user.id,
-          "batch_created",
-          `✓ Batch Created - ${quantity} codes generated successfully`,
-        );
-      }
-    } catch (notifErr) {
-      console.warn(
-        "[ADD_BATCH] Failed to send notification:",
-        notifErr.message,
-      );
-      // Don't fail the whole request just because notification failed
-    }
-
-    // Log the quota calculation for debugging
-    console.log(
-      `[ADD_BATCH] Codes generated today before: ${codesGeneratedToday}`,
-    );
-    console.log(`[ADD_BATCH] Quantity created: ${quantity}`);
-    console.log(
-      `[ADD_BATCH] Codes generated today total: ${codesGeneratedToday + quantity}`,
-    );
-
     return res.status(201).json({
       message: "Batch created successfully",
       batch,
@@ -794,8 +804,20 @@ export async function addBatch(req, res) {
  */
 export async function getBatches(req, res) {
   try {
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
     const { page = 1, limit = 20, productId } = req.query;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     // Input validation
     const pageNum = Math.max(Number(page), 1);
@@ -861,7 +883,19 @@ export async function getBatches(req, res) {
 export async function getBatchDetail(req, res) {
   try {
     const { id } = req.params;
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     // Get batch with codes and product info
     const batch = await prisma.batch.findFirst({
@@ -881,8 +915,8 @@ export async function getBatchDetail(req, res) {
         codes: {
           select: {
             id: true,
-            code: true,
-            status: true,
+            codeValue: true,
+            isUsed: true,
             createdAt: true,
           },
           orderBy: { createdAt: "asc" },
@@ -928,7 +962,19 @@ export async function getBatchDetail(req, res) {
 export async function downloadBatchCodes(req, res) {
   try {
     const { id } = req.params;
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     // Get batch with codes
     const batch = await prisma.batch.findFirst({
@@ -945,8 +991,8 @@ export async function downloadBatchCodes(req, res) {
         },
         codes: {
           select: {
-            code: true,
-            status: true,
+            codeValue: true,
+            isUsed: true,
             createdAt: true,
           },
           orderBy: { createdAt: "asc" },
@@ -967,7 +1013,8 @@ export async function downloadBatchCodes(req, res) {
       const expirationDate = new Date(
         batch.expirationDate,
       ).toLocaleDateString();
-      csvContent += `"${code.code}","${code.status}","${createdDate}","${batch.product.name}","${id}","${expirationDate}"\n`;
+      const status = code.isUsed ? "USED" : "UNUSED";
+      csvContent += `"${code.codeValue}","${status}","${createdDate}","${batch.product.name}","${id}","${expirationDate}"\n`;
     });
 
     // Set headers for file download

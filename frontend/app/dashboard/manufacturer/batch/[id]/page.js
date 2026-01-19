@@ -49,11 +49,12 @@ export default function BatchDetailPage() {
 
   const filteredCodes = batch?.codes
     ? batch.codes.filter((code) => {
-        const matchesSearch = code.code
+        const matchesSearch = code.codeValue
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
+        const codeStatus = code.isUsed ? "USED" : "UNUSED";
         const matchesStatus =
-          statusFilter === "ALL" || code.status === statusFilter;
+          statusFilter === "ALL" || codeStatus === statusFilter;
         return matchesSearch && matchesStatus;
       })
     : [];
@@ -61,11 +62,10 @@ export default function BatchDetailPage() {
   const codeStats = batch?.codes
     ? {
         total: batch.codes.length,
-        unused: batch.codes.filter((c) => c.status === "UNUSED").length,
-        verified: batch.codes.filter((c) => c.status === "VERIFIED").length,
-        flagged: batch.codes.filter((c) => c.status === "FLAGGED").length,
-        blacklisted: batch.codes.filter((c) => c.status === "BLACKLISTED")
-          .length,
+        unused: batch.codes.filter((c) => !c.isUsed).length,
+        verified: batch.codes.filter((c) => c.isUsed).length,
+        flagged: 0,
+        blacklisted: 0,
       }
     : { total: 0, unused: 0, verified: 0, flagged: 0, blacklisted: 0 };
 
@@ -82,7 +82,7 @@ export default function BatchDetailPage() {
         `/manufacturer/batch/${batchId}/download`,
         {
           responseType: "blob",
-        }
+        },
       );
 
       // Create a blob URL and trigger download
@@ -272,9 +272,7 @@ export default function BatchDetailPage() {
           <option value="ALL">All Status</option>
           <option value="UNUSED">Unused</option>
           <option value="VERIFIED">Verified</option>
-          <option value="FLAGGED">Flagged</option>
-          <option value="BLACKLISTED">Blacklisted</option>
-        </select>
+          <option value="USED">Used/Verifi
       </div>
 
       {/* Codes List */}
@@ -316,22 +314,18 @@ export default function BatchDetailPage() {
                   >
                     <td className="px-6 py-4">
                       <code className="text-sm font-mono text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                        {code.code}
+                        {code.codeValue}
                       </code>
                     </td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
-                          code.status === "UNUSED"
+                          !code.isUsed
                             ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                            : code.status === "VERIFIED"
-                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                            : code.status === "FLAGGED"
-                            ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
-                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                            : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
                         }`}
                       >
-                        {code.status}
+                        {code.isUsed ? "USED" : "UNUSED"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
@@ -339,14 +333,14 @@ export default function BatchDetailPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => copyToClipboard(code.code)}
+                        onClick={() => copyToClipboard(code.codeValue)}
                         className={`px-3 py-1 text-sm rounded-lg font-medium transition-colors ${
-                          copied === code.code
+                          copied === code.codeValue
                             ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
                             : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                         }`}
                       >
-                        {copied === code.code ? "✓ Copied" : "📋 Copy"}
+                        {copied === code.codeValue ? "✓ Copied" : "📋 Copy"}
                       </button>
                     </td>
                   </tr>

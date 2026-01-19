@@ -26,20 +26,51 @@ export async function sendVerificationNotification(verificationData) {
       location,
     } = verificationData;
 
+    console.log(
+      "[NOTIFICATION_DEBUG] Starting verification notification for:",
+      {
+        manufacturerId,
+        codeValue: codeValue?.substring(0, 8),
+        verificationState,
+      },
+    );
+
     // Get manufacturer and user info
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       include: { userId: false }, // Will get email from User table
     });
 
-    if (!manufacturer) return;
+    if (!manufacturer) {
+      console.warn(
+        "[NOTIFICATION_DEBUG] Manufacturer not found:",
+        manufacturerId,
+      );
+      return;
+    }
+
+    console.log("[NOTIFICATION_DEBUG] Found manufacturer:", {
+      id: manufacturer.id,
+      userId: manufacturer.userId,
+    });
 
     // Get user email
     const user = await prisma.user.findFirst({
       where: { id: manufacturer.userId },
     });
 
-    if (!user) return;
+    if (!user) {
+      console.warn(
+        "[NOTIFICATION_DEBUG] User not found for userId:",
+        manufacturer.userId,
+      );
+      return;
+    }
+
+    console.log("[NOTIFICATION_DEBUG] Found user:", {
+      id: user.id,
+      email: user.email,
+    });
 
     // Determine notification type
     let subject = "";
@@ -77,13 +108,20 @@ export async function sendVerificationNotification(verificationData) {
     }
 
     // Store in database
-    await prisma.userNotifications.create({
+    const notification = await prisma.userNotifications.create({
       data: {
         userId: user.id,
         type: "VERIFICATION",
         message: `${subject} - ${message}`,
         read: false,
       },
+    });
+
+    console.log("[NOTIFICATION_DEBUG] Notification created in DB:", {
+      id: notification.id,
+      userId: user.id,
+      type: "VERIFICATION",
+      messageLength: notification.message.length,
     });
 
     // Send email if configured
@@ -185,18 +223,11 @@ export async function sendPaymentNotification(paymentData) {
  */
 export async function sendAccountStatusNotification(userId, status, message) {
   try {
-    console.log(
-      `[ACCOUNT_NOTIFICATION] Creating notification for userId: ${userId}, status: ${status}, message: ${message}`,
-    );
-
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
 
-    if (!user) {
-      console.warn(`[ACCOUNT_NOTIFICATION] User not found: ${userId}`);
-      return;
-    }
+    if (!user) return;
 
     const subject =
       status === "verified"
@@ -205,58 +236,34 @@ export async function sendAccountStatusNotification(userId, status, message) {
           ? "❌ Account Rejected"
           : "⏳ Account Under Review";
 
-    const notifData = {
-      userId,
-      type: "ACCOUNT",
-      message: message || `Your account status has been updated to: ${status}`,
-      read: false,
-    };
-
-    console.log(
-      `[ACCOUNT_NOTIFICATION] Creating notification with data:`,
-      notifData,
-    );
-
-    const notification = await prisma.userNotifications.create({
-      data: notifData,
+    await prisma.userNotifications.create({
+      data: {
+        userId,
+        type: "ACCOUNT",
+        message:
+          message || `Your account status has been updated to: ${status}`,
+        read: false,
+      },
     });
-
-    console.log(
-      `[ACCOUNT_NOTIFICATION] Notification created successfully:`,
-      notification,
-    );
 
     // Send email
     if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      try {
-        await transporter.sendMail({
-          from: `"Lumora Support" <${process.env.EMAIL_USER}>`,
-          to: user.email,
-          subject,
-          html: `
-            <h2>${subject}</h2>
-            <p>${message || `Your account status has been updated to: ${status}`}</p>
-            <hr/>
-            <p><a href="${process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app"}/dashboard">Go to Dashboard</a></p>
-          `,
-        });
-        console.log(`[ACCOUNT_NOTIFICATION] Email sent to ${user.email}`);
-      } catch (emailErr) {
-        console.warn(
-          `[ACCOUNT_NOTIFICATION] Failed to send email:`,
-          emailErr.message,
-        );
-      }
-    } else {
-      console.warn(
-        "[ACCOUNT_NOTIFICATION] Email service not configured - skipping email",
-      );
+      await transporter.sendMail({
+        from: `"Lumora Support" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject,
+        html: `
+          <h2>${subject}</h2>
+          <p>${message || `Your account status has been updated to: ${status}`}</p>
+          <hr/>
+          <p><a href="${process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app"}/dashboard">Go to Dashboard</a></p>
+        `,
+      });
     }
 
     console.log(`[ACCOUNT_NOTIFICATION] Sent status update to ${user.email}`);
   } catch (error) {
     console.error("[ACCOUNT_NOTIFICATION] Error:", error.message);
-    console.error("[ACCOUNT_NOTIFICATION] Stack:", error.stack);
   }
 }
 

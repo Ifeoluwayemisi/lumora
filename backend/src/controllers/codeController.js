@@ -7,7 +7,19 @@ import { generateCodesForBatch } from "../services/codeService.js";
 export async function generateBatchCodes(req, res) {
   try {
     const { drugId, batchNumber, expirationDate, quantity } = req.body;
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true, verified: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     // Input validation
     if (!drugId || !batchNumber || !expirationDate) {
@@ -24,7 +36,7 @@ export async function generateBatchCodes(req, res) {
     }
 
     // Check manufacturer verification
-    if (!req.user.verified) {
+    if (!manufacturer.verified) {
       return res.status(403).json({
         error: "Unauthorized",
         message:
@@ -46,7 +58,7 @@ export async function generateBatchCodes(req, res) {
       drugId,
       batchNumber,
       expDate,
-      quantity || 20 // default 20
+      quantity || 20, // default 20
     );
 
     return res.status(201).json({

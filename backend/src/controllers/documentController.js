@@ -18,8 +18,20 @@ if (!fs.existsSync(UPLOAD_DIR)) {
  */
 export const uploadDocument = async (req, res) => {
   try {
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
     const { documentType } = req.body;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     if (!req.file) {
       return res.status(400).json({ error: "No file provided" });
@@ -44,15 +56,6 @@ export const uploadDocument = async (req, res) => {
       return res.status(400).json({ error: "Invalid document type" });
     }
 
-    // Get manufacturer
-    const manufacturer = await prisma.manufacturer.findUnique({
-      where: { id: manufacturerId },
-    });
-
-    if (!manufacturer) {
-      return res.status(404).json({ error: "Manufacturer not found" });
-    }
-
     // Check if document already exists for this type
     const existingDoc = await prisma.document.findUnique({
       where: {
@@ -65,7 +68,7 @@ export const uploadDocument = async (req, res) => {
 
     // Generate unique filename
     const filename = `${manufacturerId}_${documentType}_${Date.now()}${path.extname(
-      req.file.originalname
+      req.file.originalname,
     )}`;
     const filepath = path.join(UPLOAD_DIR, filename);
 
@@ -97,7 +100,7 @@ export const uploadDocument = async (req, res) => {
     });
 
     console.log(
-      `[DOCUMENT] ${documentType} uploaded for manufacturer ${manufacturerId}`
+      `[DOCUMENT] ${documentType} uploaded for manufacturer ${manufacturerId}`,
     );
 
     return res.status(200).json({
@@ -123,7 +126,19 @@ export const uploadDocument = async (req, res) => {
  */
 export const getDocuments = async (req, res) => {
   try {
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     const documents = await prisma.document.findMany({
       where: { manufacturerId },
@@ -161,7 +176,19 @@ export const getDocuments = async (req, res) => {
 export const deleteDocument = async (req, res) => {
   try {
     const { documentId } = req.params;
-    const manufacturerId = req.user.id;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
 
     const document = await prisma.document.findUnique({
       where: { id: documentId },

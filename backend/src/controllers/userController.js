@@ -153,10 +153,6 @@ function getNotificationTitle(type) {
       return "Verification Alert";
     case "ALERT":
       return "Security Alert";
-    case "ACCOUNT":
-      return "Account Status";
-    case "PAYMENT":
-      return "Payment Update";
     case "WARNING":
       return "Warning";
     case "INFO":
@@ -706,5 +702,44 @@ export async function getUserProfile(req, res) {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch user profile" });
+  }
+}
+
+/**
+ * DEBUG: Test notification creation
+ * Manually creates a test notification for debugging
+ */
+export async function testNotification(req, res) {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Create a test notification
+    const notification = await prisma.userNotifications.create({
+      data: {
+        userId,
+        type: "VERIFICATION",
+        message:
+          "✓ Test Notification - This is a test alert from Lumora system",
+        read: false,
+      },
+    });
+
+    console.log("[TEST_NOTIFICATION] Created test notification:", notification);
+
+    res.json({
+      success: true,
+      message: "Test notification created successfully",
+      notification,
+    });
+  } catch (error) {
+    console.error("[TEST_NOTIFICATION] Error:", error);
+    res.status(500).json({
+      error: "Failed to create test notification",
+      message: error.message,
+    });
   }
 }

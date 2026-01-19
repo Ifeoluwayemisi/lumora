@@ -18,6 +18,7 @@ import {
   getDashboardSummary,
   uploadProfilePicture,
   getUserProfile,
+  testNotification,
 } from "../controllers/userController.js";
 import {
   deleteNotification,
@@ -64,6 +65,7 @@ router.delete("/favorite/:id", removeFavorite);
 // Notifications endpoints
 router.get("/notifications", getNotifications);
 router.get("/notifications/unread-count", getUnreadCount);
+router.get("/notifications/test", testNotification); // DEBUG: Test notification endpoint
 router.patch("/notifications/:id", markNotificationRead);
 router.delete("/notifications/:id", deleteNotification);
 router.patch("/notifications/mark-all-read", markAllNotificationsRead);
