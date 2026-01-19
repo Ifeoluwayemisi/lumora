@@ -153,6 +153,10 @@ function getNotificationTitle(type) {
       return "Verification Alert";
     case "ALERT":
       return "Security Alert";
+    case "ACCOUNT":
+      return "Account Status";
+    case "PAYMENT":
+      return "Payment Update";
     case "WARNING":
       return "Warning";
     case "INFO":

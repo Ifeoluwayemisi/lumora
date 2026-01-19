@@ -5,6 +5,7 @@ import {
 } from "../services/manufacturerService.js";
 import { canCreateCode, getQuotaInfo } from "../services/quotaService.js";
 import { parseISO, isValid } from "date-fns";
+import { sendAccountStatusNotification } from "../services/notificationService.js";
 
 /**
  * Get manufacturer dashboard overview
@@ -121,6 +122,10 @@ export async function getDashboard(req, res) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    console.log(
+      `[DASHBOARD-${requestId}] Checking codes from: ${today.toISOString()}`,
+    );
+
     const codesGeneratedToday = await prisma.code.count({
       where: {
         manufacturerId,
@@ -131,9 +136,21 @@ export async function getDashboard(req, res) {
       `[DASHBOARD-${requestId}] Codes generated today: ${codesGeneratedToday}`,
     );
 
+    // Debug: Check all codes for this manufacturer to verify they exist
+    const allCodes = await prisma.code.count({
+      where: { manufacturerId },
+    });
+    console.log(
+      `[DASHBOARD-${requestId}] Total codes for manufacturer: ${allCodes}`,
+    );
+
     // Determine daily limit based on plan
     const dailyLimit = manufacturer.plan === "PREMIUM" ? 1000 : 50;
     const quotaRemaining = Math.max(dailyLimit - codesGeneratedToday, 0);
+
+    console.log(
+      `[DASHBOARD-${requestId}] Plan: ${manufacturer.plan}, Limit: ${dailyLimit}, Remaining: ${quotaRemaining}`,
+    );
 
     // Get recent alerts (last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -709,6 +726,37 @@ export async function addBatch(req, res) {
       expirationDate: expDate,
       quantity,
     });
+
+    // Send notification that codes were generated
+    try {
+      const user = await prisma.user.findFirst({
+        where: { manufacturer: { id: manufacturerId } },
+        select: { id: true },
+      });
+
+      if (user) {
+        await sendAccountStatusNotification(
+          user.id,
+          "batch_created",
+          `✓ Batch Created - ${quantity} codes generated successfully`,
+        );
+      }
+    } catch (notifErr) {
+      console.warn(
+        "[ADD_BATCH] Failed to send notification:",
+        notifErr.message,
+      );
+      // Don't fail the whole request just because notification failed
+    }
+
+    // Log the quota calculation for debugging
+    console.log(
+      `[ADD_BATCH] Codes generated today before: ${codesGeneratedToday}`,
+    );
+    console.log(`[ADD_BATCH] Quantity created: ${quantity}`);
+    console.log(
+      `[ADD_BATCH] Codes generated today total: ${codesGeneratedToday + quantity}`,
+    );
 
     return res.status(201).json({
       message: "Batch created successfully",
