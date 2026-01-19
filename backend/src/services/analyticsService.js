@@ -222,8 +222,13 @@ export async function getExportData(manufacturerId, format = "csv") {
         manufacturerId,
         createdAt: { gte: thirtyDaysAgo },
       },
-      include: {
-        code: { select: { value: true, batch: { select: { name: true } } } },
+      select: {
+        codeValue: true,
+        verificationState: true,
+        location: true,
+        createdAt: true,
+        latitude: true,
+        longitude: true,
       },
     });
 

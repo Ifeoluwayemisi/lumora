@@ -135,37 +135,67 @@ export async function getHotspots(req, res) {
  * Export analytics data
  */
 export async function exportAnalytics(req, res) {
+  const requestId = Math.random().toString(36).substring(7);
+  const startTime = Date.now();
+
   try {
     const userId = req.user?.id;
     const { format = "csv" } = req.query;
 
+    console.log(
+      `[EXPORT-${requestId}] Export request: format=${format}, userId=${userId}`,
+    );
+
     if (!userId) {
+      console.warn(`[EXPORT-${requestId}] Unauthorized: No user ID`);
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     // Look up manufacturer from user
+    console.log(`[EXPORT-${requestId}] Looking up manufacturer...`);
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { userId },
       select: { id: true },
     });
 
     if (!manufacturer) {
+      console.warn(
+        `[EXPORT-${requestId}] Manufacturer not found for userId: ${userId}`,
+      );
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
     const manufacturerId = manufacturer.id;
+    console.log(
+      `[EXPORT-${requestId}] Found manufacturerId: ${manufacturerId}`,
+    );
+
+    console.log(`[EXPORT-${requestId}] Fetching export data...`);
     const data = await getExportData(manufacturerId, format);
+    console.log(`[EXPORT-${requestId}] Got export data`, {
+      hasVerifications: !!data?.verifications,
+      verificationCount: data?.verifications?.length,
+    });
 
     if (format === "csv") {
       try {
+        console.log(`[EXPORT-${requestId}] Generating CSV...`);
         const csv = new Parser().parse(data.verifications);
         res.setHeader("Content-Type", "text/csv");
         res.setHeader(
           "Content-Disposition",
           "attachment; filename=analytics.csv",
         );
+        const duration = Date.now() - startTime;
+        console.log(
+          `[EXPORT-${requestId}] CSV exported successfully in ${duration}ms`,
+        );
         res.send(csv);
       } catch (err) {
+        console.error(`[EXPORT-${requestId}] CSV generation error:`, {
+          message: err?.message,
+          stack: err?.stack,
+        });
         res.status(400).json({ error: "Failed to generate CSV" });
       }
     } else if (format === "json") {
@@ -173,6 +203,10 @@ export async function exportAnalytics(req, res) {
       res.setHeader(
         "Content-Disposition",
         "attachment; filename=analytics.json",
+      );
+      const duration = Date.now() - startTime;
+      console.log(
+        `[EXPORT-${requestId}] JSON exported successfully in ${duration}ms`,
       );
       res.json(data);
     } else if (format === "pdf") {
@@ -183,8 +217,19 @@ export async function exportAnalytics(req, res) {
       res.status(400).json({ error: "Invalid format" });
     }
   } catch (err) {
-    console.error("[EXPORT_ANALYTICS] Error:", err);
-    res.status(500).json({ error: "Failed to export analytics" });
+    const duration = Date.now() - startTime;
+    console.error(`[EXPORT-${requestId}] Error after ${duration}ms:`, {
+      message: err?.message,
+      code: err?.code,
+      stack: err?.stack,
+      fullError: err,
+    });
+    res.status(500).json({
+      error: "Failed to export analytics",
+      message:
+        process.env.NODE_ENV === "development" ? err?.message : undefined,
+      requestId,
+    });
   }
 }
 
