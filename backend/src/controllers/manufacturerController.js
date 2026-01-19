@@ -11,10 +11,13 @@ import { parseISO, isValid } from "date-fns";
  * Returns: stats, quota, recent alerts, plan info
  */
 export async function getDashboard(req, res) {
+  const dashboardStartTime = Date.now();
   try {
     const manufacturerId = req.user?.id;
+    console.log(`[GET_DASHBOARD] Starting for manufacturer: ${manufacturerId}`);
 
     if (!manufacturerId) {
+      console.warn("[GET_DASHBOARD] No manufacturer ID found");
       return res.status(401).json({
         error: "Unauthorized",
         message: "User not found in request",
@@ -24,11 +27,15 @@ export async function getDashboard(req, res) {
     // Get manufacturer info (using only fields that exist in current schema)
     let manufacturer = null;
     try {
+      console.log(`[GET_DASHBOARD] Fetching manufacturer data...`);
       const manufacturerData = await prisma.manufacturer.findUnique({
         where: { id: manufacturerId },
       });
 
       if (!manufacturerData) {
+        console.warn(
+          `[GET_DASHBOARD] No manufacturer record found for ID: ${manufacturerId}`,
+        );
         return res.status(404).json({
           error: "Manufacturer not found",
           message:
@@ -48,14 +55,20 @@ export async function getDashboard(req, res) {
         riskLevel: manufacturerData?.riskLevel || "MEDIUM",
         plan: manufacturerData?.plan || "BASIC",
       };
+      console.log(
+        `[GET_DASHBOARD] Manufacturer found: ${manufacturer.name} (Plan: ${manufacturer.plan})`,
+      );
     } catch (dbErr) {
-      console.error("[GET_DASHBOARD] Database error:", {
+      console.error("[GET_DASHBOARD] Database error fetching manufacturer:", {
         code: dbErr.code,
         message: dbErr.message,
+        manufacturerId,
       });
       throw dbErr;
     }
+
     // Get product count
+    console.log(`[GET_DASHBOARD] Fetching statistics...`);
     const totalProducts = await prisma.product.count({
       where: { manufacturerId },
     });
@@ -140,6 +153,9 @@ export async function getDashboard(req, res) {
       timestamp: alert.createdAt,
     }));
 
+    const duration = Date.now() - dashboardStartTime;
+    console.log(`[GET_DASHBOARD] Success - completed in ${duration}ms`);
+
     return res.status(200).json({
       manufacturer,
       stats: {
@@ -162,13 +178,17 @@ export async function getDashboard(req, res) {
       },
     });
   } catch (err) {
+    const duration = Date.now() - dashboardStartTime;
     console.error("[GET_DASHBOARD] Error Details:", {
       message: err.message,
       code: err.code,
       meta: err.meta,
-      stack: err.stack,
+      duration: `${duration}ms`,
       manufacturerId: req.user?.id,
     });
+    if (process.env.NODE_ENV === "development") {
+      console.error("[GET_DASHBOARD] Stack trace:", err.stack);
+    }
     return res.status(500).json({
       error: "Failed to fetch dashboard",
       message:
