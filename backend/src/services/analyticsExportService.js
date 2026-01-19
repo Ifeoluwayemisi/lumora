@@ -1,4 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import pkg from "@prisma/client";
+const { PrismaClient } = pkg;
 import { Parser } from "json2csv";
 import PDFDocument from "pdfkit";
 

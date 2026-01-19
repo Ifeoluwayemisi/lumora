@@ -8,7 +8,8 @@ import {
   getDisputeStats,
   getRecentDisputes,
 } from "../services/disputeService.js";
-import { PrismaClient } from "@prisma/client";
+import pkg from "@prisma/client";
+const { PrismaClient } = pkg;
 
 const prisma = new PrismaClient();
 
@@ -229,5 +230,3 @@ export async function getStats(req, res) {
     res.status(500).json({ error: "Failed to fetch statistics" });
   }
 }
-
-
