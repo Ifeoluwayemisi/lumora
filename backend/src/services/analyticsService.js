@@ -148,9 +148,11 @@ export async function getManufacturerAnalytics(manufacturerId) {
     return result;
   } catch (err) {
     console.error(`[ANALYTICS_SERVICE-${serviceId}] Error:`, {
-      message: err.message,
-      code: err.code,
-      stack: err.stack,
+      message: err?.message,
+      code: err?.code,
+      stack: err?.stack,
+      fullError: err,
+      type: err?.constructor?.name,
     });
     throw err;
   }

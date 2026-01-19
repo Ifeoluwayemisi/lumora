@@ -73,14 +73,15 @@ export async function getAnalytics(req, res) {
   } catch (err) {
     const duration = Date.now() - startTime;
     console.error(`[ANALYTICS-${requestId}] Error after ${duration}ms:`, {
-      message: err.message,
-      code: err.code,
-      stack: err.stack,
+      message: err?.message,
+      code: err?.code,
+      stack: err?.stack,
+      fullError: err,
       manufacturerId: req.user?.id,
     });
     res.status(500).json({
       error: "Failed to fetch analytics",
-      message: process.env.NODE_ENV === "development" ? err.message : undefined,
+      message: process.env.NODE_ENV === "development" ? err?.message : undefined,
       requestId,
     });
   }
