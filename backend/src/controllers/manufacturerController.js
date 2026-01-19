@@ -11,13 +11,21 @@ import { parseISO, isValid } from "date-fns";
  * Returns: stats, quota, recent alerts, plan info
  */
 export async function getDashboard(req, res) {
-  const dashboardStartTime = Date.now();
+  const requestId = Math.random().toString(36).substring(7);
+  const startTime = Date.now();
+
   try {
+    console.log(
+      `[DASHBOARD-${requestId}] Request started at ${new Date().toISOString()}`,
+    );
+
     const manufacturerId = req.user?.id;
-    console.log(`[GET_DASHBOARD] Starting for manufacturer: ${manufacturerId}`);
+    console.log(`[DASHBOARD-${requestId}] Manufacturer ID: ${manufacturerId}`);
 
     if (!manufacturerId) {
-      console.warn("[GET_DASHBOARD] No manufacturer ID found");
+      console.warn(
+        `[DASHBOARD-${requestId}] Unauthorized: No user ID in request`,
+      );
       return res.status(401).json({
         error: "Unauthorized",
         message: "User not found in request",
@@ -27,14 +35,14 @@ export async function getDashboard(req, res) {
     // Get manufacturer info (using only fields that exist in current schema)
     let manufacturer = null;
     try {
-      console.log(`[GET_DASHBOARD] Fetching manufacturer data...`);
+      console.log(`[DASHBOARD-${requestId}] Fetching manufacturer record...`);
       const manufacturerData = await prisma.manufacturer.findUnique({
         where: { id: manufacturerId },
       });
 
       if (!manufacturerData) {
         console.warn(
-          `[GET_DASHBOARD] No manufacturer record found for ID: ${manufacturerId}`,
+          `[DASHBOARD-${requestId}] Manufacturer not found in database`,
         );
         return res.status(404).json({
           error: "Manufacturer not found",
@@ -42,6 +50,10 @@ export async function getDashboard(req, res) {
             "No manufacturer record found. Please complete manufacturer registration.",
         });
       }
+
+      console.log(
+        `[DASHBOARD-${requestId}] Manufacturer found: ${manufacturerData.name}`,
+      );
 
       // Build response with defaults for fields that may not exist yet
       manufacturer = {
@@ -55,38 +67,40 @@ export async function getDashboard(req, res) {
         riskLevel: manufacturerData?.riskLevel || "MEDIUM",
         plan: manufacturerData?.plan || "BASIC",
       };
-      console.log(
-        `[GET_DASHBOARD] Manufacturer found: ${manufacturer.name} (Plan: ${manufacturer.plan})`,
-      );
     } catch (dbErr) {
-      console.error("[GET_DASHBOARD] Database error fetching manufacturer:", {
-        code: dbErr.code,
-        message: dbErr.message,
-        manufacturerId,
-      });
+      console.error(
+        `[DASHBOARD-${requestId}] Database error during manufacturer fetch:`,
+        {
+          code: dbErr.code,
+          message: dbErr.message,
+          stack: dbErr.stack,
+        },
+      );
       throw dbErr;
     }
-
     // Get product count
-    console.log(`[GET_DASHBOARD] Fetching statistics...`);
     const totalProducts = await prisma.product.count({
       where: { manufacturerId },
     });
+    console.log(`[DASHBOARD-${requestId}] Total products: ${totalProducts}`);
 
     // Get total codes generated
     const totalCodes = await prisma.code.count({
       where: { manufacturerId },
     });
+    console.log(`[DASHBOARD-${requestId}] Total codes: ${totalCodes}`);
 
     // Get total batches
     const totalBatches = await prisma.batch.count({
       where: { manufacturerId },
     });
+    console.log(`[DASHBOARD-${requestId}] Total batches: ${totalBatches}`);
 
     // Get verification count
     const totalVerifications = await prisma.verificationLog.count({
       where: { manufacturerId },
     });
+    console.log(`[DASHBOARD-${requestId}] Total verifications: ${totalVerifications}`);
 
     // Get suspicious/flagged verifications
     const suspiciousAttempts = await prisma.verificationLog.count({
@@ -97,6 +111,7 @@ export async function getDashboard(req, res) {
         },
       },
     });
+    console.log(`[DASHBOARD-${requestId}] Suspicious attempts: ${suspiciousAttempts}`);
 
     // Get daily quota (reset at midnight)
     const today = new Date();
@@ -108,6 +123,7 @@ export async function getDashboard(req, res) {
         createdAt: { gte: today },
       },
     });
+    console.log(`[DASHBOARD-${requestId}] Codes generated today: ${codesGeneratedToday}`);
 
     // Determine daily limit based on plan
     const dailyLimit = manufacturer.plan === "PREMIUM" ? 1000 : 50;
@@ -116,6 +132,7 @@ export async function getDashboard(req, res) {
     // Get recent alerts (last 30 days)
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
+    console.log(`[DASHBOARD-${requestId}] Fetching recent alerts...`);
     const recentAlerts = await prisma.verificationLog.findMany({
       where: {
         manufacturerId,
@@ -133,6 +150,7 @@ export async function getDashboard(req, res) {
       orderBy: { createdAt: "desc" },
       take: 5,
     });
+    console.log(`[DASHBOARD-${requestId}] Recent alerts found: ${recentAlerts.length}`);
 
     // Format alerts for frontend
     const formattedAlerts = recentAlerts.map((alert) => ({
@@ -153,8 +171,8 @@ export async function getDashboard(req, res) {
       timestamp: alert.createdAt,
     }));
 
-    const duration = Date.now() - dashboardStartTime;
-    console.log(`[GET_DASHBOARD] Success - completed in ${duration}ms`);
+    const duration = Date.now() - startTime;
+    console.log(`[DASHBOARD-${requestId}] Request completed successfully in ${duration}ms`);
 
     return res.status(200).json({
       manufacturer,
@@ -178,17 +196,15 @@ export async function getDashboard(req, res) {
       },
     });
   } catch (err) {
-    const duration = Date.now() - dashboardStartTime;
-    console.error("[GET_DASHBOARD] Error Details:", {
+    const duration = Date.now() - startTime;
+    console.error(`[DASHBOARD-${requestId}] Error after ${duration}ms:`, {
       message: err.message,
       code: err.code,
       meta: err.meta,
-      duration: `${duration}ms`,
+      stack: err.stack,
       manufacturerId: req.user?.id,
+      timestamp: new Date().toISOString(),
     });
-    if (process.env.NODE_ENV === "development") {
-      console.error("[GET_DASHBOARD] Stack trace:", err.stack);
-    }
     return res.status(500).json({
       error: "Failed to fetch dashboard",
       message:
@@ -203,6 +219,7 @@ export async function getDashboard(req, res) {
               message: err.message,
             }
           : undefined,
+      requestId, // Help with debugging in production
     });
   }
 }

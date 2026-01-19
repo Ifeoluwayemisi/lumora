@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 
+import { requestLogger } from "./middleware/requestLogger.js";
 import authRoutes from "./routes/authRoutes.js";
 import verificationRoutes from "./routes/verificationRoutes.js";
 import codeRoutes from "./routes/codeRoutes.js";
@@ -38,6 +39,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Add request logging middleware
+app.use(requestLogger);
 
 // Body parsing middleware with size limits
 app.use(express.json({ limit: "10mb" }));
@@ -98,7 +102,26 @@ app.get("/", (req, res) => {
 
 // Health check endpoint
 app.get("/health", (req, res) => {
-  res.json({ status: "healthy", timestamp: new Date().toISOString() });
+  res.json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+    environment: NODE_ENV,
+    uptime: process.uptime(),
+  });
+});
+
+// Diagnostic endpoint - helps debug production issues
+app.get("/health/diagnostics", (req, res) => {
+  res.json({
+    status: "running",
+    timestamp: new Date().toISOString(),
+    environment: NODE_ENV,
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    nodeVersion: process.version,
+    frontendUrl: process.env.FRONTEND_URL,
+    database: "Connected", // You can enhance this to actually test DB connection
+  });
 });
 
 // 404 handler
@@ -106,21 +129,41 @@ app.use((req, res) => {
   res.status(404).json({
     error: "Not Found",
     path: req.path,
+    method: req.method,
     message: "The requested resource does not exist",
   });
 });
 
-// Global error handler
+// Global error handler with enhanced logging
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
+  const requestId = req.id || Math.random().toString(36).substring(7);
+  const statusCode = err.statusCode || err.status || 500;
   const isDevelopment = NODE_ENV === "development";
 
   const response = {
     error: err.message || "Internal Server Error",
-    ...(isDevelopment && { stack: err.stack }),
+    requestId, // For production debugging
+    timestamp: new Date().toISOString(),
+    ...(isDevelopment && {
+      stack: err.stack,
+      details: {
+        code: err.code,
+        meta: err.meta,
+      },
+    }),
   };
 
-  console.error(`[ERROR] ${req.method} ${req.path}:`, err);
+  // Enhanced error logging
+  console.error(`[ERROR-${requestId}] ${req.method} ${req.path}:`, {
+    statusCode,
+    message: err.message,
+    code: err.code,
+    stack: err.stack,
+    query: req.query,
+    params: req.params,
+    userId: req.user?.id,
+    timestamp: new Date().toISOString(),
+  });
 
   // Ensure response is JSON
   res.setHeader("Content-Type", "application/json");
