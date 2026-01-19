@@ -4,12 +4,23 @@ import prisma from "../models/prismaClient.js";
  * Get manufacturer analytics data
  */
 export async function getManufacturerAnalytics(manufacturerId) {
+  const serviceId = Math.random().toString(36).substring(7);
   try {
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Starting analytics for manufacturerId: ${manufacturerId}`,
+    );
+
     // Get date range for last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Date range: ${thirtyDaysAgo} to now`,
+    );
 
     // Verification trends - get raw data and process in code
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Fetching verification raw data...`,
+    );
     const verificationRawData = await prisma.verificationLog.findMany({
       where: {
         manufacturerId,
@@ -20,6 +31,9 @@ export async function getManufacturerAnalytics(manufacturerId) {
         verificationState: true,
       },
     });
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Found ${verificationRawData.length} verification logs`,
+    );
 
     // Group by date in application code
     const verificationTrends = {};
@@ -30,15 +44,25 @@ export async function getManufacturerAnalytics(manufacturerId) {
       }
       verificationTrends[date]++;
     });
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Grouped into ${Object.keys(verificationTrends).length} days`,
+    );
 
     // Verification by state/status
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Fetching verification by status...`,
+    );
     const verificationByStatus = await prisma.verificationLog.groupBy({
       by: ["verificationState"],
       where: { manufacturerId },
       _count: { id: true },
     });
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Found ${verificationByStatus.length} status groups`,
+    );
 
     // Location data for heatmap
+    console.log(`[ANALYTICS_SERVICE-${serviceId}] Fetching location data...`);
     const locationData = await prisma.verificationLog.findMany({
       where: {
         manufacturerId,
@@ -54,15 +78,25 @@ export async function getManufacturerAnalytics(manufacturerId) {
         verificationState: true,
       },
     });
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Found ${locationData.length} location records`,
+    );
 
     // Code performance metrics
+    console.log(`[ANALYTICS_SERVICE-${serviceId}] Fetching code metrics...`);
     const codeMetrics = await prisma.code.groupBy({
       by: ["status"],
       where: { manufacturerId },
       _count: { id: true },
     });
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Found ${codeMetrics.length} code status groups`,
+    );
 
     // Suspicious activity trends
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Fetching suspicious trends...`,
+    );
     const suspiciousTrends = await prisma.verificationLog.findMany({
       where: {
         manufacturerId,
@@ -78,8 +112,14 @@ export async function getManufacturerAnalytics(manufacturerId) {
       },
       orderBy: { createdAt: "desc" },
     });
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Found ${suspiciousTrends.length} suspicious activities`,
+    );
 
     // Risk score calculation
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Fetching manufacturer data...`,
+    );
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       select: {
@@ -88,8 +128,12 @@ export async function getManufacturerAnalytics(manufacturerId) {
         _count: { select: { codes: true } },
       },
     });
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Manufacturer found:`,
+      manufacturer ? "yes" : "no",
+    );
 
-    return {
+    const result = {
       verificationTrends,
       verificationByStatus,
       locationData,
@@ -97,8 +141,17 @@ export async function getManufacturerAnalytics(manufacturerId) {
       suspiciousTrends,
       manufacturer,
     };
+
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Analytics complete, returning data`,
+    );
+    return result;
   } catch (err) {
-    console.error("[GET_MANUFACTURER_ANALYTICS] Error:", err);
+    console.error(`[ANALYTICS_SERVICE-${serviceId}] Error:`, {
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+    });
     throw err;
   }
 }
