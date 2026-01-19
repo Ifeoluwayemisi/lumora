@@ -1,4 +1,4 @@
-const {
+import {
   getDisputes,
   getDisputeById,
   createDispute,
@@ -7,13 +7,16 @@ const {
   rejectDispute,
   getDisputeStats,
   getRecentDisputes,
-} = require("../services/disputeService");
+} from "../services/disputeService.js";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 /**
  * GET /admin/disputes
  * Get all disputes with filtering and pagination
  */
-async function getAllDisputes(req, res) {
+export async function getAllDisputes(req, res) {
   try {
     const { status, manufacturerId, page = 1, limit = 10 } = req.query;
 
@@ -38,7 +41,7 @@ async function getAllDisputes(req, res) {
  * GET /admin/disputes/:id
  * Get specific dispute by ID
  */
-async function getDisputeDetails(req, res) {
+export async function getDisputeDetails(req, res) {
   try {
     const { id } = req.params;
 
@@ -59,7 +62,7 @@ async function getDisputeDetails(req, res) {
  * POST /admin/disputes
  * Create a new dispute (manufacturer files dispute against payment)
  */
-async function fileDispute(req, res) {
+export async function fileDispute(req, res) {
   try {
     const { paymentId, reference, amount, reason, description } = req.body;
 
@@ -70,13 +73,10 @@ async function fileDispute(req, res) {
     }
 
     // Get manufacturer ID from payment
-    const { PrismaClient } = require("@prisma/client");
-    const prisma = new PrismaClient();
     const payment = await prisma.payment.findUnique({
       where: { id: paymentId },
       select: { manufacturerId: true, reference: true, amount: true },
     });
-    await prisma.$disconnect();
 
     if (!payment) {
       return res.status(404).json({ error: "Payment not found" });
@@ -106,7 +106,7 @@ async function fileDispute(req, res) {
  * PATCH /admin/disputes/:id/investigate
  * Update dispute to UNDER_INVESTIGATION with notes
  */
-async function startInvestigation(req, res) {
+export async function startInvestigation(req, res) {
   try {
     const { id } = req.params;
     const { resolutionNotes } = req.body;
@@ -134,7 +134,7 @@ async function startInvestigation(req, res) {
  * PATCH /admin/disputes/:id/resolve
  * Resolve dispute with decision (RESOLVED status)
  */
-async function resolveDispute(req, res) {
+export async function resolveDispute(req, res) {
   try {
     const { id } = req.params;
     const { resolutionNotes } = req.body;
@@ -162,7 +162,7 @@ async function resolveDispute(req, res) {
  * PATCH /admin/disputes/:id/refund
  * Process refund for dispute
  */
-async function approveRefund(req, res) {
+export async function approveRefund(req, res) {
   try {
     const { id } = req.params;
     const { refundAmount } = req.body;
@@ -186,7 +186,7 @@ async function approveRefund(req, res) {
  * PATCH /admin/disputes/:id/reject
  * Reject dispute (no refund)
  */
-async function rejectDisputeRequest(req, res) {
+export async function rejectDisputeRequest(req, res) {
   try {
     const { id } = req.params;
     const { reason } = req.body;
@@ -214,7 +214,7 @@ async function rejectDisputeRequest(req, res) {
  * GET /admin/disputes/stats/overview
  * Get dispute statistics
  */
-async function getStats(req, res) {
+export async function getStats(req, res) {
   try {
     const stats = await getDisputeStats();
     const recentDisputes = await getRecentDisputes(5);
@@ -230,13 +230,4 @@ async function getStats(req, res) {
   }
 }
 
-module.exports = {
-  getAllDisputes,
-  getDisputeDetails,
-  fileDispute,
-  startInvestigation,
-  resolveDispute,
-  approveRefund,
-  rejectDisputeRequest,
-  getStats,
-};
+
