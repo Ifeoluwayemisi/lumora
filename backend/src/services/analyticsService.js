@@ -82,10 +82,10 @@ export async function getManufacturerAnalytics(manufacturerId) {
       `[ANALYTICS_SERVICE-${serviceId}] Found ${locationData.length} location records`,
     );
 
-    // Code performance metrics
+    // Code performance metrics - Group by isUsed (used/unused)
     console.log(`[ANALYTICS_SERVICE-${serviceId}] Fetching code metrics...`);
     const codeMetrics = await prisma.code.groupBy({
-      by: ["status"],
+      by: ["isUsed"],
       where: { manufacturerId },
       _count: { id: true },
     });
