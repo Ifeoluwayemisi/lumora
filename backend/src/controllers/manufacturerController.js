@@ -161,6 +161,30 @@ export async function getDashboard(req, res) {
       `[DASHBOARD-${requestId}] Recent alerts found: ${recentAlerts.length}`,
     );
 
+    // Check for expiring batches (within 7 days)
+    const now = new Date();
+    const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const expiringBatches = await prisma.batch.findMany({
+      where: {
+        manufacturerId: manufacturer.id,
+        expirationDate: {
+          gte: now,
+          lte: weekFromNow,
+        },
+      },
+      select: {
+        id: true,
+        batchNumber: true,
+        expirationDate: true,
+        product: { select: { name: true } },
+      },
+      take: 5, // Limit to 5 expiring batches
+    });
+
+    console.log(
+      `[DASHBOARD-${requestId}] Expiring batches found: ${expiringBatches.length}`,
+    );
+
     // Helper function to safely get code prefix
     const getCodePrefix = (code) => {
       if (!code) return "[unknown]";
@@ -169,7 +193,7 @@ export async function getDashboard(req, res) {
     };
 
     // Format alerts for frontend
-    const formattedAlerts = recentAlerts.map((alert) => {
+    let formattedAlerts = recentAlerts.map((alert) => {
       const codePrefix = getCodePrefix(alert.code);
       return {
         id: alert.id,
@@ -185,6 +209,26 @@ export async function getDashboard(req, res) {
           alert.verificationState === "SUSPICIOUS_PATTERN" ? "high" : "medium",
         timestamp: alert.createdAt,
       };
+    });
+
+    // Add batch expiration alerts
+    const expirationAlerts = expiringBatches.map((batch) => {
+      const daysUntilExpiry = Math.ceil(
+        (batch.expirationDate - now) / (1000 * 60 * 60 * 24)
+      );
+      return {
+        id: `batch-expiring-${batch.id}`,
+        title: "Batch Expiring Soon",
+        message: `${batch.product?.name || "Batch"} ${batch.batchNumber} expires in ${daysUntilExpiry} days`,
+        severity: daysUntilExpiry <= 3 ? "high" : "medium",
+        timestamp: new Date(),
+      };
+    });
+
+    // Combine all alerts (verification + expiration), sorted by severity
+    formattedAlerts = [...formattedAlerts, ...expirationAlerts].sort((a, b) => {
+      const severityOrder = { high: 0, medium: 1, low: 2 };
+      return severityOrder[a.severity] - severityOrder[b.severity];
     });
 
     const duration = Date.now() - startTime;
