@@ -34,8 +34,11 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-// Auth first, then role
-router.use(authMiddleware, roleMiddlewareMultiple(["CONSUMER", "ADMIN"]));
+// Auth first, then role - Allow CONSUMER, ADMIN, and MANUFACTURER
+router.use(
+  authMiddleware,
+  roleMiddlewareMultiple(["CONSUMER", "ADMIN", "MANUFACTURER"]),
+);
 
 // Profile endpoints
 router.get("/profile", getUserProfile);
