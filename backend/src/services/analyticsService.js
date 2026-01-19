@@ -9,14 +9,26 @@ export async function getManufacturerAnalytics(manufacturerId) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // Verification trends (daily counts for last 30 days)
-    const verificationTrends = await prisma.verificationLog.groupBy({
-      by: ["createdAt"],
+    // Verification trends - get raw data and process in code
+    const verificationRawData = await prisma.verificationLog.findMany({
       where: {
         manufacturerId,
         createdAt: { gte: thirtyDaysAgo },
       },
-      _count: { id: true },
+      select: {
+        createdAt: true,
+        verificationState: true,
+      },
+    });
+
+    // Group by date in application code
+    const verificationTrends = {};
+    verificationRawData.forEach((log) => {
+      const date = log.createdAt.toISOString().split("T")[0]; // YYYY-MM-DD
+      if (!verificationTrends[date]) {
+        verificationTrends[date] = 0;
+      }
+      verificationTrends[date]++;
     });
 
     // Verification by state/status
@@ -73,7 +85,7 @@ export async function getManufacturerAnalytics(manufacturerId) {
       select: {
         trustScore: true,
         riskLevel: true,
-        _count: { select: { products: true, codes: true } },
+        _count: { select: { codes: true } },
       },
     });
 
