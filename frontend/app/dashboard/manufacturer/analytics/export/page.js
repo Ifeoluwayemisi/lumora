@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import DashboardSidebar from "@/components/DashboardSidebar";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 
 export default function ExportAnalyticsPage() {
   const [startDate, setStartDate] = useState(
@@ -20,7 +18,24 @@ export default function ExportAnalyticsPage() {
     products: true,
     hotspots: true,
   });
+  const [html2canvas, setHtml2canvas] = useState(null);
+  const [jsPDF, setJsPDF] = useState(null);
   const chartRef = useRef(null);
+
+  // Load PDF libraries on client side only
+  useEffect(() => {
+    const loadLibraries = async () => {
+      try {
+        const html2canvasModule = await import("html2canvas");
+        const jsPDFModule = await import("jspdf");
+        setHtml2canvas(() => html2canvasModule.default);
+        setJsPDF(() => jsPDFModule.jsPDF);
+      } catch (error) {
+        console.warn("Failed to load PDF libraries:", error);
+      }
+    };
+    loadLibraries();
+  }, []);
 
   const toggleExport = (key) => {
     setSelectedExports((prev) => ({
@@ -89,7 +104,10 @@ export default function ExportAnalyticsPage() {
   };
 
   const generatePDF = async () => {
-    if (!exportData) return;
+    if (!exportData || !jsPDF) {
+      alert("PDF library not loaded. Please try again.");
+      return;
+    }
 
     try {
       setLoading(true);
