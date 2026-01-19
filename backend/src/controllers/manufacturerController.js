@@ -100,7 +100,9 @@ export async function getDashboard(req, res) {
     const totalVerifications = await prisma.verificationLog.count({
       where: { manufacturerId },
     });
-    console.log(`[DASHBOARD-${requestId}] Total verifications: ${totalVerifications}`);
+    console.log(
+      `[DASHBOARD-${requestId}] Total verifications: ${totalVerifications}`,
+    );
 
     // Get suspicious/flagged verifications
     const suspiciousAttempts = await prisma.verificationLog.count({
@@ -111,7 +113,9 @@ export async function getDashboard(req, res) {
         },
       },
     });
-    console.log(`[DASHBOARD-${requestId}] Suspicious attempts: ${suspiciousAttempts}`);
+    console.log(
+      `[DASHBOARD-${requestId}] Suspicious attempts: ${suspiciousAttempts}`,
+    );
 
     // Get daily quota (reset at midnight)
     const today = new Date();
@@ -123,7 +127,9 @@ export async function getDashboard(req, res) {
         createdAt: { gte: today },
       },
     });
-    console.log(`[DASHBOARD-${requestId}] Codes generated today: ${codesGeneratedToday}`);
+    console.log(
+      `[DASHBOARD-${requestId}] Codes generated today: ${codesGeneratedToday}`,
+    );
 
     // Determine daily limit based on plan
     const dailyLimit = manufacturer.plan === "PREMIUM" ? 1000 : 50;
@@ -150,29 +156,40 @@ export async function getDashboard(req, res) {
       orderBy: { createdAt: "desc" },
       take: 5,
     });
-    console.log(`[DASHBOARD-${requestId}] Recent alerts found: ${recentAlerts.length}`);
+    console.log(
+      `[DASHBOARD-${requestId}] Recent alerts found: ${recentAlerts.length}`,
+    );
+
+    // Helper function to safely get code prefix
+    const getCodePrefix = (code) => {
+      if (!code) return "[unknown]";
+      const codeStr = typeof code === "string" ? code : String(code);
+      return codeStr.substring(0, 8) || "[unknown]";
+    };
 
     // Format alerts for frontend
-    const formattedAlerts = recentAlerts.map((alert) => ({
-      id: alert.id,
-      title:
-        alert.verificationState === "SUSPICIOUS_PATTERN"
-          ? "Suspicious Pattern Detected"
-          : "Code Reuse Attempt",
-      message:
-        alert.verificationState === "SUSPICIOUS_PATTERN"
-          ? `Multiple rapid verifications of code ${alert.code?.substring(
-              0,
-              8,
-            )}...`
-          : `Code ${alert.code?.substring(0, 8)}... was already verified`,
-      severity:
-        alert.verificationState === "SUSPICIOUS_PATTERN" ? "high" : "medium",
-      timestamp: alert.createdAt,
-    }));
+    const formattedAlerts = recentAlerts.map((alert) => {
+      const codePrefix = getCodePrefix(alert.code);
+      return {
+        id: alert.id,
+        title:
+          alert.verificationState === "SUSPICIOUS_PATTERN"
+            ? "Suspicious Pattern Detected"
+            : "Code Reuse Attempt",
+        message:
+          alert.verificationState === "SUSPICIOUS_PATTERN"
+            ? `Multiple rapid verifications of code ${codePrefix}...`
+            : `Code ${codePrefix}... was already verified`,
+        severity:
+          alert.verificationState === "SUSPICIOUS_PATTERN" ? "high" : "medium",
+        timestamp: alert.createdAt,
+      };
+    });
 
     const duration = Date.now() - startTime;
-    console.log(`[DASHBOARD-${requestId}] Request completed successfully in ${duration}ms`);
+    console.log(
+      `[DASHBOARD-${requestId}] Request completed successfully in ${duration}ms`,
+    );
 
     return res.status(200).json({
       manufacturer,
