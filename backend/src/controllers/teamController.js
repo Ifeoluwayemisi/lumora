@@ -1,4 +1,4 @@
-const {
+import {
   getTeamMembers,
   getPendingInvites,
   inviteTeamMember,
@@ -8,24 +8,24 @@ const {
   cancelInvite,
   updateLastActive,
   checkPermission,
-} = require("../services/teamService");
+} from "../services/teamService.js";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 /**
  * GET /manufacturer/team
- * Get all team members
+ * Get all team members for a manufacturer
  */
-async function getAllTeamMembers(req, res) {
+export async function getAllTeamMembers(req, res) {
   try {
     const { manufacturerId } = req.params;
 
     // Verify user has access
-    const { PrismaClient } = require("@prisma/client");
-    const prisma = new PrismaClient();
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       select: { userId: true },
     });
-    await prisma.$disconnect();
 
     if (!manufacturer) {
       return res.status(404).json({ error: "Manufacturer not found" });
@@ -52,18 +52,15 @@ async function getAllTeamMembers(req, res) {
  * GET /manufacturer/team/invites
  * Get pending team invites
  */
-async function getPendingTeamInvites(req, res) {
+export async function getPendingTeamInvites(req, res) {
   try {
     const { manufacturerId } = req.params;
 
     // Verify user has access
-    const { PrismaClient } = require("@prisma/client");
-    const prisma = new PrismaClient();
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       select: { userId: true },
     });
-    await prisma.$disconnect();
 
     if (!manufacturer) {
       return res.status(404).json({ error: "Manufacturer not found" });
@@ -90,7 +87,7 @@ async function getPendingTeamInvites(req, res) {
  * POST /manufacturer/team/invite
  * Send team invitation
  */
-async function sendTeamInvite(req, res) {
+export async function sendTeamInvite(req, res) {
   try {
     const { manufacturerId } = req.params;
     const { email, role } = req.body;
@@ -100,13 +97,10 @@ async function sendTeamInvite(req, res) {
     }
 
     // Verify user has access and is admin
-    const { PrismaClient } = require("@prisma/client");
-    const prisma = new PrismaClient();
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       select: { userId: true },
     });
-    await prisma.$disconnect();
 
     if (!manufacturer) {
       return res.status(404).json({ error: "Manufacturer not found" });
@@ -135,7 +129,7 @@ async function sendTeamInvite(req, res) {
  * PATCH /manufacturer/team/:memberId/role
  * Update team member role
  */
-async function updateTeamMemberRole(req, res) {
+export async function updateTeamMemberRole(req, res) {
   try {
     const { manufacturerId, memberId } = req.params;
     const { role } = req.body;
@@ -145,13 +139,10 @@ async function updateTeamMemberRole(req, res) {
     }
 
     // Verify user has access
-    const { PrismaClient } = require("@prisma/client");
-    const prisma = new PrismaClient();
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       select: { userId: true },
     });
-    await prisma.$disconnect();
 
     if (!manufacturer) {
       return res.status(404).json({ error: "Manufacturer not found" });
@@ -178,18 +169,15 @@ async function updateTeamMemberRole(req, res) {
  * DELETE /manufacturer/team/:memberId
  * Remove team member
  */
-async function deleteTeamMember(req, res) {
+export async function deleteTeamMember(req, res) {
   try {
     const { manufacturerId, memberId } = req.params;
 
     // Verify user has access
-    const { PrismaClient } = require("@prisma/client");
-    const prisma = new PrismaClient();
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       select: { userId: true },
     });
-    await prisma.$disconnect();
 
     if (!manufacturer) {
       return res.status(404).json({ error: "Manufacturer not found" });
@@ -215,18 +203,15 @@ async function deleteTeamMember(req, res) {
  * DELETE /manufacturer/team/invites/:inviteId
  * Cancel pending invite
  */
-async function cancelTeamInvite(req, res) {
+export async function cancelTeamInvite(req, res) {
   try {
     const { manufacturerId, inviteId } = req.params;
 
     // Verify user has access
-    const { PrismaClient } = require("@prisma/client");
-    const prisma = new PrismaClient();
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       select: { userId: true },
     });
-    await prisma.$disconnect();
 
     if (!manufacturer) {
       return res.status(404).json({ error: "Manufacturer not found" });
@@ -254,7 +239,7 @@ async function cancelTeamInvite(req, res) {
  * POST /team/invite/:token/accept
  * Accept team invitation
  */
-async function acceptTeamInvite(req, res) {
+export async function acceptTeamInvite(req, res) {
   try {
     const { token } = req.params;
     const { name } = req.body;
@@ -277,13 +262,3 @@ async function acceptTeamInvite(req, res) {
       .json({ error: error.message || "Failed to accept invitation" });
   }
 }
-
-module.exports = {
-  getAllTeamMembers,
-  getPendingTeamInvites,
-  sendTeamInvite,
-  updateTeamMemberRole,
-  deleteTeamMember,
-  cancelTeamInvite,
-  acceptTeamInvite,
-};
