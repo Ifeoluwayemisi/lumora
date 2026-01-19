@@ -13,6 +13,16 @@ import {
 } from "../services/analyticsExportService.js";
 import { Parser } from "json2csv";
 
+// Helper function to get manufacturerId from userId
+async function getManufacturerIdFromUser(userId) {
+  if (!userId) return null;
+  const manufacturer = await prisma.manufacturer.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+  return manufacturer?.id;
+}
+
 /**
  * Get comprehensive analytics for manufacturer
  */
@@ -126,13 +136,24 @@ export async function getHotspots(req, res) {
  */
 export async function exportAnalytics(req, res) {
   try {
-    const manufacturerId = req.user?.id;
+    const userId = req.user?.id;
     const { format = "csv" } = req.query;
 
-    if (!manufacturerId) {
+    if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
     const data = await getExportData(manufacturerId, format);
 
     if (format === "csv") {
@@ -172,11 +193,16 @@ export async function exportAnalytics(req, res) {
  */
 export async function exportRevenueCSV(req, res) {
   try {
-    const manufacturerId = req.user?.id;
+    const userId = req.user?.id;
     const { startDate, endDate } = req.query;
 
-    if (!manufacturerId) {
+    if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturerId = await getManufacturerIdFromUser(userId);
+    if (!manufacturerId) {
+      return res.status(404).json({ error: "Manufacturer not found" });
     }
 
     const start = startDate
@@ -204,11 +230,16 @@ export async function exportRevenueCSV(req, res) {
  */
 export async function exportVerificationCSV(req, res) {
   try {
-    const manufacturerId = req.user?.id;
+    const userId = req.user?.id;
     const { startDate, endDate } = req.query;
 
-    if (!manufacturerId) {
+    if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturerId = await getManufacturerIdFromUser(userId);
+    if (!manufacturerId) {
+      return res.status(404).json({ error: "Manufacturer not found" });
     }
 
     const start = startDate
@@ -240,10 +271,15 @@ export async function exportVerificationCSV(req, res) {
  */
 export async function exportProductCSV(req, res) {
   try {
-    const manufacturerId = req.user?.id;
+    const userId = req.user?.id;
 
-    if (!manufacturerId) {
+    if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturerId = await getManufacturerIdFromUser(userId);
+    if (!manufacturerId) {
+      return res.status(404).json({ error: "Manufacturer not found" });
     }
 
     const { data, summary } = await getProductData(manufacturerId);
@@ -266,11 +302,16 @@ export async function exportProductCSV(req, res) {
  */
 export async function exportHotspotCSV(req, res) {
   try {
-    const manufacturerId = req.user?.id;
+    const userId = req.user?.id;
     const { startDate, endDate } = req.query;
 
-    if (!manufacturerId) {
+    if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturerId = await getManufacturerIdFromUser(userId);
+    if (!manufacturerId) {
+      return res.status(404).json({ error: "Manufacturer not found" });
     }
 
     const start = startDate
@@ -298,11 +339,16 @@ export async function exportHotspotCSV(req, res) {
  */
 export async function getAllExportData(req, res) {
   try {
-    const manufacturerId = req.user?.id;
+    const userId = req.user?.id;
     const { startDate, endDate } = req.query;
 
-    if (!manufacturerId) {
+    if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturerId = await getManufacturerIdFromUser(userId);
+    if (!manufacturerId) {
+      return res.status(404).json({ error: "Manufacturer not found" });
     }
 
     const start = startDate

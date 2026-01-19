@@ -264,16 +264,6 @@ export const forgotPassword = async (req, res) => {
     return res.status(400).json({ error: "Email is required" });
   }
 
-  // Check if email service is configured
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn("[FORGOT_PASSWORD] Email service not configured");
-    return res.status(503).json({
-      error: "Email service unavailable",
-      message:
-        "Password reset emails cannot be sent at this time. Please contact support.",
-    });
-  }
-
   try {
     const user = await prisma.user.findUnique({ where: { email } });
 
@@ -302,32 +292,40 @@ export const forgotPassword = async (req, res) => {
       },
     });
 
-    // Send reset email
-    try {
-      const frontendUrl =
-        process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app";
-      const resetUrl = `${frontendUrl}/auth/reset-password?token=${resetToken}`;
+    console.log("[FORGOT_PASSWORD] Reset token generated for:", email);
+    const frontendUrl =
+      process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app";
+    const resetUrl = `${frontendUrl}/auth/reset-password?token=${resetToken}`;
+    console.log("[FORGOT_PASSWORD] Reset URL:", resetUrl);
 
-      console.log("[FORGOT_PASSWORD] Sending reset email to:", email);
-      console.log("[FORGOT_PASSWORD] Reset URL:", resetUrl);
-
-      await transporter.sendMail({
-        from: `"Lumora Support" <${process.env.EMAIL_USER}>`,
-        to: email,
-        subject: "Reset Your Lumora Password",
-        html: `
-          <p>You requested a password reset. Click the link below to continue:</p>
-          <a href="${resetUrl}" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">
-            Reset Password
-          </a>
-          <p>This link will expire in 1 hour.</p>
-          <p>If you didn't request this, please ignore this email.</p>
-        `,
-      });
-      console.log("[FORGOT_PASSWORD] Email sent successfully to:", email);
-    } catch (emailError) {
-      console.error("[FORGOT_PASSWORD] Email send failed:", emailError.message);
-      // Don't fail the request, but log the error
+    // Try to send email if configured
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      try {
+        await transporter.sendMail({
+          from: `"Lumora Support" <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: "Reset Your Lumora Password",
+          html: `
+            <p>You requested a password reset. Click the link below to continue:</p>
+            <a href="${resetUrl}" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+              Reset Password
+            </a>
+            <p>This link will expire in 1 hour.</p>
+            <p>If you didn't request this, please ignore this email.</p>
+          `,
+        });
+        console.log("[FORGOT_PASSWORD] Email sent successfully to:", email);
+      } catch (emailError) {
+        console.error(
+          "[FORGOT_PASSWORD] Email send failed:",
+          emailError.message,
+        );
+        // Continue anyway - token is still valid in database
+      }
+    } else {
+      console.warn(
+        "[FORGOT_PASSWORD] Email service not configured - reset link must be provided to user through other means",
+      );
     }
 
     return res.status(200).json({
