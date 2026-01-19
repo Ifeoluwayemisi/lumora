@@ -3,6 +3,8 @@ import { execSync } from "child_process";
 import app from "./app.js";
 import prisma from "./models/prismaClient.js";
 
+// Trigger redeploy - ESM fixes applied
+
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
