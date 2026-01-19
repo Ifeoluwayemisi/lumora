@@ -81,7 +81,8 @@ export async function getAnalytics(req, res) {
     });
     res.status(500).json({
       error: "Failed to fetch analytics",
-      message: process.env.NODE_ENV === "development" ? err?.message : undefined,
+      message:
+        process.env.NODE_ENV === "development" ? err?.message : undefined,
       requestId,
     });
   }

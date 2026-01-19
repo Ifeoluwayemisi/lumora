@@ -35,17 +35,24 @@ export async function getManufacturerAnalytics(manufacturerId) {
       `[ANALYTICS_SERVICE-${serviceId}] Found ${verificationRawData.length} verification logs`,
     );
 
-    // Group by date in application code
-    const verificationTrends = {};
+    // Group by date in application code - return as array
+    const verificationTrendData = {};
     verificationRawData.forEach((log) => {
       const date = log.createdAt.toISOString().split("T")[0]; // YYYY-MM-DD
-      if (!verificationTrends[date]) {
-        verificationTrends[date] = 0;
+      if (!verificationTrendData[date]) {
+        verificationTrendData[date] = 0;
       }
-      verificationTrends[date]++;
+      verificationTrendData[date]++;
     });
+    // Convert to array format expected by frontend
+    const verificationTrends = Object.entries(verificationTrendData).map(
+      ([date, count]) => ({
+        createdAt: date,
+        _count: { id: count },
+      }),
+    );
     console.log(
-      `[ANALYTICS_SERVICE-${serviceId}] Grouped into ${Object.keys(verificationTrends).length} days`,
+      `[ANALYTICS_SERVICE-${serviceId}] Grouped into ${verificationTrends.length} days`,
     );
 
     // Verification by state/status
@@ -84,11 +91,17 @@ export async function getManufacturerAnalytics(manufacturerId) {
 
     // Code performance metrics - Group by isUsed (used/unused)
     console.log(`[ANALYTICS_SERVICE-${serviceId}] Fetching code metrics...`);
-    const codeMetrics = await prisma.code.groupBy({
+    const codeMetricsRaw = await prisma.code.groupBy({
       by: ["isUsed"],
       where: { manufacturerId },
       _count: { id: true },
     });
+    // Transform to include status field for frontend compatibility
+    const codeMetrics = codeMetricsRaw.map((item) => ({
+      status: item.isUsed ? "USED" : "UNUSED",
+      isUsed: item.isUsed,
+      _count: { id: item._count.id },
+    }));
     console.log(
       `[ANALYTICS_SERVICE-${serviceId}] Found ${codeMetrics.length} code status groups`,
     );
