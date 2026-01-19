@@ -31,15 +31,13 @@ export async function getManufacturerAnalytics(manufacturerId) {
       where: {
         manufacturerId,
         createdAt: { gte: thirtyDaysAgo },
-        lat: { not: null },
-        lng: { not: null },
+        latitude: { not: null },
+        longitude: { not: null },
       },
       select: {
-        lat: true,
-        lng: true,
-        country: true,
-        state: true,
-        city: true,
+        latitude: true,
+        longitude: true,
+        location: true,
         createdAt: true,
         verificationState: true,
       },
@@ -99,18 +97,31 @@ export async function getManufacturerAnalytics(manufacturerId) {
 export async function getHotspotPredictions(manufacturerId) {
   try {
     // Get top verification locations
-    const hotspots = await prisma.verificationLog.groupBy({
-      by: ["country", "state", "city", "lat", "lng"],
-      where: { manufacturerId },
-      _count: { id: true },
-      orderBy: { _count: { id: "desc" } },
+    const hotspots = await prisma.verificationLog.findMany({
+      where: {
+        manufacturerId,
+        latitude: { not: null },
+        longitude: { not: null },
+      },
+      select: {
+        latitude: true,
+        longitude: true,
+        location: true,
+        verificationState: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
       take: 20,
     });
 
-    // Group by location with frequency
-    return hotspots.map((spot) => ({
-      ...spot,
-      frequency: spot._count.id,
+    // Return hotspots with location info
+    return hotspots.map((spot, index) => ({
+      id: index,
+      latitude: spot.latitude,
+      longitude: spot.longitude,
+      location: spot.location,
+      verificationState: spot.verificationState,
+      timestamp: spot.createdAt,
     }));
   } catch (err) {
     console.error("[GET_HOTSPOT_PREDICTIONS] Error:", err);

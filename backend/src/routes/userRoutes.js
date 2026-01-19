@@ -26,7 +26,7 @@ import {
   getUnreadCount,
 } from "../controllers/notificationController.js";
 import { authMiddleware } from "../middleware/authMiddleware.js";
-import { roleMiddleware } from "../middleware/roleMiddleware.js";
+import { roleMiddlewareMultiple } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 const upload = multer({
@@ -35,7 +35,7 @@ const upload = multer({
 });
 
 // Auth first, then role
-router.use(authMiddleware, roleMiddleware("CONSUMER", "ADMIN"));
+router.use(authMiddleware, roleMiddlewareMultiple(["CONSUMER", "ADMIN"]));
 
 // Profile endpoints
 router.get("/profile", getUserProfile);
@@ -43,7 +43,7 @@ router.patch("/profile", updateUserProfile);
 router.patch(
   "/profile-picture",
   upload.single("profilePicture"),
-  uploadProfilePicture
+  uploadProfilePicture,
 );
 router.patch("/password", changeUserPassword);
 router.delete("/account", deleteUserAccount);

@@ -61,7 +61,7 @@ app.use((req, res, next) => {
   if (NODE_ENV === "production") {
     res.setHeader(
       "Strict-Transport-Security",
-      "max-age=31536000; includeSubDomains"
+      "max-age=31536000; includeSubDomains",
     );
   }
   next();

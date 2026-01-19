@@ -7,6 +7,7 @@ Your dashboard endpoint is returning a **500 Internal Server Error** on producti
 ## What's Actually Wrong
 
 From your error trace:
+
 ```
 GET https://lumoraorg.onrender.com/api/manufacturer/dashboard 500 (Internal Server Error)
 ```
@@ -47,29 +48,33 @@ I've added **comprehensive logging** to pinpoint exactly what's going wrong:
 ### Changes Made:
 
 **1. Enhanced Dashboard Controller** (`manufacturerController.js`)
+
 - Added unique request ID to every dashboard request
 - Log each database query step with timing
 - Track exactly where the failure occurs
 - Include context (user ID, manufacturer name, etc.)
 
 **2. Diagnostic Endpoints** (`app.js`)
+
 ```bash
 # Health check
 GET /health
 # Response: { status: "healthy", uptime: 3600 }
 
 # Full diagnostics
-GET /health/diagnostics  
+GET /health/diagnostics
 # Response: { environment, memory, nodeVersion, database: "Connected" }
 ```
 
 **3. Request Logger Middleware** (`requestLogger.js`)
+
 - Tracks every request with unique ID
 - Logs response times
 - Captures status codes
 - Helps with production debugging
 
 **4. Enhanced Error Handler** (`app.js`)
+
 - Returns request ID in error responses
 - Includes error code and metadata
 - Shows full stack trace in development mode
@@ -77,6 +82,7 @@ GET /health/diagnostics
 ## How to Find the Root Cause
 
 ### Step 1: Trigger the Error
+
 ```bash
 # In browser, navigate to dashboard:
 https://lumora.vercel.app/dashboard
@@ -90,6 +96,7 @@ https://lumora.vercel.app/dashboard
 ```
 
 ### Step 2: Search Logs in Render
+
 1. Go to https://dashboard.render.com
 2. Find "lumora-backend" service
 3. Click "Logs"
@@ -99,6 +106,7 @@ https://lumora.vercel.app/dashboard
 ### Step 3: Example Log Output
 
 **Success scenario:**
+
 ```
 [DASHBOARD-a1b2c3] Request started
 [DASHBOARD-a1b2c3] Manufacturer ID: mfr_456
@@ -109,6 +117,7 @@ https://lumora.vercel.app/dashboard
 ```
 
 **Failure scenario:**
+
 ```
 [DASHBOARD-a1b2c3] Request started
 [DASHBOARD-a1b2c3] Manufacturer ID: mfr_456
@@ -122,13 +131,13 @@ https://lumora.vercel.app/dashboard
 
 ## Common Issues & Solutions
 
-| Issue | Sign | Fix |
-|-------|------|-----|
-| Schema mismatch | `P2015: Column does not exist` | Run migration in production |
-| DB not connected | `ECONNREFUSED` | Check DATABASE_URL env var |
-| No user record | `null manufacturerId` | Check authentication |
-| Query too slow | Timeout | Optimize database query |
-| Memory issue | `ENOMEM` | Check memory on Render |
+| Issue            | Sign                           | Fix                         |
+| ---------------- | ------------------------------ | --------------------------- |
+| Schema mismatch  | `P2015: Column does not exist` | Run migration in production |
+| DB not connected | `ECONNREFUSED`                 | Check DATABASE_URL env var  |
+| No user record   | `null manufacturerId`          | Check authentication        |
+| Query too slow   | Timeout                        | Optimize database query     |
+| Memory issue     | `ENOMEM`                       | Check memory on Render      |
 
 ## What I've Deployed
 
@@ -138,7 +147,7 @@ https://lumora.vercel.app/dashboard
 feat: Add comprehensive logging for dashboard error debugging
 
 - Add request ID tracking to all dashboard requests
-- Log each database query with timing information  
+- Log each database query with timing information
 - Add diagnostic health check endpoint at /health/diagnostics
 - Enhanced global error handler with request IDs for production debugging
 - Added request logger middleware with response timing
@@ -202,4 +211,3 @@ curl http://localhost:5000/health
 **Status:** ✅ Deployed and waiting for redeploy on Render
 **Next Action:** Load dashboard and capture the request ID from the error
 **Debugging:** Use request ID to search Render logs for exact failure point
-

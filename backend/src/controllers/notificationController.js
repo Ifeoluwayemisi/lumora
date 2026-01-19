@@ -5,10 +5,18 @@ import prisma from "../models/prismaClient.js";
  * Get all notifications for authenticated user
  */
 export async function getNotifications(req, res) {
+  const requestId = Math.random().toString(36).substring(7);
+  const startTime = Date.now();
+
   try {
     const userId = req.user?.id;
 
+    console.log(
+      `[NOTIFICATIONS-${requestId}] Request started for userId: ${userId}`,
+    );
+
     if (!userId) {
+      console.warn(`[NOTIFICATIONS-${requestId}] Unauthorized: No user ID`);
       return res.status(401).json({ error: "Unauthorized" });
     }
 
@@ -17,10 +25,19 @@ export async function getNotifications(req, res) {
     const limitNum = Math.min(parseInt(limit) || 20, 100);
     const skip = (pageNum - 1) * limitNum;
 
+    console.log(`[NOTIFICATIONS-${requestId}] Query params:`, {
+      status,
+      type,
+      pageNum,
+      limitNum,
+    });
+
     // Build query filters
     const where = { userId };
     if (status) where.read = status === "read";
     if (type) where.type = type.toUpperCase();
+
+    console.log(`[NOTIFICATIONS-${requestId}] Where clause:`, where);
 
     // Fetch notifications
     const [notifications, total] = await Promise.all([
@@ -33,6 +50,11 @@ export async function getNotifications(req, res) {
       prisma.userNotifications.count({ where }),
     ]);
 
+    const duration = Date.now() - startTime;
+    console.log(
+      `[NOTIFICATIONS-${requestId}] Found ${notifications.length} notifications, total: ${total}, in ${duration}ms`,
+    );
+
     return res.status(200).json({
       success: true,
       total,
@@ -42,13 +64,20 @@ export async function getNotifications(req, res) {
       notifications,
     });
   } catch (error) {
-    console.error("[GET_NOTIFICATIONS] Error:", error.message);
+    const duration = Date.now() - startTime;
+    console.error(`[NOTIFICATIONS-${requestId}] Error after ${duration}ms:`, {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      userId: req.user?.id,
+    });
     return res.status(500).json({
       error: "Failed to fetch notifications",
       message:
         process.env.NODE_ENV === "development"
           ? error.message
           : "Please try again later",
+      requestId,
     });
   }
 }

@@ -16,23 +16,52 @@ import { Parser } from "json2csv";
  * Get comprehensive analytics for manufacturer
  */
 export async function getAnalytics(req, res) {
+  const requestId = Math.random().toString(36).substring(7);
+  const startTime = Date.now();
+
   try {
     const manufacturerId = req.user?.id;
 
+    console.log(
+      `[ANALYTICS-${requestId}] Request started for manufacturerId: ${manufacturerId}`,
+    );
+
     if (!manufacturerId) {
+      console.warn(`[ANALYTICS-${requestId}] Unauthorized: No manufacturer ID`);
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    console.log(`[ANALYTICS-${requestId}] Fetching analytics...`);
     const analytics = await getManufacturerAnalytics(manufacturerId);
+
+    const duration = Date.now() - startTime;
+    console.log(
+      `[ANALYTICS-${requestId}] Analytics fetched successfully in ${duration}ms`,
+    );
+    console.log(`[ANALYTICS-${requestId}] Data structure:`, {
+      hasVerificationTrends: !!analytics.verificationTrends,
+      hasVerificationByStatus: !!analytics.verificationByStatus,
+      hasLocationData: !!analytics.locationData,
+      hasCodeMetrics: !!analytics.codeMetrics,
+      hasSuspiciousTrends: !!analytics.suspiciousTrends,
+      hasManufacturer: !!analytics.manufacturer,
+    });
 
     res.status(200).json({
       data: analytics,
     });
   } catch (err) {
-    console.error("[GET_ANALYTICS] Error:", err);
+    const duration = Date.now() - startTime;
+    console.error(`[ANALYTICS-${requestId}] Error after ${duration}ms:`, {
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+      manufacturerId: req.user?.id,
+    });
     res.status(500).json({
       error: "Failed to fetch analytics",
       message: process.env.NODE_ENV === "development" ? err.message : undefined,
+      requestId,
     });
   }
 }

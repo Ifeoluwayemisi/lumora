@@ -1,24 +1,26 @@
 # Quick Debugging Checklist - Dashboard 500 Error
 
 ## Problem
+
 ```
 ❌ GET https://lumoraorg.onrender.com/api/manufacturer/dashboard 500 (Internal Server Error)
 ```
 
 ## What Those Chrome Errors MEAN
 
-| Error | Source | Impact | Action |
-|-------|--------|--------|--------|
-| `chrome-extension://invalid/` | Browser extension | NONE - harmless | ✅ Ignore |
-| `Resources must be listed in web_accessible_resources` | Browser extension | NONE - harmless | ✅ Ignore |
-| `Download React DevTools` | Browser suggestion | NONE - just a tip | ✅ Ignore |
-| **`GET /api/manufacturer/dashboard 500`** | **Your backend** | **YES - REAL PROBLEM** | ⚠️ **FIX THIS** |
+| Error                                                  | Source             | Impact                 | Action          |
+| ------------------------------------------------------ | ------------------ | ---------------------- | --------------- |
+| `chrome-extension://invalid/`                          | Browser extension  | NONE - harmless        | ✅ Ignore       |
+| `Resources must be listed in web_accessible_resources` | Browser extension  | NONE - harmless        | ✅ Ignore       |
+| `Download React DevTools`                              | Browser suggestion | NONE - just a tip      | ✅ Ignore       |
+| **`GET /api/manufacturer/dashboard 500`**              | **Your backend**   | **YES - REAL PROBLEM** | ⚠️ **FIX THIS** |
 
 ---
 
 ## Action Plan
 
 ### 1️⃣ Wait for Redeploy (2-5 minutes)
+
 Render is auto-deploying the logging changes. Wait for the deployment to complete.
 
 **Check Render status:**
@@ -27,6 +29,7 @@ https://dashboard.render.com → lumora-backend → Logs
 ---
 
 ### 2️⃣ Trigger the Error
+
 1. Open https://lumora.vercel.app/dashboard
 2. You'll see the 500 error (or it might now work!)
 3. **Open DevTools** (F12) → Network tab
@@ -39,6 +42,7 @@ https://dashboard.render.com → lumora-backend → Logs
 ### 3️⃣ Find the Root Cause in Logs
 
 **Option A: Search by Request ID** (Recommended)
+
 ```bash
 # Go to Render Logs
 # Search for: DASHBOARD-[requestId]
@@ -46,6 +50,7 @@ https://dashboard.render.com → lumora-backend → Logs
 ```
 
 **Option B: Search by Error**
+
 ```bash
 # Search for: "Database error"
 # Search for: "P2015"
@@ -69,6 +74,7 @@ ENOENT → Missing file/env variable
 ### 5️⃣ Most Likely Cause
 
 🎯 **Most probable issue:**
+
 ```
 Database schema mismatch
 ↓
@@ -78,6 +84,7 @@ Need to run Prisma migration in production
 ```
 
 **Check:**
+
 - Is the schema up-to-date? Check `backend/prisma/schema.prisma`
 - Have all migrations been run? Check `backend/prisma/migrations/`
 - Are environment variables set correctly in Render?
@@ -165,7 +172,7 @@ stack: → Errors with stack traces
 
 - [ ] Dashboard loads without 500 error
 - [ ] Data displays (products, codes, stats)
-- [ ] No JavaScript console errors (about *your* app)
+- [ ] No JavaScript console errors (about _your_ app)
 - [ ] `/health` endpoint responds with JSON
 - [ ] `/health/diagnostics` shows database: "Connected"
 - [ ] Logs show completion without [ERROR]
@@ -192,6 +199,7 @@ backend/
 ## Last Resort: Contact Render Support
 
 If logs show nothing and /health works:
+
 1. Get full logs from Render
 2. Go to render.com/support
 3. Provide: Render service name, logs, error code
