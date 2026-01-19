@@ -44,10 +44,10 @@ export default function ManufacturerDashboard() {
     // Initial fetch
     fetchDashboard();
 
-    // Set up auto-refresh every 10 seconds to sync verified status
+    // Set up auto-refresh every 3 seconds to sync quota/codes immediately after generation
     const refreshInterval = setInterval(() => {
       fetchDashboard();
-    }, 10000);
+    }, 3000);
 
     // Clean up interval on unmount
     return () => clearInterval(refreshInterval);
@@ -124,15 +124,15 @@ export default function ManufacturerDashboard() {
                     isVerified
                       ? "bg-gradient-to-r from-genuine to-green-600"
                       : accountStatus === "pending_verification"
-                      ? "bg-gradient-to-r from-yellow-500 to-orange-500"
-                      : "bg-gradient-to-r from-red-500 to-red-600"
+                        ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                        : "bg-gradient-to-r from-red-500 to-red-600"
                   }`}
                 >
                   {isVerified
                     ? "✓ Verified"
                     : accountStatus === "pending_verification"
-                    ? "⏳ Pending"
-                    : "✗ Rejected"}
+                      ? "⏳ Pending"
+                      : "✗ Rejected"}
                 </div>
               </div>
             </div>
@@ -341,8 +341,8 @@ export default function ManufacturerDashboard() {
                     quotaPercentage < 50
                       ? "bg-gradient-to-r from-green-500 to-green-600"
                       : quotaPercentage < 80
-                      ? "bg-gradient-to-r from-yellow-500 to-orange-500"
-                      : "bg-gradient-to-r from-red-500 to-red-600"
+                        ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                        : "bg-gradient-to-r from-red-500 to-red-600"
                   }`}
                   style={{ width: `${Math.min(quotaPercentage, 100)}%` }}
                 ></div>
@@ -555,8 +555,8 @@ export default function ManufacturerDashboard() {
                       alert.severity === "high"
                         ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
                         : alert.severity === "medium"
-                        ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
-                        : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
+                          ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800"
+                          : "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
                     }`}
                   >
                     <div
@@ -564,8 +564,8 @@ export default function ManufacturerDashboard() {
                         alert.severity === "high"
                           ? "text-red-600"
                           : alert.severity === "medium"
-                          ? "text-yellow-600"
-                          : "text-blue-600"
+                            ? "text-yellow-600"
+                            : "text-blue-600"
                       }`}
                     >
                       {alert.severity === "high" && "🔴"}

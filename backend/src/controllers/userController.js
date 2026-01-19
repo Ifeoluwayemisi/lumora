@@ -145,6 +145,25 @@ export async function removeFavorite(req, res) {
 }
 
 /**
+ * Helper function to get notification title based on type
+ */
+function getNotificationTitle(type) {
+  switch (type?.toUpperCase()) {
+    case "VERIFICATION":
+      return "Verification Alert";
+    case "ALERT":
+      return "Security Alert";
+    case "WARNING":
+      return "Warning";
+    case "INFO":
+    case "GENERAL":
+      return "Notification";
+    default:
+      return "Update";
+  }
+}
+
+/**
  * GET /notifications
  * Get all user notifications
  */
@@ -155,7 +174,14 @@ export async function getNotifications(req, res) {
       where: { userId },
       orderBy: { createdAt: "desc" },
     });
-    res.json(notifications);
+
+    // Transform notifications to include title based on type
+    const transformedNotifications = notifications.map((notif) => ({
+      ...notif,
+      title: getNotificationTitle(notif.type),
+    }));
+
+    res.json({ notifications: transformedNotifications });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch notifications" });
@@ -357,7 +383,7 @@ export async function changeUserPassword(req, res) {
     // Verify current password
     const isPasswordValid = await bcrypt.compare(
       currentPassword,
-      user.password
+      user.password,
     );
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Current password is incorrect" });
