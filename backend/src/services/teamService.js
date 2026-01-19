@@ -1,6 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
-const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+import { PrismaClient } from "@prisma/client";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
+
 const prisma = new PrismaClient();
 
 // Email configuration
@@ -306,7 +307,7 @@ async function checkPermission(manufacturerId, memberId, requiredRole) {
   return (roles[member.role] || 0) >= (roles[requiredRole] || 0);
 }
 
-module.exports = {
+export {
   getTeamMembers,
   getPendingInvites,
   inviteTeamMember,

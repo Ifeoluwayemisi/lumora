@@ -48,7 +48,7 @@ import {
   updateTeamMemberRole,
   deleteTeamMember,
   cancelTeamInvite,
-  acceptInvite,
+  acceptTeamInvite,
 } from "../controllers/teamController.js";
 
 // Configure multer for file uploads
@@ -295,6 +295,6 @@ router.delete(
 );
 
 // Public endpoint for accepting invites
-router.post("/team/invite/:token/accept", acceptInvite);
+router.post("/team/invite/:token/accept", acceptTeamInvite);
 
 export default router;
