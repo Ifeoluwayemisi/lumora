@@ -946,8 +946,23 @@ export async function downloadBatchCodes(req, res) {
  * Get manufacturer verification history
  */
 export async function getManufacturerHistory(req, res) {
+  const requestId = Math.random().toString(36).substring(7);
+  const startTime = Date.now();
+
   try {
     const { productId, batchId, from, to, page = 1, limit = 20 } = req.query;
+
+    console.log(
+      `[HISTORY-${requestId}] Request started for manufacturerId: ${req.user.id}`,
+    );
+    console.log(`[HISTORY-${requestId}] Query params:`, {
+      productId,
+      batchId,
+      from,
+      to,
+      page,
+      limit,
+    });
 
     // Input validation
     const pageNum = Math.max(Number(page), 1);
@@ -971,6 +986,11 @@ export async function getManufacturerHistory(req, res) {
       }
     }
 
+    console.log(
+      `[HISTORY-${requestId}] Query where clause:`,
+      JSON.stringify(where),
+    );
+
     const [history, total] = await Promise.all([
       prisma.verificationLog.findMany({
         where,
@@ -981,8 +1001,22 @@ export async function getManufacturerHistory(req, res) {
       prisma.verificationLog.count({ where }),
     ]);
 
+    console.log(
+      `[HISTORY-${requestId}] Found ${history.length} records, total: ${total}`,
+    );
+    console.log(`[HISTORY-${requestId}] First record sample:`, history[0]);
+
+    const duration = Date.now() - startTime;
+    console.log(`[HISTORY-${requestId}] Request completed in ${duration}ms`);
+
+    // Map codeValue to code for API compatibility with frontend
+    const historyWithCodeField = history.map((log) => ({
+      ...log,
+      code: log.codeValue, // Map codeValue to code for frontend
+    }));
+
     return res.status(200).json({
-      data: history,
+      data: historyWithCodeField,
       pagination: {
         total,
         page: pageNum,
@@ -991,13 +1025,20 @@ export async function getManufacturerHistory(req, res) {
       },
     });
   } catch (err) {
-    console.error("[GET_HISTORY] Error:", err.message);
+    const duration = Date.now() - startTime;
+    console.error(`[HISTORY-${requestId}] Error after ${duration}ms:`, {
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+      manufacturerId: req.user?.id,
+    });
     return res.status(500).json({
       error: "Failed to fetch history",
       message:
         process.env.NODE_ENV === "development"
           ? err.message
           : "Please try again later",
+      requestId,
     });
   }
 }
