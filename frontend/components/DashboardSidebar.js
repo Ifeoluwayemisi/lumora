@@ -20,6 +20,7 @@ import {
   FiTrendingUp,
   FiCreditCard,
   FiCheckSquare,
+  FiHelpCircle,
 } from "react-icons/fi";
 
 export default function DashboardSidebar({ userRole }) {
@@ -63,6 +64,11 @@ export default function DashboardSidebar({ userRole }) {
         icon: FiList,
       },
       {
+        href: "/dashboard/manufacturer/history",
+        label: "History",
+        icon: FiTrendingUp,
+      },
+      {
         href: "/dashboard/manufacturer/analytics",
         label: "Analytics",
         icon: FiTrendingUp,
@@ -78,9 +84,24 @@ export default function DashboardSidebar({ userRole }) {
         icon: FiCreditCard,
       },
       {
+        href: "/dashboard/manufacturer/team",
+        label: "Team",
+        icon: FiUsers,
+      },
+      {
         href: "/dashboard/manufacturer/profile",
         label: "Profile",
         icon: FiUser,
+      },
+      {
+        href: "/dashboard/manufacturer/settings",
+        label: "Settings",
+        icon: FiSettings,
+      },
+      {
+        href: "/dashboard/manufacturer/help",
+        label: "Help & Support",
+        icon: FiHelpCircle,
       },
     ];
     const adminItems = [
