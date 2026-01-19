@@ -63,7 +63,7 @@ export default function ExportAnalyticsPage() {
     }
   };
 
-  const downloadCSV = async (type) => {
+  const downloadFile = async (type, fileExtension = "csv") => {
     try {
       const params = `?startDate=${startDate}&endDate=${endDate}`;
       let url = "";
@@ -85,22 +85,47 @@ export default function ExportAnalyticsPage() {
           return;
       }
 
+      console.log(`Downloading ${type} as ${fileExtension}...`);
       const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to download");
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to download");
+      }
 
       const blob = await response.blob();
+      console.log(`Received blob of size ${blob.size}`);
+
+      // Create download link with proper cleanup
       const urlBlob = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
+      link.style.display = "none";
       link.href = urlBlob;
-      link.download = `${type}-export-${new Date().getTime()}.csv`;
+      link.download = `${type}-export-${new Date().getTime()}.${fileExtension}`;
+
+      // Append to body, click, then remove
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(urlBlob);
+
+      // Clean up - use setTimeout to ensure click is processed
+      setTimeout(() => {
+        try {
+          document.body.removeChild(link);
+        } catch (e) {
+          console.warn("Could not remove download link:", e);
+        }
+        window.URL.revokeObjectURL(urlBlob);
+      }, 100);
+
+      console.log(`Successfully downloaded ${type}`);
     } catch (error) {
-      console.error("Error downloading CSV:", error);
-      alert("Failed to download CSV");
+      console.error(`Error downloading ${type}:`, error);
+      alert(`Failed to download ${type}: ${error.message}`);
     }
+  };
+
+  const downloadCSV = async (type) => {
+    await downloadFile(type, "csv");
   };
 
   const generatePDF = async () => {

@@ -58,17 +58,27 @@ export default function AnalyticsPage() {
       const response = await api.get(
         `/manufacturer/analytics/export?format=${format}`,
         {
-          responseType: format === "json" ? "json" : "blob",
-        }
+          responseType: "blob",
+        },
       );
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(response.data);
       const link = document.createElement("a");
+      link.style.display = "none";
       link.href = url;
       link.setAttribute("download", `analytics.${format}`);
       document.body.appendChild(link);
       link.click();
-      link.parentChild.removeChild(link);
+
+      // Clean up with setTimeout to ensure click is processed
+      setTimeout(() => {
+        try {
+          document.body.removeChild(link);
+        } catch (e) {
+          console.warn("Could not remove download link:", e);
+        }
+        window.URL.revokeObjectURL(url);
+      }, 100);
 
       toast.success(`Exported as ${format.toUpperCase()}`);
     } catch (err) {
@@ -178,8 +188,8 @@ export default function AnalyticsPage() {
                   manufacturer?.riskLevel === "LOW"
                     ? "text-green-600"
                     : manufacturer?.riskLevel === "MEDIUM"
-                    ? "text-yellow-600"
-                    : "text-red-600"
+                      ? "text-yellow-600"
+                      : "text-red-600"
                 }`}
               >
                 {manufacturer?.riskLevel || "N/A"}

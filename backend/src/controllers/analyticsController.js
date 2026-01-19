@@ -199,16 +199,26 @@ export async function exportAnalytics(req, res) {
         res.status(400).json({ error: "Failed to generate CSV" });
       }
     } else if (format === "json") {
-      res.setHeader("Content-Type", "application/json");
-      res.setHeader(
-        "Content-Disposition",
-        "attachment; filename=analytics.json",
-      );
-      const duration = Date.now() - startTime;
-      console.log(
-        `[EXPORT-${requestId}] JSON exported successfully in ${duration}ms`,
-      );
-      res.json(data);
+      try {
+        console.log(`[EXPORT-${requestId}] Generating JSON...`);
+        const jsonString = JSON.stringify(data, null, 2);
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader(
+          "Content-Disposition",
+          "attachment; filename=analytics.json",
+        );
+        const duration = Date.now() - startTime;
+        console.log(
+          `[EXPORT-${requestId}] JSON exported successfully in ${duration}ms`,
+        );
+        res.send(jsonString);
+      } catch (err) {
+        console.error(`[EXPORT-${requestId}] JSON generation error:`, {
+          message: err?.message,
+          stack: err?.stack,
+        });
+        res.status(400).json({ error: "Failed to generate JSON" });
+      }
     } else if (format === "pdf") {
       // For PDF, we'd typically use a library like puppeteer or pdfkit
       // For now, return the data as JSON that can be rendered to PDF on frontend
