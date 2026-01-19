@@ -85,6 +85,7 @@ export async function createBatchWithCodes({
         data: {
           batchId: batch.id,
           manufacturerId,
+          productId,
           codeValue,
           qrImagePath: qrPath,
         },
@@ -135,7 +136,7 @@ async function generateUniqueCode(length = 6) {
   while (true) {
     const random = Array.from(
       { length },
-      () => charset[Math.floor(Math.random() * charset.length)]
+      () => charset[Math.floor(Math.random() * charset.length)],
     ).join("");
 
     const code = `LUM-${random}`;

@@ -51,12 +51,12 @@ export default function BatchesPage() {
       setBatches(batchesRes.data?.data || []);
       setProducts(productsRes.data?.data || []);
       setQuota(
-        dashboardRes.data?.quota || { used: 0, limit: 50, remaining: 50 }
+        dashboardRes.data?.quota || { used: 0, limit: 50, remaining: 50 },
       );
     } catch (err) {
       console.error("[FETCH_DATA] Error:", err.response?.data || err.message);
       toast.error(
-        "Failed to load data - " + (err.response?.data?.message || err.message)
+        "Failed to load data - " + (err.response?.data?.message || err.message),
       );
       setBatches([]);
       setProducts([]);
@@ -91,7 +91,7 @@ export default function BatchesPage() {
       });
 
       toast.success(
-        `Batch created with ${response.data.codesGenerated} codes!`
+        `Batch created with ${response.data.codesGenerated} codes!`,
       );
       setQuota(response.data.quota);
       setFormData({
@@ -123,7 +123,7 @@ export default function BatchesPage() {
         `/manufacturer/batch/${batchId}/download`,
         {
           responseType: "blob",
-        }
+        },
       );
 
       // Create a blob URL and trigger download
@@ -133,7 +133,7 @@ export default function BatchesPage() {
       link.setAttribute("download", `batch_${batchId}_codes.csv`);
       document.body.appendChild(link);
       link.click();
-      link.parentChild.removeChild(link);
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
       toast.success("Codes downloaded successfully!");
@@ -226,8 +226,8 @@ export default function BatchesPage() {
                   quotaPercentage < 50
                     ? "bg-gradient-to-r from-green-500 to-green-600"
                     : quotaPercentage < 80
-                    ? "bg-gradient-to-r from-yellow-500 to-orange-500"
-                    : "bg-gradient-to-r from-red-500 to-red-600"
+                      ? "bg-gradient-to-r from-yellow-500 to-orange-500"
+                      : "bg-gradient-to-r from-red-500 to-red-600"
                 }`}
                 style={{ width: `${Math.min(quotaPercentage, 100)}%` }}
               ></div>
@@ -479,7 +479,7 @@ export default function BatchesPage() {
                           quota.remaining - formData.quantity
                         } codes will remain after this batch`
                       : `✗ This exceeds your daily limit by ${Math.abs(
-                          quota.remaining - formData.quantity
+                          quota.remaining - formData.quantity,
                         )} codes`}
                   </p>
                 </div>

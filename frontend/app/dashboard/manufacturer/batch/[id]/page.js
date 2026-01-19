@@ -49,7 +49,8 @@ export default function BatchDetailPage() {
 
   const filteredCodes = batch?.codes
     ? batch.codes.filter((code) => {
-        const matchesSearch = code.codeValue
+        const codeValue = code.codeValue || "";
+        const matchesSearch = codeValue
           .toLowerCase()
           .includes(searchTerm.toLowerCase());
         const codeStatus = code.isUsed ? "USED" : "UNUSED";
@@ -94,7 +95,7 @@ export default function BatchDetailPage() {
       link.click();
       link.parentChild.removeChild(link);
       window.URL.revokeObjectURL(url);
-
+      document.body;
       toast.success("Codes downloaded successfully!");
     } catch (err) {
       console.error("[DOWNLOAD] Error:", err);
@@ -272,7 +273,8 @@ export default function BatchDetailPage() {
           <option value="ALL">All Status</option>
           <option value="UNUSED">Unused</option>
           <option value="VERIFIED">Verified</option>
-          <option value="USED">Used/Verifi
+          <option value="USED">Used</option>
+        </select>
       </div>
 
       {/* Codes List */}

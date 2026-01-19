@@ -19,10 +19,10 @@ export async function getDashboard(req, res) {
       `[DASHBOARD-${requestId}] Request started at ${new Date().toISOString()}`,
     );
 
-    const manufacturerId = req.user?.id;
-    console.log(`[DASHBOARD-${requestId}] Manufacturer ID: ${manufacturerId}`);
+    const userId = req.user?.id;
+    console.log(`[DASHBOARD-${requestId}] User ID: ${userId}`);
 
-    if (!manufacturerId) {
+    if (!userId) {
       console.warn(
         `[DASHBOARD-${requestId}] Unauthorized: No user ID in request`,
       );
@@ -37,7 +37,7 @@ export async function getDashboard(req, res) {
     try {
       console.log(`[DASHBOARD-${requestId}] Fetching manufacturer record...`);
       const manufacturerData = await prisma.manufacturer.findUnique({
-        where: { id: manufacturerId },
+        where: { userId },
       });
 
       if (!manufacturerData) {
@@ -80,25 +80,25 @@ export async function getDashboard(req, res) {
     }
     // Get product count
     const totalProducts = await prisma.product.count({
-      where: { manufacturerId },
+      where: { manufacturerId: manufacturer.id },
     });
     console.log(`[DASHBOARD-${requestId}] Total products: ${totalProducts}`);
 
     // Get total codes generated
     const totalCodes = await prisma.code.count({
-      where: { manufacturerId },
+      where: { manufacturerId: manufacturer.id },
     });
     console.log(`[DASHBOARD-${requestId}] Total codes: ${totalCodes}`);
 
     // Get total batches
     const totalBatches = await prisma.batch.count({
-      where: { manufacturerId },
+      where: { manufacturerId: manufacturer.id },
     });
     console.log(`[DASHBOARD-${requestId}] Total batches: ${totalBatches}`);
 
     // Get verification count
     const totalVerifications = await prisma.verificationLog.count({
-      where: { manufacturerId },
+      where: { manufacturerId: manufacturer.id },
     });
     console.log(
       `[DASHBOARD-${requestId}] Total verifications: ${totalVerifications}`,
@@ -107,7 +107,7 @@ export async function getDashboard(req, res) {
     // Get suspicious/flagged verifications
     const suspiciousAttempts = await prisma.verificationLog.count({
       where: {
-        manufacturerId,
+        manufacturerId: manufacturer.id,
         verificationState: {
           in: ["SUSPICIOUS_PATTERN", "CODE_ALREADY_USED"],
         },
@@ -123,7 +123,7 @@ export async function getDashboard(req, res) {
 
     const codesGeneratedToday = await prisma.code.count({
       where: {
-        manufacturerId,
+        manufacturerId: manufacturer.id,
         createdAt: { gte: today },
       },
     });
@@ -141,7 +141,7 @@ export async function getDashboard(req, res) {
     console.log(`[DASHBOARD-${requestId}] Fetching recent alerts...`);
     const recentAlerts = await prisma.verificationLog.findMany({
       where: {
-        manufacturerId,
+        manufacturerId: manufacturer.id,
         createdAt: { gte: thirtyDaysAgo },
         verificationState: { in: ["SUSPICIOUS_PATTERN", "CODE_ALREADY_USED"] },
       },
