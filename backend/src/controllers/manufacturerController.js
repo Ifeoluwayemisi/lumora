@@ -5,6 +5,7 @@ import {
 } from "../services/manufacturerService.js";
 import { canCreateCode, getQuotaInfo } from "../services/quotaService.js";
 import { parseISO, isValid } from "date-fns";
+import { generateBatchPDF, generateBatchCSV } from "../utils/pdfGenerator.js";
 
 /**
  * Get manufacturer dashboard overview
@@ -1029,6 +1030,81 @@ export async function downloadBatchCodes(req, res) {
     console.error("[DOWNLOAD_BATCH_CODES] Error:", err.message);
     return res.status(500).json({
       error: "Failed to download codes",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
+
+/**
+ * Download batch codes as printable PDF with QR codes
+ * Generates an A4-formatted PDF that can be printed and cut
+ */
+export async function downloadBatchPDF(req, res) {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
+
+    // Get batch with codes and product info
+    const batch = await prisma.batch.findFirst({
+      where: {
+        id,
+        manufacturerId, // Ensure ownership
+      },
+      include: {
+        product: {
+          select: {
+            name: true,
+            category: true,
+            skuPrefix: true,
+          },
+        },
+        codes: {
+          select: {
+            id: true,
+            codeValue: true,
+            isUsed: true,
+            createdAt: true,
+            qrImagePath: true,
+          },
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+
+    if (!batch) {
+      return res.status(404).json({ error: "Batch not found" });
+    }
+
+    // Generate PDF
+    const pdfBuffer = await generateBatchPDF(batch, batch.codes);
+
+    // Set headers for file download
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="batch_${id}_codes.pdf"`,
+    );
+
+    return res.status(200).send(pdfBuffer);
+  } catch (err) {
+    console.error("[DOWNLOAD_BATCH_PDF] Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to generate PDF",
       message:
         process.env.NODE_ENV === "development"
           ? err.message

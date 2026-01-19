@@ -27,6 +27,8 @@ export default function BatchDetailPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [copied, setCopied] = useState(null);
+  const [selectedCode, setSelectedCode] = useState(null);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   useEffect(() => {
     if (batchId) {
@@ -79,8 +81,9 @@ export default function BatchDetailPage() {
 
   const downloadCodes = async () => {
     try {
+      // Download as PDF with QR codes
       const response = await api.get(
-        `/manufacturer/batch/${batchId}/download`,
+        `/manufacturer/batch/${batchId}/download-pdf`,
         {
           responseType: "blob",
         },
@@ -90,15 +93,41 @@ export default function BatchDetailPage() {
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
+      link.setAttribute("download", `batch_${batchId}_codes.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("PDF downloaded successfully!");
+    } catch (err) {
+      console.error("[DOWNLOAD_PDF] Error:", err);
+      // Fallback to CSV if PDF fails
+      downloadCSV();
+    }
+  };
+
+  const downloadCSV = async () => {
+    try {
+      const response = await api.get(
+        `/manufacturer/batch/${batchId}/download`,
+        {
+          responseType: "blob",
+        },
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
       link.setAttribute("download", `batch_${batchId}_codes.csv`);
       document.body.appendChild(link);
       link.click();
-      link.parentChild.removeChild(link);
+      document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      document.body;
-      toast.success("Codes downloaded successfully!");
+
+      toast.success("CSV downloaded successfully!");
     } catch (err) {
-      console.error("[DOWNLOAD] Error:", err);
+      console.error("[DOWNLOAD_CSV] Error:", err);
       toast.error("Failed to download codes");
     }
   };
@@ -241,14 +270,24 @@ export default function BatchDetailPage() {
           </p>
         </div>
         <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-          <button
-            onClick={downloadCodes}
-            className="text-xs font-semibold text-blue-700 dark:text-blue-300 hover:underline"
-          >
-            ⬇ Download
-          </button>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 mt-2">
-            CSV
+          <div className="space-y-2">
+            <button
+              onClick={downloadCodes}
+              className="w-full text-xs font-semibold text-blue-700 dark:text-blue-300 hover:underline px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+              title="Download as printable PDF with QR codes"
+            >
+              📄 PDF
+            </button>
+            <button
+              onClick={downloadCSV}
+              className="w-full text-xs font-semibold text-blue-700 dark:text-blue-300 hover:underline px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+              title="Download as CSV file"
+            >
+              📊 CSV
+            </button>
+          </div>
+          <p className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-2">
+            Download
           </p>
         </div>
       </div>
@@ -334,16 +373,28 @@ export default function BatchDetailPage() {
                       {new Date(code.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => copyToClipboard(code.codeValue)}
-                        className={`px-3 py-1 text-sm rounded-lg font-medium transition-colors ${
-                          copied === code.codeValue
-                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                        }`}
-                      >
-                        {copied === code.codeValue ? "✓ Copied" : "📋 Copy"}
-                      </button>
+                      <div className="flex gap-2 justify-end">
+                        <button
+                          onClick={() => {
+                            setSelectedCode(code);
+                            setShowQRModal(true);
+                          }}
+                          className="px-3 py-1 text-sm rounded-lg font-medium transition-colors bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50"
+                          title="View QR Code"
+                        >
+                          📱 QR
+                        </button>
+                        <button
+                          onClick={() => copyToClipboard(code.codeValue)}
+                          className={`px-3 py-1 text-sm rounded-lg font-medium transition-colors ${
+                            copied === code.codeValue
+                              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          }`}
+                        >
+                          {copied === code.codeValue ? "✓ Copied" : "📋 Copy"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -352,6 +403,99 @@ export default function BatchDetailPage() {
           </div>
         )}
       </div>
+
+      {/* QR Code Modal */}
+      {showQRModal && selectedCode && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                QR Code
+              </h3>
+              <button
+                onClick={() => {
+                  setShowQRModal(false);
+                  setSelectedCode(null);
+                }}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center space-y-4">
+              {/* QR Code Image */}
+              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+                <img
+                  src={
+                    selectedCode.qrCodeUrl ||
+                    `data:image/png;base64,${selectedCode.qrCode}`
+                  }
+                  alt={`QR Code for ${selectedCode.codeValue}`}
+                  className="w-64 h-64 object-contain"
+                  onError={(e) => {
+                    e.target.src =
+                      "https://via.placeholder.com/256?text=QR+Not+Available";
+                  }}
+                />
+              </div>
+
+              {/* Code Value */}
+              <div className="w-full">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                  Code Value:
+                </p>
+                <code className="block text-sm font-mono bg-gray-100 dark:bg-gray-700 p-3 rounded text-center text-gray-900 dark:text-white break-all">
+                  {selectedCode.codeValue}
+                </code>
+              </div>
+
+              {/* Status */}
+              <div className="w-full">
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
+                  Status:
+                </p>
+                <span
+                  className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${
+                    !selectedCode.isUsed
+                      ? "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                      : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                  }`}
+                >
+                  {selectedCode.isUsed ? "USED" : "UNUSED"}
+                </span>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="w-full flex gap-2 mt-4">
+                <button
+                  onClick={() => {
+                    copyToClipboard(selectedCode.codeValue);
+                    setShowQRModal(false);
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  📋 Copy Code
+                </button>
+                <button
+                  onClick={() => {
+                    setShowQRModal(false);
+                    setSelectedCode(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+
+              {/* Print Hint */}
+              <p className="text-xs text-gray-600 dark:text-gray-400 text-center mt-4">
+                💡 Right-click the QR code to print or save as image
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Info Box */}
       <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">

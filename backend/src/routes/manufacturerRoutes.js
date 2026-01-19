@@ -14,6 +14,7 @@ import {
   getManufacturerHistory,
   getBatchDetail,
   downloadBatchCodes,
+  downloadBatchPDF,
   updateProfile,
 } from "../controllers/manufacturerController.js";
 import {
@@ -165,6 +166,12 @@ router.get(
   authMiddleware,
   roleMiddleware("manufacturer"),
   downloadBatchCodes,
+);
+router.get(
+  "/batch/:id/download-pdf",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  downloadBatchPDF,
 );
 router.post("/batch", authMiddleware, roleMiddleware("manufacturer"), addBatch);
 router.get(
