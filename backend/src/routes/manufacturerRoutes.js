@@ -72,32 +72,12 @@ const router = express.Router();
 router.use(authMiddleware, roleMiddleware("MANUFACTURER"));
 
 // Dashboard
-router.get(
-  "/dashboard",
-  authMiddleware,
-  roleMiddleware("manufacturer"),
-  getDashboard,
-);
-router.patch(
-  "/profile",
-  authMiddleware,
-  roleMiddleware("manufacturer"),
-  updateProfile,
-);
+router.get("/dashboard", getDashboard);
+router.patch("/profile", updateProfile);
 
 // Analytics
-router.get(
-  "/analytics",
-  authMiddleware,
-  roleMiddleware("manufacturer"),
-  getAnalytics,
-);
-router.get(
-  "/analytics/hotspots",
-  authMiddleware,
-  roleMiddleware("manufacturer"),
-  getHotspots,
-);
+router.get("/analytics", getAnalytics);
+router.get("/analytics/hotspots", getHotspots);
 router.get(
   "/analytics/export",
   authMiddleware,

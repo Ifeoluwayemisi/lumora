@@ -1,3 +1,4 @@
+import prisma from "../models/prismaClient.js";
 import {
   getManufacturerAnalytics,
   getHotspotPredictions,
@@ -20,16 +21,35 @@ export async function getAnalytics(req, res) {
   const startTime = Date.now();
 
   try {
-    const manufacturerId = req.user?.id;
+    const userId = req.user?.id;
 
     console.log(
-      `[ANALYTICS-${requestId}] Request started for manufacturerId: ${manufacturerId}`,
+      `[ANALYTICS-${requestId}] Request started for userId: ${userId}`,
     );
 
-    if (!manufacturerId) {
-      console.warn(`[ANALYTICS-${requestId}] Unauthorized: No manufacturer ID`);
+    if (!userId) {
+      console.warn(`[ANALYTICS-${requestId}] Unauthorized: No user ID`);
       return res.status(401).json({ error: "Unauthorized" });
     }
+
+    // Look up manufacturer from user
+    console.log(`[ANALYTICS-${requestId}] Looking up manufacturer...`);
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      console.warn(
+        `[ANALYTICS-${requestId}] Manufacturer not found for userId: ${userId}`,
+      );
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
+    console.log(
+      `[ANALYTICS-${requestId}] Found manufacturerId: ${manufacturerId}`,
+    );
 
     console.log(`[ANALYTICS-${requestId}] Fetching analytics...`);
     const analytics = await getManufacturerAnalytics(manufacturerId);
@@ -71,12 +91,23 @@ export async function getAnalytics(req, res) {
  */
 export async function getHotspots(req, res) {
   try {
-    const manufacturerId = req.user?.id;
+    const userId = req.user?.id;
 
-    if (!manufacturerId) {
+    if (!userId) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
+    // Look up manufacturer from user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
     const hotspots = await getHotspotPredictions(manufacturerId);
 
     res.status(200).json({
