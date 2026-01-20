@@ -266,7 +266,8 @@ export default function ExportAnalyticsPage() {
                   🚀 Unlock Advanced Analytics
                 </p>
                 <p className="text-xs text-amber-800 dark:text-amber-400 mt-1">
-                  Export detailed analytics, revenue reports, and custom data - Premium feature
+                  Export detailed analytics, revenue reports, and custom data -
+                  Premium feature
                 </p>
               </div>
               <Link
@@ -286,7 +287,8 @@ export default function ExportAnalyticsPage() {
                 Premium Feature
               </h2>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                Advanced analytics and data exports are available in our Premium plan.
+                Advanced analytics and data exports are available in our Premium
+                plan.
               </p>
               <Link
                 href="/dashboard/manufacturer/settings#billing"
@@ -297,273 +299,273 @@ export default function ExportAnalyticsPage() {
             </div>
           ) : (
             <div className="max-w-4xl">
-            {/* Date Range Selection */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">
-                Select Date Range
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <button
-                onClick={fetchExportData}
-                disabled={loading}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-              >
-                {loading ? "Loading..." : "Load Export Data"}
-              </button>
-            </div>
-
-            {/* Export Type Selection */}
-            {exportData && (
+              {/* Date Range Selection */}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">
-                  Select Data to Export
+                  Select Date Range
                 </h2>
 
-                <div className="space-y-3 mb-6">
-                  <label className="flex items-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Start Date
+                    </label>
                     <input
-                      type="checkbox"
-                      checked={selectedExports.revenue}
-                      onChange={() => toggleExport("revenue")}
-                      className="w-4 h-4 text-blue-600 rounded"
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <span className="ml-3 text-gray-700">
-                      💰 Revenue Analytics ({exportData.revenue.data.length}{" "}
-                      transactions)
-                    </span>
-                  </label>
-
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedExports.verification}
-                      onChange={() => toggleExport("verification")}
-                      className="w-4 h-4 text-blue-600 rounded"
-                    />
-                    <span className="ml-3 text-gray-700">
-                      ✓ Verification Analytics (
-                      {exportData.verification.data.length} verifications)
-                    </span>
-                  </label>
-
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedExports.products}
-                      onChange={() => toggleExport("products")}
-                      className="w-4 h-4 text-blue-600 rounded"
-                    />
-                    <span className="ml-3 text-gray-700">
-                      📦 Product Analytics ({exportData.products.data.length}{" "}
-                      products)
-                    </span>
-                  </label>
-
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedExports.hotspots}
-                      onChange={() => toggleExport("hotspots")}
-                      className="w-4 h-4 text-blue-600 rounded"
-                    />
-                    <span className="ml-3 text-gray-700">
-                      📍 Hotspot Analytics ({exportData.hotspots.data.length}{" "}
-                      locations)
-                    </span>
-                  </label>
-                </div>
-
-                {/* Export Buttons */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-gray-900 mb-3">
-                    Download as CSV
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-                    {selectedExports.revenue && (
-                      <button
-                        onClick={() => downloadCSV("revenue")}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium text-sm"
-                      >
-                        💰 Revenue CSV
-                      </button>
-                    )}
-                    {selectedExports.verification && (
-                      <button
-                        onClick={() => downloadCSV("verification")}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium text-sm"
-                      >
-                        ✓ Verification CSV
-                      </button>
-                    )}
-                    {selectedExports.products && (
-                      <button
-                        onClick={() => downloadCSV("products")}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium text-sm"
-                      >
-                        📦 Products CSV
-                      </button>
-                    )}
-                    {selectedExports.hotspots && (
-                      <button
-                        onClick={() => downloadCSV("hotspots")}
-                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium text-sm"
-                      >
-                        📍 Hotspots CSV
-                      </button>
-                    )}
                   </div>
 
-                  <div className="border-t pt-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={fetchExportData}
+                  disabled={loading}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                >
+                  {loading ? "Loading..." : "Load Export Data"}
+                </button>
+              </div>
+
+              {/* Export Type Selection */}
+              {exportData && (
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">
+                    Select Data to Export
+                  </h2>
+
+                  <div className="space-y-3 mb-6">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedExports.revenue}
+                        onChange={() => toggleExport("revenue")}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="ml-3 text-gray-700">
+                        💰 Revenue Analytics ({exportData.revenue.data.length}{" "}
+                        transactions)
+                      </span>
+                    </label>
+
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedExports.verification}
+                        onChange={() => toggleExport("verification")}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="ml-3 text-gray-700">
+                        ✓ Verification Analytics (
+                        {exportData.verification.data.length} verifications)
+                      </span>
+                    </label>
+
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedExports.products}
+                        onChange={() => toggleExport("products")}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="ml-3 text-gray-700">
+                        📦 Product Analytics ({exportData.products.data.length}{" "}
+                        products)
+                      </span>
+                    </label>
+
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedExports.hotspots}
+                        onChange={() => toggleExport("hotspots")}
+                        className="w-4 h-4 text-blue-600 rounded"
+                      />
+                      <span className="ml-3 text-gray-700">
+                        📍 Hotspot Analytics ({exportData.hotspots.data.length}{" "}
+                        locations)
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Export Buttons */}
+                  <div className="space-y-3">
                     <h3 className="font-semibold text-gray-900 mb-3">
-                      Download as PDF
+                      Download as CSV
                     </h3>
-                    <button
-                      onClick={generatePDF}
-                      disabled={loading}
-                      className="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                    >
-                      📄 Generate PDF Report
-                    </button>
-                    <p className="text-sm text-gray-600 mt-2">
-                      Creates a comprehensive PDF report with all selected
-                      analytics
-                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                      {selectedExports.revenue && (
+                        <button
+                          onClick={() => downloadCSV("revenue")}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium text-sm"
+                        >
+                          💰 Revenue CSV
+                        </button>
+                      )}
+                      {selectedExports.verification && (
+                        <button
+                          onClick={() => downloadCSV("verification")}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium text-sm"
+                        >
+                          ✓ Verification CSV
+                        </button>
+                      )}
+                      {selectedExports.products && (
+                        <button
+                          onClick={() => downloadCSV("products")}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium text-sm"
+                        >
+                          📦 Products CSV
+                        </button>
+                      )}
+                      {selectedExports.hotspots && (
+                        <button
+                          onClick={() => downloadCSV("hotspots")}
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium text-sm"
+                        >
+                          📍 Hotspots CSV
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="border-t pt-6">
+                      <h3 className="font-semibold text-gray-900 mb-3">
+                        Download as PDF
+                      </h3>
+                      <button
+                        onClick={generatePDF}
+                        disabled={loading}
+                        className="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      >
+                        📄 Generate PDF Report
+                      </button>
+                      <p className="text-sm text-gray-600 mt-2">
+                        Creates a comprehensive PDF report with all selected
+                        analytics
+                      </p>
+                    </div>
                   </div>
                 </div>
+              )}
+
+              {/* Summary Statistics */}
+              {exportData && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  {selectedExports.revenue && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <h3 className="font-bold text-gray-900 mb-4">
+                        💰 Revenue Summary
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {Object.entries(exportData.revenue.summary).map(
+                          ([key, value]) => (
+                            <div key={key} className="flex justify-between">
+                              <span className="text-gray-600">{key}:</span>
+                              <span className="font-semibold text-gray-900">
+                                {value}
+                              </span>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedExports.verification && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <h3 className="font-bold text-gray-900 mb-4">
+                        ✓ Verification Summary
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {Object.entries(exportData.verification.summary).map(
+                          ([key, value]) => (
+                            <div key={key} className="flex justify-between">
+                              <span className="text-gray-600">{key}:</span>
+                              <span className="font-semibold text-gray-900">
+                                {value}
+                              </span>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedExports.products && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <h3 className="font-bold text-gray-900 mb-4">
+                        📦 Product Summary
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {Object.entries(exportData.products.summary).map(
+                          ([key, value]) => (
+                            <div key={key} className="flex justify-between">
+                              <span className="text-gray-600">{key}:</span>
+                              <span className="font-semibold text-gray-900">
+                                {value}
+                              </span>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedExports.hotspots && (
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                      <h3 className="font-bold text-gray-900 mb-4">
+                        📍 Hotspot Summary
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {Object.entries(exportData.hotspots.summary).map(
+                          ([key, value]) => (
+                            <div key={key} className="flex justify-between">
+                              <span className="text-gray-600">{key}:</span>
+                              <span className="font-semibold text-gray-900">
+                                {value}
+                              </span>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Information */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 className="font-bold text-blue-900 mb-2">
+                  📋 Export Information
+                </h3>
+                <p className="text-blue-800 text-sm">
+                  You can export your analytics data in two formats:
+                </p>
+                <ul className="text-blue-800 text-sm mt-2 space-y-1 ml-4">
+                  <li>
+                    <strong>CSV:</strong> Spreadsheet-compatible format, perfect
+                    for further analysis in Excel or Google Sheets
+                  </li>
+                  <li>
+                    <strong>PDF:</strong> Professional report format with
+                    summaries, ready to share with stakeholders
+                  </li>
+                </ul>
               </div>
-            )}
-
-            {/* Summary Statistics */}
-            {exportData && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {selectedExports.revenue && (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-bold text-gray-900 mb-4">
-                      💰 Revenue Summary
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      {Object.entries(exportData.revenue.summary).map(
-                        ([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="text-gray-600">{key}:</span>
-                            <span className="font-semibold text-gray-900">
-                              {value}
-                            </span>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {selectedExports.verification && (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-bold text-gray-900 mb-4">
-                      ✓ Verification Summary
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      {Object.entries(exportData.verification.summary).map(
-                        ([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="text-gray-600">{key}:</span>
-                            <span className="font-semibold text-gray-900">
-                              {value}
-                            </span>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {selectedExports.products && (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-bold text-gray-900 mb-4">
-                      📦 Product Summary
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      {Object.entries(exportData.products.summary).map(
-                        ([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="text-gray-600">{key}:</span>
-                            <span className="font-semibold text-gray-900">
-                              {value}
-                            </span>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {selectedExports.hotspots && (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 className="font-bold text-gray-900 mb-4">
-                      📍 Hotspot Summary
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      {Object.entries(exportData.hotspots.summary).map(
-                        ([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="text-gray-600">{key}:</span>
-                            <span className="font-semibold text-gray-900">
-                              {value}
-                            </span>
-                          </div>
-                        ),
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Information */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h3 className="font-bold text-blue-900 mb-2">
-                📋 Export Information
-              </h3>
-              <p className="text-blue-800 text-sm">
-                You can export your analytics data in two formats:
-              </p>
-              <ul className="text-blue-800 text-sm mt-2 space-y-1 ml-4">
-                <li>
-                  <strong>CSV:</strong> Spreadsheet-compatible format, perfect
-                  for further analysis in Excel or Google Sheets
-                </li>
-                <li>
-                  <strong>PDF:</strong> Professional report format with
-                  summaries, ready to share with stakeholders
-                </li>
-              </ul>
             </div>
-          </div>
           )}
         </div>
       </div>

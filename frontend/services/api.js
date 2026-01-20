@@ -19,7 +19,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 if (!process.env.NEXT_PUBLIC_API_URL && typeof window !== "undefined") {
   console.warn(
-    "⚠️  NEXT_PUBLIC_API_URL not configured. Using fallback: http://localhost:5000/api"
+    "⚠️  NEXT_PUBLIC_API_URL not configured. Using fallback: http://localhost:5000/api",
   );
 }
 
@@ -58,7 +58,7 @@ api.interceptors.request.use(
   (error) => {
     console.error("[API] Request error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 /**
@@ -122,7 +122,25 @@ api.interceptors.response.use(
     });
 
     return Promise.reject(error);
-  }
+  },
 );
+
+/**
+ * Get URL for static files (e.g., QR codes, certificates)
+ * Removes /api suffix from API_URL since static files are served at root
+ *
+ * @param {string} relativePath - Relative path from backend root (e.g., /uploads/qrcodes/code.png)
+ * @returns {string} Full URL to the static file
+ */
+export function getStaticFileUrl(relativePath) {
+  if (!relativePath) return null;
+
+  // Remove /api suffix if present
+  const baseUrl = API_URL.endsWith("/api")
+    ? API_URL.slice(0, -4) // Remove last 4 characters (/api)
+    : API_URL;
+
+  return `${baseUrl}${relativePath}`;
+}
 
 export default api;

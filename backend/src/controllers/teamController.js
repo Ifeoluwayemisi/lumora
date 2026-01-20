@@ -17,10 +17,26 @@ const prisma = new PrismaClient();
 /**
  * GET /manufacturer/team
  * Get all team members for a manufacturer
+ * Supports both: /manufacturer/:manufacturerId/team and /manufacturer/team
  */
 export async function getAllTeamMembers(req, res) {
   try {
-    const { manufacturerId } = req.params;
+    // Get manufacturerId from params or extract from JWT via user's manufacturer record
+    let manufacturerId = req.params.manufacturerId;
+
+    if (!manufacturerId) {
+      // Extract from JWT token - look up manufacturer by userId
+      const manufacturer = await prisma.manufacturer.findUnique({
+        where: { userId: req.user.id },
+        select: { id: true },
+      });
+
+      if (!manufacturer) {
+        return res.status(404).json({ error: "Manufacturer not found" });
+      }
+
+      manufacturerId = manufacturer.id;
+    }
 
     // Verify user has access
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -44,18 +60,41 @@ export async function getAllTeamMembers(req, res) {
       members,
     });
   } catch (error) {
-    console.error("Error fetching team members:", error);
-    res.status(500).json({ error: "Failed to fetch team members" });
+    console.error("[GET_TEAM_MEMBERS] Error:", error.message);
+    console.error("[GET_TEAM_MEMBERS] Stack:", error.stack);
+    res
+      .status(500)
+      .json({
+        error: "Failed to fetch team members",
+        message:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
   }
 }
 
 /**
  * GET /manufacturer/team/invites
  * Get pending team invites
+ * Supports both: /manufacturer/:manufacturerId/team/invites and /manufacturer/team/pending-invites
  */
 export async function getPendingTeamInvites(req, res) {
   try {
-    const { manufacturerId } = req.params;
+    // Get manufacturerId from params or extract from JWT via user's manufacturer record
+    let manufacturerId = req.params.manufacturerId;
+
+    if (!manufacturerId) {
+      // Extract from JWT token - look up manufacturer by userId
+      const manufacturer = await prisma.manufacturer.findUnique({
+        where: { userId: req.user.id },
+        select: { id: true },
+      });
+
+      if (!manufacturer) {
+        return res.status(404).json({ error: "Manufacturer not found" });
+      }
+
+      manufacturerId = manufacturer.id;
+    }
 
     // Verify user has access
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -79,22 +118,42 @@ export async function getPendingTeamInvites(req, res) {
       invites,
     });
   } catch (error) {
-    console.error("Error fetching pending invites:", error);
-    res.status(500).json({ error: "Failed to fetch pending invites" });
+    console.error("[GET_PENDING_INVITES] Error:", error.message);
+    console.error("[GET_PENDING_INVITES] Stack:", error.stack);
+    res
+      .status(500)
+      .json({
+        error: "Failed to fetch pending invites",
+        message:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
   }
 }
 
 /**
  * POST /manufacturer/team/invite
  * Send team invitation
+ * Supports both: /manufacturer/:manufacturerId/team/invite and /manufacturer/team/invite
  */
 export async function sendTeamInvite(req, res) {
   try {
-    const { manufacturerId } = req.params;
+    let { manufacturerId } = req.params;
     const { email, role } = req.body;
 
     if (!email || !role) {
       return res.status(400).json({ error: "Email and role are required" });
+    }
+
+    // Extract manufacturerId from JWT if not in params
+    if (!manufacturerId) {
+      const manufacturer = await prisma.manufacturer.findUnique({
+        where: { userId: req.user.id },
+        select: { id: true },
+      });
+      if (!manufacturer) {
+        return res.status(404).json({ error: "Manufacturer not found" });
+      }
+      manufacturerId = manufacturer.id;
     }
 
     // Verify user has access and is admin
@@ -119,7 +178,7 @@ export async function sendTeamInvite(req, res) {
       invite,
     });
   } catch (error) {
-    console.error("Error sending invite:", error);
+    console.error("[SEND_INVITE] Error:", error.message);
     res
       .status(400)
       .json({ error: error.message || "Failed to send invitation" });
@@ -129,14 +188,27 @@ export async function sendTeamInvite(req, res) {
 /**
  * PATCH /manufacturer/team/:memberId/role
  * Update team member role
+ * Supports both URL patterns with/without manufacturerId
  */
 export async function updateTeamMemberRole(req, res) {
   try {
-    const { manufacturerId, memberId } = req.params;
+    let { manufacturerId, memberId } = req.params;
     const { role } = req.body;
 
     if (!role) {
       return res.status(400).json({ error: "Role is required" });
+    }
+
+    // Extract manufacturerId from JWT if not in params
+    if (!manufacturerId) {
+      const manufacturer = await prisma.manufacturer.findUnique({
+        where: { userId: req.user.id },
+        select: { id: true },
+      });
+      if (!manufacturer) {
+        return res.status(404).json({ error: "Manufacturer not found" });
+      }
+      manufacturerId = manufacturer.id;
     }
 
     // Verify user has access
@@ -161,7 +233,7 @@ export async function updateTeamMemberRole(req, res) {
       member,
     });
   } catch (error) {
-    console.error("Error updating member role:", error);
+    console.error("[UPDATE_MEMBER_ROLE] Error:", error.message);
     res.status(400).json({ error: error.message || "Failed to update role" });
   }
 }
@@ -169,10 +241,23 @@ export async function updateTeamMemberRole(req, res) {
 /**
  * DELETE /manufacturer/team/:memberId
  * Remove team member
+ * Supports both URL patterns with/without manufacturerId
  */
 export async function deleteTeamMember(req, res) {
   try {
-    const { manufacturerId, memberId } = req.params;
+    let { manufacturerId, memberId } = req.params;
+
+    // Extract manufacturerId from JWT if not in params
+    if (!manufacturerId) {
+      const manufacturer = await prisma.manufacturer.findUnique({
+        where: { userId: req.user.id },
+        select: { id: true },
+      });
+      if (!manufacturer) {
+        return res.status(404).json({ error: "Manufacturer not found" });
+      }
+      manufacturerId = manufacturer.id;
+    }
 
     // Verify user has access
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -195,7 +280,7 @@ export async function deleteTeamMember(req, res) {
       message: "Team member removed",
     });
   } catch (error) {
-    console.error("Error removing team member:", error);
+    console.error("[DELETE_TEAM_MEMBER] Error:", error.message);
     res.status(400).json({ error: error.message || "Failed to remove member" });
   }
 }
@@ -203,10 +288,23 @@ export async function deleteTeamMember(req, res) {
 /**
  * DELETE /manufacturer/team/invites/:inviteId
  * Cancel pending invite
+ * Supports both URL patterns with/without manufacturerId
  */
 export async function cancelTeamInvite(req, res) {
   try {
-    const { manufacturerId, inviteId } = req.params;
+    let { manufacturerId, inviteId } = req.params;
+
+    // Extract manufacturerId from JWT if not in params
+    if (!manufacturerId) {
+      const manufacturer = await prisma.manufacturer.findUnique({
+        where: { userId: req.user.id },
+        select: { id: true },
+      });
+      if (!manufacturer) {
+        return res.status(404).json({ error: "Manufacturer not found" });
+      }
+      manufacturerId = manufacturer.id;
+    }
 
     // Verify user has access
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -229,7 +327,7 @@ export async function cancelTeamInvite(req, res) {
       message: "Invitation cancelled",
     });
   } catch (error) {
-    console.error("Error cancelling invite:", error);
+    console.error("[CANCEL_INVITE] Error:", error.message);
     res
       .status(400)
       .json({ error: error.message || "Failed to cancel invitation" });

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import api from "@/services/api";
+import api, { getStaticFileUrl } from "@/services/api";
 import { toast } from "react-toastify";
 import Link from "next/link";
 
@@ -40,6 +40,8 @@ export default function BatchDetailPage() {
     setLoading(true);
     try {
       const response = await api.get(`/manufacturer/batch/${batchId}`);
+      console.log("[BATCH_DETAIL] Full response:", response.data);
+      console.log("[BATCH_DETAIL] Codes:", response.data.batch?.codes);
       setBatch(response.data.batch);
     } catch (err) {
       console.error("[FETCH_DETAIL] Error:", err);
@@ -426,20 +428,49 @@ export default function BatchDetailPage() {
             <div className="flex flex-col items-center space-y-4">
               {/* QR Code Image */}
               <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
-                <img
-                  src={
-                    selectedCode.qrImagePath
-                      ? `${process.env.NEXT_PUBLIC_API_URL}${selectedCode.qrImagePath}`
-                      : "https://via.placeholder.com/256?text=QR+Not+Available"
-                  }
-                  alt={`QR Code for ${selectedCode.codeValue}`}
-                  className="w-64 h-64 object-contain"
-                  onError={(e) => {
-                    console.error("[QR_IMAGE_ERROR] Failed to load QR:", e);
-                    e.target.src =
-                      "https://via.placeholder.com/256?text=QR+Not+Available";
-                  }}
-                />
+                {selectedCode?.qrImagePath ? (
+                  <>
+                    {console.log("[QR_MODAL] Path:", selectedCode.qrImagePath)}
+                    {console.log(
+                      "[QR_MODAL] Using static file URL:",
+                      getStaticFileUrl(selectedCode.qrImagePath),
+                    )}
+                    <img
+                      src={getStaticFileUrl(selectedCode.qrImagePath)}
+                      alt={`QR Code for ${selectedCode.codeValue}`}
+                      className="w-64 h-64 object-contain"
+                      onError={(e) => {
+                        console.error(
+                          "[QR_IMAGE_ERROR] Failed to load QR from:",
+                          e.target.src,
+                        );
+                        e.target.src =
+                          "https://via.placeholder.com/256?text=QR+Not+Available";
+                      }}
+                      onLoad={() => {
+                        console.log(
+                          "[QR_IMAGE_SUCCESS] QR loaded from:",
+                          getStaticFileUrl(selectedCode.qrImagePath),
+                        );
+                      }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    {console.log(
+                      "[QR_MODAL] qrImagePath is null/undefined:",
+                      selectedCode?.qrImagePath,
+                    )}
+                    <img
+                      src="https://via.placeholder.com/256?text=QR+Not+Available"
+                      alt="QR Not Available"
+                      className="w-64 h-64 object-contain"
+                    />
+                    <p className="text-sm text-red-600">
+                      QR code not available
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Code Value */}
