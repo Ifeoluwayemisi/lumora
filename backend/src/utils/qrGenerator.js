@@ -1,10 +1,16 @@
 import QRCode from "qrcode";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 
 export async function generateQRCode(codeValue) {
-  const dir = path.join(process.cwd(), "uploads/qrcodes");
+  // Get the absolute path relative to this file's location
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const dir = path.join(__dirname, "../../uploads/qrcodes");
+
   console.log("[QR_GENERATOR] Working directory:", process.cwd());
+  console.log("[QR_GENERATOR] Script directory:", __dirname);
   console.log("[QR_GENERATOR] QR output directory:", dir);
 
   if (!fs.existsSync(dir)) {

@@ -9,14 +9,17 @@ Based on production logs from Render, three critical bugs were discovered and fi
 ## Bug #1: PDF Color Validation Error ❌ → ✅
 
 ### Error Message
+
 ```
 [PDF_GENERATION] Error: Error: `red` must be at least 0 and at most 1, but was actually 80
 ```
 
 ### Root Cause
+
 The `pdf-lib` library expects RGB values normalized to the 0-1 range, but the code was passing values in the 0-255 range (standard CSS/image RGB format).
 
 ### Affected Lines in `pdfGenerator.js`
+
 - Line 90: `rgb(0, 0, 0)` ✓ (already correct)
 - Line 111: `rgb(80, 80, 80)` → `rgb(80/255, 80/255, 80/255)` ✅
 - Line 120: `rgb(200, 200, 200)` → `rgb(200/255, 200/255, 200/255)` ✅
@@ -27,9 +30,11 @@ The `pdf-lib` library expects RGB values normalized to the 0-1 range, but the co
 - Line 176: `rgb(150, 150, 150)` → `rgb(150/255, 150/255, 150/255)` ✅
 
 ### Fix Applied
+
 All RGB values in `pdfGenerator.js` were normalized by dividing each component by 255.
 
 ### Status
+
 ✅ **FIXED** - PDF generation will now work correctly with proper color values
 
 ---
@@ -37,27 +42,34 @@ All RGB values in `pdfGenerator.js` were normalized by dividing each component b
 ## Bug #2: CSV Download Header Error ❌ → ✅
 
 ### Error Message
+
 ```
 [DOWNLOAD_BATCH_CODES] Error: res.clearHeader is not a function
 at downloadBatchCodes (file:///opt/render/.../manufacturerController.js:1144:9)
 ```
 
 ### Root Cause
+
 Express Response object doesn't have a `clearHeader()` method. The correct method is `removeHeader()`.
 
 ### Affected Location
+
 `backend/src/controllers/manufacturerController.js` line 1144:
+
 ```javascript
 res.clearHeader("Content-Encoding"); // ❌ WRONG - doesn't exist
 ```
 
 ### Fix Applied
+
 Changed to:
+
 ```javascript
 res.removeHeader("Content-Encoding"); // ✅ CORRECT
 ```
 
 ### Status
+
 ✅ **FIXED** - CSV downloads will now work without throwing function errors
 
 ---
@@ -65,6 +77,7 @@ res.removeHeader("Content-Encoding"); // ✅ CORRECT
 ## Bug #3: QR File Serving 404 Error ❌ → ✅
 
 ### Error Message
+
 ```
 [RES-divrxi] GET /uploads/qrcodes/LUM-JS8FMW.png {
   statusCode: 404,
@@ -74,19 +87,24 @@ res.removeHeader("Content-Encoding"); // ✅ CORRECT
 ```
 
 ### Root Cause
+
 The static middleware in `app.js` was using a relative path: `express.static("uploads")`
 
 On Render, the working directory may be different from where the process is executed, causing the `uploads` folder to not be found.
 
 ### Previous Code
+
 ```javascript
 app.use("/uploads", express.static("uploads"));
 ```
 
 ### Fix Applied
+
 Updated `app.js` to:
+
 1. Import `path` and `fileURLToPath` modules
 2. Calculate absolute path to uploads folder:
+
 ```javascript
 import path from "path";
 import { fileURLToPath } from "url";
@@ -101,17 +119,18 @@ app.use("/uploads", express.static(uploadsPath));
 ```
 
 ### Status
+
 ✅ **FIXED** - QR files will now be served correctly from absolute path
 
 ---
 
 ## Summary of Changes
 
-| File | Issue | Fix | Status |
-|------|-------|-----|--------|
-| `pdfGenerator.js` | RGB values 0-255 instead of 0-1 | Normalize all RGB: divide by 255 | ✅ |
-| `manufacturerController.js` | `res.clearHeader()` not a function | Use `res.removeHeader()` | ✅ |
-| `app.js` | Relative path for static files | Use absolute path with `__dirname` | ✅ |
+| File                        | Issue                              | Fix                                | Status |
+| --------------------------- | ---------------------------------- | ---------------------------------- | ------ |
+| `pdfGenerator.js`           | RGB values 0-255 instead of 0-1    | Normalize all RGB: divide by 255   | ✅     |
+| `manufacturerController.js` | `res.clearHeader()` not a function | Use `res.removeHeader()`           | ✅     |
+| `app.js`                    | Relative path for static files     | Use absolute path with `__dirname` | ✅     |
 
 ## Next Steps
 
@@ -120,17 +139,18 @@ app.use("/uploads", express.static(uploadsPath));
    - Trigger redeploy on Render
 
 2. **Test Each Fix**
+
    ```bash
    # Test 1: Generate batch PDF
    - Go to batch details
    - Click "Download as PDF"
    - Verify PDF generates without "red must be 0-1" error
-   
+
    # Test 2: Download CSV
-   - Click "Download Codes" 
+   - Click "Download Codes"
    - Verify CSV downloads (not JSON error)
    - Open in Excel to verify content
-   
+
    # Test 3: View QR codes
    - Check batch detail page
    - QR codes should display in modal
