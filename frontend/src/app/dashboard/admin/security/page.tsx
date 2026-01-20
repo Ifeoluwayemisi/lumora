@@ -1,52 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
-
-interface SecurityStats {
-  riskScore: number;
-  trustScore: number;
-  websiteVerified: boolean;
-  documentsVerified: boolean;
-  rateLimitStatus: {
-    remaining: number;
-    limit: number;
-  };
-}
+import { useSecurityDashboard } from "@/hooks/useSecurity";
+import { useState } from "react";
 
 export default function AdminSecurityDashboard() {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<SecurityStats | null>(null);
-  const [error, setError] = useState("");
-  const [runningCheck, setRunningCheck] = useState(false);
   const router = useRouter();
+  const { stats, loading, error, refresh } = useSecurityDashboard({
+    refreshInterval: 300000, // 5 minutes
+    enabled: true,
+  });
+  const [runningCheck, setRunningCheck] = useState(false);
 
-  useEffect(() => {
-    loadSecurityStats();
-  }, []);
-
-  const loadSecurityStats = async () => {
+  const handleRunFullCheck = async () => {
     try {
-      setLoading(true);
-      // Placeholder - will fetch from API
-      // For now, show a sample structure
-      setStats({
-        riskScore: 45,
-        trustScore: 72,
-        websiteVerified: true,
-        documentsVerified: false,
-        rateLimitStatus: {
-          remaining: 450,
-          limit: 1000,
-        },
-      });
-      setError("");
+      setRunningCheck(true);
+      // TODO: Call securityAPI.fullCheck() when implemented
+      // await securityAPI.fullCheck(manufacturerId);
+      await refresh();
     } catch (err: any) {
-      setError(err.message || "Failed to load security stats");
+      console.error("Full check failed:", err);
     } finally {
-      setLoading(false);
+      setRunningCheck(false);
     }
   };
 
@@ -61,12 +37,6 @@ export default function AdminSecurityDashboard() {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      await loadSecurityStats();
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to run security check");
-    } finally {
-      setRunningCheck(false);
-    }
   };
 
   if (loading) {
