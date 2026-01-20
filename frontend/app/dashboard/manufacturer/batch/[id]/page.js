@@ -39,12 +39,27 @@ export default function BatchDetailPage() {
   const fetchBatchDetail = async () => {
     setLoading(true);
     try {
+      console.log("[BATCH_FETCH] Starting fetch for batch:", batchId);
       const response = await api.get(`/manufacturer/batch/${batchId}`);
-      console.log("[BATCH_DETAIL] Full response:", response.data);
-      console.log("[BATCH_DETAIL] Codes:", response.data.batch?.codes);
+      console.log("[BATCH_FETCH] Full response received:", response.data);
+      
+      if (response.data.batch && response.data.batch.codes) {
+        console.log("[BATCH_FETCH] Total codes:", response.data.batch.codes.length);
+        
+        // Log sample codes with their paths
+        const samples = response.data.batch.codes.slice(0, 3);
+        console.log("[BATCH_FETCH] Sample codes from API:");
+        samples.forEach((code) => {
+          console.log(`  - Code: ${code.codeValue}`);
+          console.log(`    QR Path: ${code.qrImagePath}`);
+          console.log(`    Type: ${typeof code.qrImagePath}`);
+          console.log(`    Is relative: ${code.qrImagePath?.startsWith("/")}`);
+        });
+      }
+      
       setBatch(response.data.batch);
     } catch (err) {
-      console.error("[FETCH_DETAIL] Error:", err);
+      console.error("[BATCH_FETCH] Error:", err);
       toast.error("Failed to load batch details");
     } finally {
       setLoading(false);
@@ -83,6 +98,8 @@ export default function BatchDetailPage() {
 
   const downloadCodes = async () => {
     try {
+      console.log("[DOWNLOAD_PDF] Starting PDF download for batch:", batchId);
+      
       // Download as PDF with QR codes
       const response = await api.get(
         `/manufacturer/batch/${batchId}/download-pdf`,
@@ -90,6 +107,11 @@ export default function BatchDetailPage() {
           responseType: "blob",
         },
       );
+
+      console.log("[DOWNLOAD_PDF] Response received:");
+      console.log("  Content-Type:", response.headers["content-type"]);
+      console.log("  Blob size:", response.data.size, "bytes");
+      console.log("  Blob type:", response.data.type);
 
       // Create a blob URL and trigger download
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -101,9 +123,12 @@ export default function BatchDetailPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
+      console.log("[DOWNLOAD_PDF] File download triggered");
       toast.success("PDF downloaded successfully!");
     } catch (err) {
       console.error("[DOWNLOAD_PDF] Error:", err);
+      console.error("[DOWNLOAD_PDF] Response data:", err.response?.data);
+      console.error("[DOWNLOAD_PDF] Response headers:", err.response?.headers);
       // Fallback to CSV if PDF fails
       downloadCSV();
     }
@@ -111,12 +136,20 @@ export default function BatchDetailPage() {
 
   const downloadCSV = async () => {
     try {
+      console.log("[DOWNLOAD_CSV] Starting CSV download for batch:", batchId);
+      
       const response = await api.get(
         `/manufacturer/batch/${batchId}/download`,
         {
           responseType: "blob",
         },
       );
+
+      console.log("[DOWNLOAD_CSV] Response received:");
+      console.log("  Content-Type:", response.headers["content-type"]);
+      console.log("  Response status:", response.status);
+      console.log("  Blob size:", response.data.size, "bytes");
+      console.log("  Blob type:", response.data.type);
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
@@ -127,9 +160,16 @@ export default function BatchDetailPage() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
 
+      console.log("[DOWNLOAD_CSV] File download triggered");
       toast.success("CSV downloaded successfully!");
     } catch (err) {
       console.error("[DOWNLOAD_CSV] Error:", err);
+      console.error("[DOWNLOAD_CSV] Response status:", err.response?.status);
+      console.error("[DOWNLOAD_CSV] Response headers:", err.response?.headers);
+      console.error("[DOWNLOAD_CSV] Response data type:", typeof err.response?.data);
+      if (err.response?.data) {
+        console.error("[DOWNLOAD_CSV] Response data (first 500 chars):", err.response.data.toString().substring(0, 500));
+      }
       toast.error("Failed to download codes");
     }
   };
@@ -430,28 +470,58 @@ export default function BatchDetailPage() {
               <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 {selectedCode?.qrImagePath ? (
                   <>
-                    {console.log("[QR_MODAL] Path:", selectedCode.qrImagePath)}
-                    {console.log(
-                      "[QR_MODAL] Using static file URL:",
-                      getStaticFileUrl(selectedCode.qrImagePath),
-                    )}
+                    {(() => {
+                      const path = selectedCode.qrImagePath;
+                      console.log("[QR_MODAL_OPEN] Code:", selectedCode.codeValue);
+                      console.log("[QR_MODAL_OPEN] Raw path from DB:", path);
+                      
+                      // Detect if path is absolute (from Render server)
+                      const isAbsolutePath = path?.includes("/opt/render/") || path?.includes("uploads");
+                      console.log("[QR_MODAL_OPEN] Is absolute path:", isAbsolutePath);
+                      
+                      let finalUrl = path;
+                      if (isAbsolutePath && path?.includes("uploads")) {
+                        // Extract the /uploads/... part
+                        const uploadsIndex = path.indexOf("/uploads");
+                        if (uploadsIndex !== -1) {
+                          finalUrl = path.substring(uploadsIndex);
+                          console.log("[QR_MODAL_OPEN] Extracted relative path:", finalUrl);
+                        }
+                      }
+                      
+                      const staticUrl = getStaticFileUrl(finalUrl);
+                      console.log("[QR_MODAL_OPEN] Final URL to use:", staticUrl);
+                      window._lastQRUrl = staticUrl; // Store for debugging
+                      return null;
+                    })()}
                     <img
-                      src={getStaticFileUrl(selectedCode.qrImagePath)}
+                      src={(() => {
+                        const path = selectedCode.qrImagePath;
+                        const isAbsolutePath = path?.includes("/opt/render/") || path?.includes("uploads");
+                        let finalPath = path;
+                        
+                        if (isAbsolutePath && path?.includes("uploads")) {
+                          const uploadsIndex = path.indexOf("/uploads");
+                          if (uploadsIndex !== -1) {
+                            finalPath = path.substring(uploadsIndex);
+                          }
+                        }
+                        return getStaticFileUrl(finalPath);
+                      })()}
                       alt={`QR Code for ${selectedCode.codeValue}`}
                       className="w-64 h-64 object-contain"
                       onError={(e) => {
-                        console.error(
-                          "[QR_IMAGE_ERROR] Failed to load QR from:",
-                          e.target.src,
-                        );
+                        console.error("[QR_IMAGE_ERROR] Failed to load from:", e.target.src);
+                        console.error("[QR_IMAGE_ERROR] Code:", selectedCode.codeValue);
+                        console.error("[QR_IMAGE_ERROR] Original path:", selectedCode.qrImagePath);
+                        console.error("[QR_IMAGE_ERROR] Status:", e.type);
                         e.target.src =
                           "https://via.placeholder.com/256?text=QR+Not+Available";
                       }}
                       onLoad={() => {
-                        console.log(
-                          "[QR_IMAGE_SUCCESS] QR loaded from:",
-                          getStaticFileUrl(selectedCode.qrImagePath),
-                        );
+                        console.log("[QR_IMAGE_SUCCESS] QR loaded successfully");
+                        console.log("[QR_IMAGE_SUCCESS] URL:", window._lastQRUrl);
+                        console.log("[QR_IMAGE_SUCCESS] Code:", selectedCode.codeValue);
                       }}
                     />
                   </>

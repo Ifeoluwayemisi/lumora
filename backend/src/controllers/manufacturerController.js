@@ -961,6 +961,7 @@ export async function getBatchDetail(req, res) {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+    console.log("[GET_BATCH_DETAIL] Request - Batch ID:", id, "User ID:", userId);
 
     // Look up manufacturer from user
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -969,10 +970,12 @@ export async function getBatchDetail(req, res) {
     });
 
     if (!manufacturer) {
+      console.log("[GET_BATCH_DETAIL] Manufacturer not found for user:", userId);
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
     const manufacturerId = manufacturer.id;
+    console.log("[GET_BATCH_DETAIL] Manufacturer ID:", manufacturerId);
 
     // Get batch with codes and product info
     const batch = await prisma.batch.findFirst({
@@ -1006,10 +1009,20 @@ export async function getBatchDetail(req, res) {
     });
 
     if (!batch) {
+      console.log("[GET_BATCH_DETAIL] Batch not found - ID:", id);
       return res.status(404).json({ error: "Batch not found" });
     }
 
-    return res.status(200).json({
+    // Log QR paths for debugging
+    if (batch.codes.length > 0) {
+      const sampleCodes = batch.codes.slice(0, 3);
+      console.log("[GET_BATCH_DETAIL] Sample QR paths from database:");
+      sampleCodes.forEach((code) => {
+        console.log(`  - ${code.codeValue}: ${code.qrImagePath}`);
+      });
+    }
+
+    const response = {
       batch: {
         id: batch.id,
         productId: batch.productId,
@@ -1020,9 +1033,13 @@ export async function getBatchDetail(req, res) {
         createdAt: batch.createdAt,
         codes: batch.codes, // Return all codes in batch
       },
-    });
+    };
+
+    console.log("[GET_BATCH_DETAIL] Response ready - Sending", batch.codes.length, "codes");
+    return res.status(200).json(response);
   } catch (err) {
     console.error("[GET_BATCH_DETAIL] Error:", err.message);
+    console.error("[GET_BATCH_DETAIL] Stack:", err.stack);
     return res.status(500).json({
       error: "Failed to fetch batch detail",
       message:
@@ -1041,6 +1058,7 @@ export async function downloadBatchCodes(req, res) {
   try {
     const { id } = req.params;
     const userId = req.user.id;
+    console.log("[DOWNLOAD_BATCH_CODES] Request - Batch ID:", id, "User ID:", userId);
 
     // Look up manufacturer from user
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -1049,10 +1067,12 @@ export async function downloadBatchCodes(req, res) {
     });
 
     if (!manufacturer) {
+      console.log("[DOWNLOAD_BATCH_CODES] Manufacturer not found");
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
     const manufacturerId = manufacturer.id;
+    console.log("[DOWNLOAD_BATCH_CODES] Manufacturer ID:", manufacturerId);
 
     // Get batch with codes
     const batch = await prisma.batch.findFirst({
@@ -1079,6 +1099,7 @@ export async function downloadBatchCodes(req, res) {
     });
 
     if (!batch) {
+      console.log("[DOWNLOAD_BATCH_CODES] Batch not found - ID:", id);
       return res.status(404).json({ error: "Batch not found" });
     }
 
@@ -1095,16 +1116,27 @@ export async function downloadBatchCodes(req, res) {
       csvContent += `"${code.codeValue}","${status}","${createdDate}","${batch.product.name}","${id}","${expirationDate}"\n`;
     });
 
-    // Set headers for file download
-    res.setHeader("Content-Type", "text/csv");
+    console.log("[DOWNLOAD_BATCH_CODES] CSV generated - Size:", csvContent.length, "bytes");
+    console.log("[DOWNLOAD_BATCH_CODES] Codes included:", batch.codes.length);
+
+    // CRITICAL: Clear any previous headers and set CSV headers ONLY
+    res.clearHeader("Content-Encoding");
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="batch_${id}_codes.csv"`,
     );
+    res.setHeader("Content-Length", Buffer.byteLength(csvContent, "utf-8"));
 
-    return res.status(200).send(csvContent);
+    console.log("[DOWNLOAD_BATCH_CODES] Headers set:");
+    console.log("  Content-Type: text/csv; charset=utf-8");
+    console.log(`  Content-Disposition: attachment; filename="batch_${id}_codes.csv"`);
+
+    res.status(200).send(csvContent);
+    console.log("[DOWNLOAD_BATCH_CODES] CSV sent successfully");
   } catch (err) {
     console.error("[DOWNLOAD_BATCH_CODES] Error:", err.message);
+    console.error("[DOWNLOAD_BATCH_CODES] Stack:", err.stack);
     return res.status(500).json({
       error: "Failed to download codes",
       message:
