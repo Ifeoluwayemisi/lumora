@@ -26,29 +26,44 @@ model User {
 }
 
 model Manufacturer {
-  id               String            @id @default(uuid())
-  userId           String            @unique
-  name             String
-  email            String            @default("")
-  phone            String?
-  country          String            @default("")
-  verified         Boolean           @default(false)
-  accountStatus    String            @default("pending_verification") // pending_verification, verified, rejected
-  trustScore       Float             @default(0)
-  riskLevel        String            @default("MEDIUM") // LOW, MEDIUM, HIGH
-  plan             String            @default("BASIC") // BASIC (50/day), PREMIUM (1000/day)
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  drugs            Drug[]
-  batches          Batch[]
-  codes            Code[]
-  verificationLogs VerificationLog[]
-  documents        Document[]
-  payments         Payment[]
-  billingHistory   BillingHistory[]
-  disputes         Dispute[]
-  teamMembers      TeamMember[]
-  teamInvites      TeamInvite[]
+  id                           String                      @id @default(uuid())
+  userId                       String                      @unique
+  name                         String
+  email                        String                      @default("")
+  phone                        String?
+  country                      String                      @default("")
+  verified                     Boolean                     @default(false)
+  accountStatus                String                      @default("pending_verification") // pending_verification, verified, rejected
+  trustScore                   Float                       @default(0)
+  riskLevel                    String                      @default("MEDIUM") // LOW, MEDIUM, HIGH
+  plan                         String                      @default("BASIC") // BASIC (50/day), PREMIUM (1000/day)
+  companyName                  String?
+  website                      String?
+  nafdacLicensePath            String?
+  businessCertificatePath      String?
+  photoIdPath                  String?
+  createdAt                    DateTime                    @default(now())
+  updatedAt                    DateTime                    @updatedAt
+  lastActivityAt               DateTime?
+  riskScore                    Int?                        @default(50)
+  lastRiskAssessment           DateTime?
+  lastTrustAssessment          DateTime?
+  websiteVerified              Boolean?                    @default(false)
+  businessCertificateVerified  Boolean?                    @default(false)
+  nafdacLicenseVerified        Boolean?                    @default(false)
+  drugs                        Drug[]
+  batches                      Batch[]
+  codes                        Code[]
+  verificationLogs             VerificationLog[]
+  documents                    Document[]
+  payments                     Payment[]
+  billingHistory               BillingHistory[]
+  disputes                     Dispute[]
+  teamMembers                  TeamMember[]
+  teamInvites                  TeamInvite[]
+  websiteChecks                WebsiteLegitimacyCheck[]
+  documentChecks               DocumentForgerCheck[]
+  trustHistory                 TrustScoreHistory[]
 
   @@index([userId])
   @@index([email])
@@ -340,4 +355,53 @@ model TeamInvite {
   @@unique([manufacturerId, email])
   @@index([manufacturerId])
   @@index([token])
+}
+
+model WebsiteLegitimacyCheck {
+  id                   String       @id @default(cuid())
+  manufacturerId       String
+  manufacturer         Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  domain               String
+  riskScore            Int
+  verdict              String       // LEGITIMATE, MODERATE, SUSPICIOUS
+  registrationAgeInDays Int?
+  hasSsl               Boolean?
+  isFlagged            Boolean?
+  companyNameFound     Boolean?
+  checkDetails         String?      // JSON
+  checkedAt            DateTime     @default(now())
+
+  @@index([manufacturerId])
+  @@index([checkedAt])
+}
+
+model DocumentForgerCheck {
+  id                   String       @id @default(cuid())
+  manufacturerId       String
+  manufacturer         Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  documentType         String       // NAFDAC_LICENSE, BUSINESS_CERT, PHOTO_ID
+  filePath             String
+  riskScore            Int
+  verdict              String       // LEGITIMATE, MODERATE_RISK, SUSPICIOUS, LIKELY_FORGED
+  elaResult            String?      // JSON
+  metadataResult       String?      // JSON
+  qualityScore         Int?
+  hasSecurityFeatures  Boolean?
+  checkDetails         String?      // JSON
+  checkedAt            DateTime     @default(now())
+
+  @@index([manufacturerId])
+  @@index([documentType])
+  @@index([checkedAt])
+}
+
+model TrustScoreHistory {
+  id             String       @id @default(cuid())
+  manufacturerId String
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  score          Int
+  recordedAt     DateTime     @default(now())
+
+  @@index([manufacturerId])
+  @@index([recordedAt])
 }

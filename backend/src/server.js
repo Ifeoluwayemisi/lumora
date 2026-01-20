@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import { execSync } from "child_process";
 import app from "./app.js";
 import prisma from "./models/prismaClient.js";
+import { setupSecurityJobs, cleanupSecurityJobs } from "./jobs/securityJobs.js";
 
 // Trigger redeploy - ESM fixes applied
 
@@ -73,10 +74,20 @@ async function startServer() {
 
     await testDatabaseConnection();
 
+    let securityJobs = undefined;
+
     const server = app.listen(PORT, () => {
       console.log(
         `\n🚀 Lumora backend running on port ${PORT} (${NODE_ENV})\n`,
       );
+      
+      // Initialize security jobs
+      try {
+        securityJobs = setupSecurityJobs();
+      } catch (err) {
+        console.error("Failed to setup security jobs:", err.message);
+      }
+      
       if (NODE_ENV === "development") {
         console.log("Environment info:");
         console.log("  ENABLE_AI_RISK:", process.env.ENABLE_AI_RISK || "false");
@@ -87,6 +98,7 @@ async function startServer() {
     // Handle graceful shutdown
     process.on("SIGTERM", async () => {
       console.log("\n📉 SIGTERM received, shutting down gracefully...");
+      cleanupSecurityJobs(securityJobs);
       server.close(async () => {
         await prisma.$disconnect();
         process.exit(0);
@@ -95,16 +107,4 @@ async function startServer() {
 
     process.on("SIGINT", async () => {
       console.log("\n SIGINT received, shutting down...");
-      server.close(async () => {
-        await prisma.$disconnect();
-        process.exit(0);
-      });
-    });
-  } catch (error) {
-    console.error(" Failed to start server:", error);
-    await prisma.$disconnect();
-    process.exit(1);
-  }
-}
-
-startServer();
+      cleanupSecurityJobs(securityJobs);

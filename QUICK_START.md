@@ -19,6 +19,7 @@ You now have **7 production-ready critical features** built in ~90 minutes:
 ## 🚀 Next Steps (2-3 Hours to Full Launch)
 
 ### 1. Database Schema
+
 ```bash
 # See: CRITICAL_FEATURES_INTEGRATION.md for full schema
 # Or use this quick version:
@@ -40,6 +41,7 @@ npx prisma migrate dev --name add_critical_features
 ```
 
 ### 2. API Routes
+
 ```bash
 # Create: backend/src/routes/adminSecurityRoutes.js
 # See: CRITICAL_FEATURES_INTEGRATION.md for template
@@ -50,6 +52,7 @@ app.use("/api/admin", adminSecurityRoutes);
 ```
 
 ### 3. Scheduled Jobs
+
 ```bash
 # Create: backend/src/jobs/securityJobs.js
 # See: CRITICAL_FEATURES_INTEGRATION.md for template
@@ -60,6 +63,7 @@ setupSecurityJobs();
 ```
 
 ### 4. Configuration
+
 ```bash
 # Add to .env:
 ENCRYPTION_KEY=<generate with generateEncryptionKey()>
@@ -72,6 +76,7 @@ ENABLE_RATE_LIMIT=true
 ```
 
 ### 5. Test
+
 ```bash
 npm run dev
 # Test each endpoint with curl or Postman
@@ -114,14 +119,19 @@ const web = await checkWebsiteLegitimacy(mfgId);
 
 // Document Check
 import { checkDocumentForForgery } from "../services/documentForgeryDetectionService.js";
-const doc = await checkDocumentForForgery(mfgId, "NAFDAC_LICENSE", "/path/to/doc.jpg");
+const doc = await checkDocumentForForgery(
+  mfgId,
+  "NAFDAC_LICENSE",
+  "/path/to/doc.jpg",
+);
 // { riskScore: 15, verdict: "LEGITIMATE", recommendation: "..." }
 
 // Rate Limiting
 import { createRateLimitMiddleware } from "../services/rateLimitService.js";
-app.post("/codes/generate",
+app.post(
+  "/codes/generate",
   createRateLimitMiddleware("CODE_GENERATION"),
-  handler
+  handler,
 );
 
 // Encryption
@@ -158,20 +168,23 @@ POST   /api/admin/security/check-documents/:mfgId
 ## ⚙️ Configuration Quick Reference
 
 ### Rate Limits (per window)
-| Action | Limit | Window |
-|--------|-------|--------|
-| Code Generation | 100 | /hour |
-| Verification | 1000 | /hour |
-| API Calls | 10,000 | /hour |
-| Batch Creation | 50 | /day |
-| Team Invites | 10 | /hour |
+
+| Action          | Limit  | Window |
+| --------------- | ------ | ------ |
+| Code Generation | 100    | /hour  |
+| Verification    | 1000   | /hour  |
+| API Calls       | 10,000 | /hour  |
+| Batch Creation  | 50     | /day   |
+| Team Invites    | 10     | /hour  |
 
 ### Risk Score Ranges
+
 - 0-30: SAFE ✅
 - 30-60: MODERATE ⚠️
 - 60-100: SUSPICIOUS 🚨
 
 ### Trust Score Components
+
 - Verification success: 40%
 - Payment history: 25%
 - Compliance: 20%
@@ -193,13 +206,13 @@ POST   /api/admin/security/check-documents/:mfgId
 
 ## 📈 Session Progress
 
-| Phase | Status | Time | Features |
-|-------|--------|------|----------|
-| Plan & Design | ✅ | 10 min | 7 critical features identified |
-| Code Implementation | ✅ | 75 min | All 7 features built |
-| Documentation | ✅ | 5 min | 4 docs created |
-| Git Commit | ✅ | 2 min | Pushed to main |
-| **TOTAL** | ✅ | **~90 min** | **Production ready** |
+| Phase               | Status | Time        | Features                       |
+| ------------------- | ------ | ----------- | ------------------------------ |
+| Plan & Design       | ✅     | 10 min      | 7 critical features identified |
+| Code Implementation | ✅     | 75 min      | All 7 features built           |
+| Documentation       | ✅     | 5 min       | 4 docs created                 |
+| Git Commit          | ✅     | 2 min       | Pushed to main                 |
+| **TOTAL**           | ✅     | **~90 min** | **Production ready**           |
 
 ---
 
@@ -216,6 +229,7 @@ POST   /api/admin/security/check-documents/:mfgId
 ## ⏭️ After This
 
 See COMPLETE_TODO_LIST.md for all 42 remaining tasks:
+
 - 7 High priority items (3-4 weeks)
 - 18+ Medium priority items (2-3 weeks)
 - 20+ Low priority polish items (2-3 weeks)
@@ -500,13 +514,11 @@ PATCH  /api/admin/manufacturers/:id/request-info
 After deployment:
 
 1. **Email Service** (2 hours)
-
    - Approval emails
    - Alerts
    - Receipts
 
 2. **Analytics** (2 hours)
-
    - Track upgrades
    - Monitor usage
    - Export reports
