@@ -108,3 +108,11 @@ async function startServer() {
     process.on("SIGINT", async () => {
       console.log("\n SIGINT received, shutting down...");
       cleanupSecurityJobs(securityJobs);
+    });
+    } catch (err) {
+      console.error("Failed to start server:", err.message);
+      process.exit(1);
+    }
+  }
+  
+  startServer();
