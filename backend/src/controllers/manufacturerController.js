@@ -961,7 +961,12 @@ export async function getBatchDetail(req, res) {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    console.log("[GET_BATCH_DETAIL] Request - Batch ID:", id, "User ID:", userId);
+    console.log(
+      "[GET_BATCH_DETAIL] Request - Batch ID:",
+      id,
+      "User ID:",
+      userId,
+    );
 
     // Look up manufacturer from user
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -970,7 +975,10 @@ export async function getBatchDetail(req, res) {
     });
 
     if (!manufacturer) {
-      console.log("[GET_BATCH_DETAIL] Manufacturer not found for user:", userId);
+      console.log(
+        "[GET_BATCH_DETAIL] Manufacturer not found for user:",
+        userId,
+      );
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
@@ -1035,7 +1043,11 @@ export async function getBatchDetail(req, res) {
       },
     };
 
-    console.log("[GET_BATCH_DETAIL] Response ready - Sending", batch.codes.length, "codes");
+    console.log(
+      "[GET_BATCH_DETAIL] Response ready - Sending",
+      batch.codes.length,
+      "codes",
+    );
     return res.status(200).json(response);
   } catch (err) {
     console.error("[GET_BATCH_DETAIL] Error:", err.message);
@@ -1058,7 +1070,12 @@ export async function downloadBatchCodes(req, res) {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    console.log("[DOWNLOAD_BATCH_CODES] Request - Batch ID:", id, "User ID:", userId);
+    console.log(
+      "[DOWNLOAD_BATCH_CODES] Request - Batch ID:",
+      id,
+      "User ID:",
+      userId,
+    );
 
     // Look up manufacturer from user
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -1116,7 +1133,11 @@ export async function downloadBatchCodes(req, res) {
       csvContent += `"${code.codeValue}","${status}","${createdDate}","${batch.product.name}","${id}","${expirationDate}"\n`;
     });
 
-    console.log("[DOWNLOAD_BATCH_CODES] CSV generated - Size:", csvContent.length, "bytes");
+    console.log(
+      "[DOWNLOAD_BATCH_CODES] CSV generated - Size:",
+      csvContent.length,
+      "bytes",
+    );
     console.log("[DOWNLOAD_BATCH_CODES] Codes included:", batch.codes.length);
 
     // CRITICAL: Clear any previous headers and set CSV headers ONLY
@@ -1130,7 +1151,9 @@ export async function downloadBatchCodes(req, res) {
 
     console.log("[DOWNLOAD_BATCH_CODES] Headers set:");
     console.log("  Content-Type: text/csv; charset=utf-8");
-    console.log(`  Content-Disposition: attachment; filename="batch_${id}_codes.csv"`);
+    console.log(
+      `  Content-Disposition: attachment; filename="batch_${id}_codes.csv"`,
+    );
 
     res.status(200).send(csvContent);
     console.log("[DOWNLOAD_BATCH_CODES] CSV sent successfully");
