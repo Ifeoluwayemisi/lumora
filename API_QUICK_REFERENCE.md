@@ -10,6 +10,7 @@
 ## 📊 QUICK API ENDPOINTS
 
 ### Risk Score Endpoints
+
 ```bash
 # Recalculate risk for one manufacturer
 POST /api/admin/security/recalculate-risk/{manufacturerId}
@@ -19,6 +20,7 @@ POST /api/admin/security/recalculate-all-risks
 ```
 
 ### Trust Score Endpoints
+
 ```bash
 # Calculate trust score for one manufacturer
 POST /api/admin/security/recalculate-trust/{manufacturerId}
@@ -31,6 +33,7 @@ GET /api/admin/security/trust-trend/{manufacturerId}?days=90
 ```
 
 ### Website Legitimacy Endpoints
+
 ```bash
 # Check website legitimacy
 POST /api/admin/security/check-website/{manufacturerId}
@@ -43,6 +46,7 @@ POST /api/admin/security/recheck-all-websites
 ```
 
 ### Document Forgery Endpoints
+
 ```bash
 # Check one document
 POST /api/admin/security/check-document/{manufacturerId}
@@ -56,6 +60,7 @@ GET /api/admin/security/document-history/{manufacturerId}?limit=10
 ```
 
 ### Rate Limiting Endpoints
+
 ```bash
 # Get rate limit status for user
 GET /api/admin/security/rate-limit-status/{userId}
@@ -69,6 +74,7 @@ GET /api/admin/security/rate-limit-stats
 ```
 
 ### Combined Check
+
 ```bash
 # Run ALL security checks for manufacturer
 POST /api/admin/security/full-check/{manufacturerId}
@@ -78,16 +84,16 @@ POST /api/admin/security/full-check/{manufacturerId}
 
 ## 🔄 BACKGROUND JOBS (Auto-Running)
 
-| Job | Frequency | Purpose |
-|-----|-----------|---------|
-| Risk Score Recalc | Daily (24h) | Update risk scores for all manufacturers |
-| Trust Score Recalc | Daily (24h) | Update trust scores for all manufacturers |
-| Website Check | Weekly (7 days) | Re-verify all websites |
-| Rate Limit Cleanup | Daily (24h) | Clean up expired rate limit entries |
-| Notification Cleanup | Daily (24h) | Delete notifications >30 days old |
-| Backup Reminder | Weekly (7 days) | Remind to backup database |
-| Log Archival | Monthly (30 days) | Monitor logs for archival |
-| Health Check | Every 5 minutes | Verify system is running |
+| Job                  | Frequency         | Purpose                                   |
+| -------------------- | ----------------- | ----------------------------------------- |
+| Risk Score Recalc    | Daily (24h)       | Update risk scores for all manufacturers  |
+| Trust Score Recalc   | Daily (24h)       | Update trust scores for all manufacturers |
+| Website Check        | Weekly (7 days)   | Re-verify all websites                    |
+| Rate Limit Cleanup   | Daily (24h)       | Clean up expired rate limit entries       |
+| Notification Cleanup | Daily (24h)       | Delete notifications >30 days old         |
+| Backup Reminder      | Weekly (7 days)   | Remind to backup database                 |
+| Log Archival         | Monthly (30 days) | Monitor logs for archival                 |
+| Health Check         | Every 5 minutes   | Verify system is running                  |
 
 ---
 
@@ -131,22 +137,26 @@ curl -X POST http://localhost:5000/api/admin/security/full-check/mfg123 \
 ## 📦 WHAT HAPPENS AUTOMATICALLY
 
 ### On Server Start
+
 1. ✅ Database connection verified
 2. ✅ Prisma client generated
 3. ✅ All 8 background jobs scheduled
 4. ✅ Health checks begin every 5 minutes
 
 ### Daily (at night)
+
 - 🔄 Risk scores recalculated for all manufacturers
 - 📊 Trust scores recalculated for all manufacturers
 - 🗑️ Old notifications deleted
 - 🧹 Rate limit entries cleaned up
 
 ### Weekly (Sunday midnight)
+
 - 🌐 All websites re-checked for legitimacy
 - 💾 Backup reminder sent to admins
 
 ### Monthly
+
 - 📋 Log archival monitoring started
 
 ---
@@ -187,11 +197,14 @@ All endpoints return consistent JSON:
 {
   "success": true,
   "message": "Operation completed",
-  "data": { /* results */ }
+  "data": {
+    /* results */
+  }
 }
 ```
 
 On error:
+
 ```json
 {
   "error": "Error message here"
@@ -199,6 +212,7 @@ On error:
 ```
 
 Rate limit exceeded:
+
 ```json
 {
   "error": "Too many requests",
@@ -212,6 +226,7 @@ Rate limit exceeded:
 ## 📊 SAMPLE RESPONSES
 
 ### Risk Score Response
+
 ```json
 {
   "riskScore": 35,
@@ -221,6 +236,7 @@ Rate limit exceeded:
 ```
 
 ### Trust Score Response
+
 ```json
 {
   "trustScore": 78,
@@ -242,6 +258,7 @@ Rate limit exceeded:
 ```
 
 ### Website Check Response
+
 ```json
 {
   "riskScore": 15,
@@ -258,6 +275,7 @@ Rate limit exceeded:
 ```
 
 ### Document Check Response
+
 ```json
 {
   "riskScore": 12,
@@ -277,12 +295,14 @@ Rate limit exceeded:
 ## 🚀 NEXT STEPS
 
 ### Phase 5: Integration Testing (30 minutes)
+
 - [ ] Test each endpoint with curl/Postman
 - [ ] Verify background jobs run
 - [ ] Check email notifications work
 - [ ] Monitor logs for errors
 
 ### Phase 6: Frontend Integration (2-3 hours)
+
 - [ ] Add admin dashboard page for security checks
 - [ ] Display risk/trust scores on manufacturer profiles
 - [ ] Show website check results
@@ -290,6 +310,7 @@ Rate limit exceeded:
 - [ ] Add rate limit monitoring
 
 ### Phase 7: Deployment (30 minutes)
+
 - [ ] Update environment variables on Render
 - [ ] Run database migration on production
 - [ ] Start backend service
@@ -303,24 +324,29 @@ Rate limit exceeded:
 ### Common Issues
 
 **"Admin access required" error**
+
 - Make sure user role is "ADMIN" in database
 - Check JWT token is valid
 - Verify Authorization header format: `Bearer <token>`
 
 **"Manufacturer not found" error**
+
 - Verify manufacturerId exists in database
 - Check manufacturerId is valid UUID
 
 **Rate limit "Too many requests"**
+
 - Wait for reset time (shown in response)
 - Admin can reset with `/reset-rate-limit/{userId}`
 
 **Website check failing**
+
 - Check WHOIS_API_KEY is configured
 - Verify internet connection
 - Check domain is publicly accessible
 
 **Document check failing**
+
 - Verify filePath exists
 - Check file is valid image (JPG/PNG)
 - Ensure file permissions allow reading

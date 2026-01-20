@@ -9,6 +9,7 @@
 ## 🔧 SETUP
 
 ### 1. Get Admin Token
+
 ```bash
 # Login as admin user
 curl -X POST http://localhost:5000/api/auth/login \
@@ -23,6 +24,7 @@ TOKEN="your_token_here"
 ```
 
 ### 2. Generate Test Encryption Key
+
 ```bash
 # Only if ENCRYPTION_KEY not set
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -33,6 +35,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ## ✅ TEST CASES
 
 ### Test 1: Risk Score Calculation
+
 **Purpose**: Verify dynamic risk scoring works
 
 ```bash
@@ -55,6 +58,7 @@ curl -X POST http://localhost:5000/api/admin/security/recalculate-risk/mfg_123 \
 ```
 
 **Validation**:
+
 - [ ] Response status 200
 - [ ] Risk score between 0-100
 - [ ] Timestamp is current
@@ -62,6 +66,7 @@ curl -X POST http://localhost:5000/api/admin/security/recalculate-risk/mfg_123 \
 ---
 
 ### Test 2: Trust Score Calculation
+
 **Purpose**: Verify 5-component trust scoring
 
 ```bash
@@ -89,6 +94,7 @@ curl -X POST http://localhost:5000/api/admin/security/recalculate-trust/mfg_123 
 ```
 
 **Validation**:
+
 - [ ] Response status 200
 - [ ] Trust score between 0-100
 - [ ] All components populated
@@ -97,6 +103,7 @@ curl -X POST http://localhost:5000/api/admin/security/recalculate-trust/mfg_123 
 ---
 
 ### Test 3: Trust Score Trend
+
 **Purpose**: Verify trend analysis over 90 days
 
 ```bash
@@ -120,6 +127,7 @@ curl -X GET "http://localhost:5000/api/admin/security/trust-trend/mfg_123?days=9
 ```
 
 **Validation**:
+
 - [ ] Trend is IMPROVING, STABLE, or DECLINING
 - [ ] History array has data
 - [ ] Dates are in order
@@ -127,6 +135,7 @@ curl -X GET "http://localhost:5000/api/admin/security/trust-trend/mfg_123?days=9
 ---
 
 ### Test 4: Website Legitimacy Check
+
 **Purpose**: Verify website verification
 
 ```bash
@@ -156,6 +165,7 @@ curl -X POST http://localhost:5000/api/admin/security/check-website/mfg_123 \
 ```
 
 **Validation**:
+
 - [ ] Response status 200
 - [ ] Verdict is LEGITIMATE, MODERATE, or SUSPICIOUS
 - [ ] Risk score between 0-100
@@ -164,6 +174,7 @@ curl -X POST http://localhost:5000/api/admin/security/check-website/mfg_123 \
 ---
 
 ### Test 5: Document Forgery Detection
+
 **Purpose**: Verify document analysis
 
 ```bash
@@ -194,6 +205,7 @@ curl -X POST http://localhost:5000/api/admin/security/check-document/mfg_123 \
 ```
 
 **Validation**:
+
 - [ ] Response status 200
 - [ ] Verdict is LEGITIMATE, MODERATE_RISK, SUSPICIOUS, or LIKELY_FORGED
 - [ ] Risk score between 0-100
@@ -202,6 +214,7 @@ curl -X POST http://localhost:5000/api/admin/security/check-document/mfg_123 \
 ---
 
 ### Test 6: Rate Limiting
+
 **Purpose**: Verify rate limiting works
 
 ```bash
@@ -226,6 +239,7 @@ curl -X GET http://localhost:5000/api/admin/security/rate-limit-status/user_123 
 ```
 
 **Validation**:
+
 - [ ] Response status 200
 - [ ] All action types present
 - [ ] Remaining = limit - used
@@ -234,6 +248,7 @@ curl -X GET http://localhost:5000/api/admin/security/rate-limit-status/user_123 
 ---
 
 ### Test 7: Encryption Service
+
 **Purpose**: Verify encryption/decryption
 
 ```bash
@@ -251,6 +266,7 @@ console.log("Match:", plaintext === decrypted); // Should be true
 ```
 
 **Validation**:
+
 - [ ] Decrypted matches original
 - [ ] Encrypted is different from original
 - [ ] No errors thrown
@@ -258,6 +274,7 @@ console.log("Match:", plaintext === decrypted); // Should be true
 ---
 
 ### Test 8: Background Jobs
+
 **Purpose**: Verify scheduled jobs run
 
 ```bash
@@ -273,6 +290,7 @@ tail -f backend.log | grep "SECURITY JOBS"
 ```
 
 **Validation**:
+
 - [ ] Jobs start without errors
 - [ ] Health checks run every 5 minutes
 - [ ] No memory leaks over time
@@ -280,6 +298,7 @@ tail -f backend.log | grep "SECURITY JOBS"
 ---
 
 ### Test 9: Full Check (Combined)
+
 **Purpose**: Run all checks at once
 
 ```bash
@@ -306,6 +325,7 @@ curl -X POST http://localhost:5000/api/admin/security/full-check/mfg_123 \
 ```
 
 **Validation**:
+
 - [ ] Response status 200
 - [ ] All check types included
 - [ ] No null/undefined values
@@ -316,6 +336,7 @@ curl -X POST http://localhost:5000/api/admin/security/full-check/mfg_123 \
 ## 📊 BATCH TESTS
 
 ### Batch Test 1: Recalculate All Risks
+
 ```bash
 curl -X POST http://localhost:5000/api/admin/security/recalculate-all-risks \
   -H "Authorization: Bearer $TOKEN"
@@ -324,6 +345,7 @@ curl -X POST http://localhost:5000/api/admin/security/recalculate-all-risks \
 ```
 
 ### Batch Test 2: Recalculate All Trusts
+
 ```bash
 curl -X POST http://localhost:5000/api/admin/security/recalculate-all-trust \
   -H "Authorization: Bearer $TOKEN"
@@ -332,6 +354,7 @@ curl -X POST http://localhost:5000/api/admin/security/recalculate-all-trust \
 ```
 
 ### Batch Test 3: Recheck All Websites
+
 ```bash
 curl -X POST http://localhost:5000/api/admin/security/recheck-all-websites \
   -H "Authorization: Bearer $TOKEN"
@@ -344,8 +367,10 @@ curl -X POST http://localhost:5000/api/admin/security/recheck-all-websites \
 ## 🔍 TROUBLESHOOTING
 
 ### Test Fails with 401
+
 **Issue**: Admin token invalid or missing
 **Fix**:
+
 ```bash
 # Regenerate token
 curl -X POST http://localhost:5000/api/auth/login \
@@ -353,8 +378,10 @@ curl -X POST http://localhost:5000/api/auth/login \
 ```
 
 ### Test Fails with 404
+
 **Issue**: Route not registered
 **Fix**:
+
 ```bash
 # Check app.js has security routes
 grep "adminSecurityRoutes" backend/src/app.js
@@ -364,8 +391,10 @@ npm run dev
 ```
 
 ### Test Fails with 500
+
 **Issue**: Service error
 **Fix**:
+
 ```bash
 # Check logs
 npm run dev 2>&1 | grep ERROR
@@ -376,6 +405,7 @@ DATABASE_URL=valid
 ```
 
 ### Rate Limit Tests Show 0 Usage
+
 **Issue**: First run, no history yet
 **Fix**: Run some operations first, then check limits
 
@@ -384,6 +414,7 @@ DATABASE_URL=valid
 ## 📈 PERFORMANCE VALIDATION
 
 ### Measure Response Times
+
 ```bash
 # Time risk calculation
 time curl -X POST http://localhost:5000/api/admin/security/recalculate-risk/mfg_123 \
@@ -393,6 +424,7 @@ time curl -X POST http://localhost:5000/api/admin/security/recalculate-risk/mfg_
 ```
 
 ### Check Database Query Performance
+
 ```bash
 # In database:
 SELECT COUNT(*) FROM "WebsiteLegitimacyCheck";
@@ -426,6 +458,7 @@ SELECT COUNT(*) FROM "TrustScoreHistory";
 ## 🎉 NEXT STEPS
 
 Once all tests pass:
+
 1. Deploy to Render staging
 2. Run tests on staging
 3. Deploy to production
@@ -433,4 +466,3 @@ Once all tests pass:
 5. Begin Phase 4: Frontend Integration
 
 **Estimated Time**: 1-2 hours for complete validation
-
