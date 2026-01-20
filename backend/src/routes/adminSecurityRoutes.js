@@ -1,5 +1,6 @@
 import express from "express";
-import { verifyToken } from "../middleware/auth.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import { roleMiddleware } from "../middleware/roleMiddleware.js";
 import prisma from "../models/prismaClient.js";
 import {
   recalculateManufacturerRiskScore,
@@ -29,12 +30,7 @@ import {
 const router = express.Router();
 
 // Middleware to verify admin role
-const verifyAdmin = (req, res, next) => {
-  if (req.user?.role !== "ADMIN") {
-    return res.status(403).json({ error: "Admin access required" });
-  }
-  next();
-};
+const verifyAdmin = roleMiddleware("ADMIN");
 
 // ============================================
 // RISK SCORE ENDPOINTS
@@ -46,7 +42,7 @@ const verifyAdmin = (req, res, next) => {
  */
 router.post(
   "/recalculate-risk/:manufacturerId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -80,7 +76,7 @@ router.post(
  */
 router.post(
   "/recalculate-all-risks",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -109,7 +105,7 @@ router.post(
  */
 router.post(
   "/recalculate-trust/:manufacturerId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -143,7 +139,7 @@ router.post(
  */
 router.post(
   "/recalculate-all-trust",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -168,7 +164,7 @@ router.post(
  */
 router.get(
   "/trust-trend/:manufacturerId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -198,7 +194,7 @@ router.get(
  */
 router.post(
   "/check-website/:manufacturerId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -232,7 +228,7 @@ router.post(
  */
 router.get(
   "/website-history/:manufacturerId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -262,7 +258,7 @@ router.get(
  */
 router.post(
   "/recheck-all-websites",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -291,7 +287,7 @@ router.post(
  */
 router.post(
   "/check-document/:manufacturerId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -328,7 +324,7 @@ router.post(
  */
 router.post(
   "/check-all-documents/:manufacturerId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -355,7 +351,7 @@ router.post(
  */
 router.get(
   "/document-history/:manufacturerId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -389,7 +385,7 @@ router.get(
  */
 router.get(
   "/rate-limit-status/:userId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -414,7 +410,7 @@ router.get(
  */
 router.post(
   "/reset-rate-limit/:userId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
@@ -440,19 +436,24 @@ router.post(
  * GET /api/admin/security/rate-limit-stats
  * Get rate limiting statistics
  */
-router.get("/rate-limit-stats", verifyToken, verifyAdmin, async (req, res) => {
-  try {
-    const stats = getRateLimitStats();
+router.get(
+  "/rate-limit-stats",
+  authMiddleware,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const stats = getRateLimitStats();
 
-    res.json({
-      success: true,
-      data: stats,
-    });
-  } catch (err) {
-    console.error("[ADMIN_API] Rate limit stats error:", err.message);
-    res.status(400).json({ error: err.message });
-  }
-});
+      res.json({
+        success: true,
+        data: stats,
+      });
+    } catch (err) {
+      console.error("[ADMIN_API] Rate limit stats error:", err.message);
+      res.status(400).json({ error: err.message });
+    }
+  },
+);
 
 // ============================================
 // COMBINED SECURITY CHECK
@@ -464,7 +465,7 @@ router.get("/rate-limit-stats", verifyToken, verifyAdmin, async (req, res) => {
  */
 router.post(
   "/full-check/:manufacturerId",
-  verifyToken,
+  authMiddleware,
   verifyAdmin,
   async (req, res) => {
     try {
