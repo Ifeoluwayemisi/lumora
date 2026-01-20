@@ -78,9 +78,9 @@ export async function generateBatchPDF(batch, codes) {
 /**
  * Draw header with batch and product information
  */
-function drawHeader(page, batch, pageWidth, margin, headerHeight) {
+function drawHeader(page, batch, pageWidth, pageHeight, margin, headerHeight) {
   const x = margin;
-  const y = pageWidth - margin - headerHeight;
+  const y = pageHeight - margin - headerHeight;
 
   // Title
   page.drawText("PRODUCT VERIFICATION CODE BATCH", {
