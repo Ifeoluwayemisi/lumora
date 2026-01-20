@@ -57,7 +57,7 @@ async function getPendingInvites(manufacturerId) {
  * Send team invitation email
  */
 async function sendTeamInviteEmail(email, manufacturerName, inviteToken, role) {
-  const acceptUrl = `${process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app"}/team/invite/${inviteToken}`;
+  const acceptUrl = `${process.env.FRONTEND_URL || "https://lumora-gold.vercel.app"}/team/invite/${inviteToken}`;
 
   const mailOptions = {
     from: process.env.EMAIL_USER,

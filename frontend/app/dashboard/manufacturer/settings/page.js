@@ -5,11 +5,18 @@ import MobileBottomNav from "@/components/MobileBottomNav";
 import api from "@/services/api";
 import { toast } from "react-toastify";
 import Link from "next/link";
-import { FiArrowLeft, FiCopy, FiRefreshCw, FiSave, FiBell, FiLock } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiCopy,
+  FiRefreshCw,
+  FiSave,
+  FiBell,
+  FiLock,
+} from "react-icons/fi";
 
 /**
  * Settings Page
- * 
+ *
  * Features:
  * - API key management
  * - Generate new API keys
@@ -46,7 +53,9 @@ export default function SettingsPage() {
     try {
       const response = await api.get("/manufacturer/settings");
       setApiKeys(response.data?.apiKeys || []);
-      setNotificationSettings(response.data?.notifications || notificationSettings);
+      setNotificationSettings(
+        response.data?.notifications || notificationSettings,
+      );
       setTwoFactorEnabled(response.data?.twoFactorEnabled || false);
       setWebhookUrl(response.data?.webhookUrl || "");
     } catch (err) {
@@ -65,7 +74,9 @@ export default function SettingsPage() {
 
     setCreatingKey(true);
     try {
-      const response = await api.post("/manufacturer/api-keys", { name: keyName });
+      const response = await api.post("/manufacturer/api-keys", {
+        name: keyName,
+      });
       setApiKeys([...apiKeys, response.data.apiKey]);
       toast.success("API key generated successfully");
       setShowNewKeyModal(false);
@@ -79,7 +90,8 @@ export default function SettingsPage() {
   };
 
   const handleDeleteApiKey = async (keyId) => {
-    if (!window.confirm("Are you sure you want to delete this API key?")) return;
+    if (!window.confirm("Are you sure you want to delete this API key?"))
+      return;
 
     try {
       await api.delete(`/manufacturer/api-keys/${keyId}`);
@@ -93,7 +105,10 @@ export default function SettingsPage() {
 
   const handleSaveNotificationSettings = async () => {
     try {
-      await api.patch("/manufacturer/settings/notifications", notificationSettings);
+      await api.patch(
+        "/manufacturer/settings/notifications",
+        notificationSettings,
+      );
       toast.success("Notification settings saved");
     } catch (err) {
       console.error("[SAVE_NOTIFICATIONS] Error:", err);
@@ -126,7 +141,12 @@ export default function SettingsPage() {
   };
 
   const handleDisableTwoFactor = async () => {
-    if (!window.confirm("Are you sure you want to disable two-factor authentication?")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to disable two-factor authentication?",
+      )
+    )
+      return;
 
     try {
       await api.post("/manufacturer/settings/2fa/disable");
@@ -151,7 +171,9 @@ export default function SettingsPage() {
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading settings...</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                Loading settings...
+              </p>
             </div>
           </div>
         </div>
@@ -183,7 +205,9 @@ export default function SettingsPage() {
         {/* API Keys Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">API Keys</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              API Keys
+            </h2>
             <button
               onClick={() => setShowNewKeyModal(true)}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
@@ -193,7 +217,9 @@ export default function SettingsPage() {
           </div>
 
           {apiKeys.length === 0 ? (
-            <p className="text-gray-600 dark:text-gray-400">No API keys yet. Generate one to get started.</p>
+            <p className="text-gray-600 dark:text-gray-400">
+              No API keys yet. Generate one to get started.
+            </p>
           ) : (
             <div className="space-y-4">
               {apiKeys.map((key) => (
@@ -202,10 +228,13 @@ export default function SettingsPage() {
                   className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center"
                 >
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900 dark:text-white">{key.name}</p>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {key.name}
+                    </p>
                     <div className="flex items-center gap-2 mt-2">
                       <code className="text-xs bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded text-gray-700 dark:text-gray-300 font-mono">
-                        {key.key.substring(0, 8)}...{key.key.substring(key.key.length - 8)}
+                        {key.key.substring(0, 8)}...
+                        {key.key.substring(key.key.length - 8)}
                       </code>
                       <button
                         onClick={() => copyToClipboard(key.key)}
@@ -240,12 +269,21 @@ export default function SettingsPage() {
           <div className="space-y-4">
             {[
               { key: "emailOnScan", label: "Email on code scan" },
-              { key: "emailOnFlaggedCode", label: "Email when code is flagged" },
-              { key: "emailOnBatchExpiration", label: "Email when batch expires" },
+              {
+                key: "emailOnFlaggedCode",
+                label: "Email when code is flagged",
+              },
+              {
+                key: "emailOnBatchExpiration",
+                label: "Email when batch expires",
+              },
               { key: "emailOnLowQuota", label: "Email when quota is low" },
               { key: "emailWeeklyReport", label: "Weekly performance report" },
             ].map(({ key, label }) => (
-              <label key={key} className="flex items-center gap-3 cursor-pointer">
+              <label
+                key={key}
+                className="flex items-center gap-3 cursor-pointer"
+              >
                 <input
                   type="checkbox"
                   checked={notificationSettings[key]}
@@ -257,7 +295,9 @@ export default function SettingsPage() {
                   }
                   className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 accent-green-600"
                 />
-                <span className="text-gray-700 dark:text-gray-300">{label}</span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  {label}
+                </span>
               </label>
             ))}
           </div>
@@ -279,14 +319,18 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center">
               <div>
-                <p className="font-medium text-gray-900 dark:text-white">Two-Factor Authentication</p>
+                <p className="font-medium text-gray-900 dark:text-white">
+                  Two-Factor Authentication
+                </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   Add an extra layer of security to your account
                 </p>
               </div>
               <button
                 onClick={
-                  twoFactorEnabled ? handleDisableTwoFactor : handleEnableTwoFactor
+                  twoFactorEnabled
+                    ? handleDisableTwoFactor
+                    : handleEnableTwoFactor
                 }
                 className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                   twoFactorEnabled
@@ -299,7 +343,9 @@ export default function SettingsPage() {
             </div>
 
             <div className="p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-              <p className="font-medium text-gray-900 dark:text-white mb-2">Webhook URL</p>
+              <p className="font-medium text-gray-900 dark:text-white mb-2">
+                Webhook URL
+              </p>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                 Receive real-time updates for code verifications and flags
               </p>

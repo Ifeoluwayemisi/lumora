@@ -137,7 +137,7 @@ export async function sendVerificationNotification(verificationData) {
           ${location ? `<p>Location: ${location.latitude}, ${location.longitude}</p>` : ""}
           <p>Time: ${new Date().toLocaleString()}</p>
           <hr/>
-          <p><a href="${process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app"}/dashboard/manufacturer">View Dashboard</a></p>
+          <p><a href="${process.env.FRONTEND_URL || "https://lumora-gold.vercel.app"}/dashboard/manufacturer">View Dashboard</a></p>
         `,
       });
     }
@@ -202,7 +202,7 @@ export async function sendPaymentNotification(paymentData) {
           <p><strong>Reference:</strong> ${reference}</p>
           <p><strong>Status:</strong> ${status.toUpperCase()}</p>
           <hr/>
-          <p><a href="${process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app"}/dashboard/manufacturer/billing">View Billing</a></p>
+          <p><a href="${process.env.FRONTEND_URL || "https://lumora-gold.vercel.app"}/dashboard/manufacturer/billing">View Billing</a></p>
         `,
       });
     }
@@ -256,7 +256,7 @@ export async function sendAccountStatusNotification(userId, status, message) {
           <h2>${subject}</h2>
           <p>${message || `Your account status has been updated to: ${status}`}</p>
           <hr/>
-          <p><a href="${process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app"}/dashboard">Go to Dashboard</a></p>
+          <p><a href="${process.env.FRONTEND_URL || "https://lumora-gold.vercel.app"}/dashboard">Go to Dashboard</a></p>
         `,
       });
     }
@@ -308,7 +308,7 @@ export async function sendSuspiciousActivityAlert(manufacturerId, details) {
           <p><strong>${details}</strong></p>
           <p>If this wasn't you, please secure your account immediately.</p>
           <hr/>
-          <p><a href="${process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app"}/dashboard/user/settings">Security Settings</a></p>
+          <p><a href="${process.env.FRONTEND_URL || "https://lumora-gold.vercel.app"}/dashboard/user/settings">Security Settings</a></p>
         `,
       });
     }

@@ -214,7 +214,7 @@ export async function getDashboard(req, res) {
     // Add batch expiration alerts
     const expirationAlerts = expiringBatches.map((batch) => {
       const daysUntilExpiry = Math.ceil(
-        (batch.expirationDate - now) / (1000 * 60 * 60 * 24)
+        (batch.expirationDate - now) / (1000 * 60 * 60 * 24),
       );
       return {
         id: `batch-expiring-${batch.id}`,

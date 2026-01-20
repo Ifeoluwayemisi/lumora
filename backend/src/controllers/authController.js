@@ -294,7 +294,7 @@ export const forgotPassword = async (req, res) => {
 
     console.log("[FORGOT_PASSWORD] Reset token generated for:", email);
     const frontendUrl =
-      process.env.FRONTEND_URL || "https://lumora-x91f.vercel.app";
+      process.env.FRONTEND_URL || "https://lumora-gold.vercel.app";
     const resetUrl = `${frontendUrl}/auth/reset-password?token=${resetToken}`;
     console.log("[FORGOT_PASSWORD] Reset URL:", resetUrl);
 

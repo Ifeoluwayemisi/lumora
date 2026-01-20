@@ -3,11 +3,18 @@ import { useEffect, useState } from "react";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import Link from "next/link";
-import { FiArrowLeft, FiSearch, FiChevronDown, FiMessageSquare, FiBook, FiHelpCircle } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiSearch,
+  FiChevronDown,
+  FiMessageSquare,
+  FiBook,
+  FiHelpCircle,
+} from "react-icons/fi";
 
 /**
  * Help & Support Center
- * 
+ *
  * Features:
  * - FAQ section
  * - Documentation links
@@ -23,7 +30,7 @@ const FAQData = [
       {
         question: "How do I generate product codes?",
         answer:
-          'Navigate to Products → Create Batch. Upload your product details and select the number of codes you need. The system will generate unique QR codes and CSV export files automatically. Each code is linked to your product and batch for tracking.',
+          "Navigate to Products → Create Batch. Upload your product details and select the number of codes you need. The system will generate unique QR codes and CSV export files automatically. Each code is linked to your product and batch for tracking.",
       },
       {
         question: "What is my daily code generation quota?",
@@ -129,7 +136,7 @@ export default function HelpPage() {
     items: cat.items.filter(
       (item) =>
         item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.answer.toLowerCase().includes(searchTerm.toLowerCase())
+        item.answer.toLowerCase().includes(searchTerm.toLowerCase()),
     ),
   })).filter((cat) => cat.items.length > 0);
 
@@ -162,8 +169,12 @@ export default function HelpPage() {
             className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
           >
             <FiBook className="w-8 h-8 text-blue-600 dark:text-blue-400 mb-3" />
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Documentation</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Read full documentation</p>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+              Documentation
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Read full documentation
+            </p>
           </a>
 
           <a
@@ -173,8 +184,12 @@ export default function HelpPage() {
             className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
           >
             <FiMessageSquare className="w-8 h-8 text-red-600 dark:text-red-400 mb-3" />
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Video Tutorials</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Learn with video guides</p>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+              Video Tutorials
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Learn with video guides
+            </p>
           </a>
 
           <a
@@ -182,8 +197,12 @@ export default function HelpPage() {
             className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
           >
             <FiHelpCircle className="w-8 h-8 text-green-600 dark:text-green-400 mb-3" />
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">Contact Support</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Email support@lumora.app</p>
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+              Contact Support
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Email support@lumora.app
+            </p>
           </a>
         </div>
 
@@ -218,7 +237,7 @@ export default function HelpPage() {
                 <button
                   onClick={() =>
                     setExpandedCategory(
-                      expandedCategory === catIndex ? -1 : catIndex
+                      expandedCategory === catIndex ? -1 : catIndex,
                     )
                   }
                   className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
@@ -242,7 +261,7 @@ export default function HelpPage() {
                             setExpandedQuestion(
                               expandedQuestion === `${catIndex}-${itemIndex}`
                                 ? null
-                                : `${catIndex}-${itemIndex}`
+                                : `${catIndex}-${itemIndex}`,
                             )
                           }
                           className="w-full flex justify-between items-start text-left hover:opacity-75 transition-opacity"
@@ -279,7 +298,8 @@ export default function HelpPage() {
             Still need help?
           </h3>
           <p className="text-gray-700 dark:text-gray-300 mb-4">
-            Our support team is available 24/7 to help you with any questions or issues.
+            Our support team is available 24/7 to help you with any questions or
+            issues.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <a
