@@ -378,19 +378,25 @@ export default function TeamPage() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">👑 Admin</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        👑 Admin
+                      </p>
                       <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
                         Full access to all features, can manage team members
                       </p>
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">✏️ Editor</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        ✏️ Editor
+                      </p>
                       <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
                         Can create codes, batches, and manage products
                       </p>
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900 dark:text-white">👁️ Viewer</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        👁️ Viewer
+                      </p>
                       <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">
                         Can only view analytics and reports
                       </p>
