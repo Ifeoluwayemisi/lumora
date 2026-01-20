@@ -1,6 +1,7 @@
 import { PDFDocument, rgb, PDFPage } from "pdf-lib";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 /**
  * Generate a printable PDF with codes and QR codes
@@ -54,7 +55,7 @@ export async function generateBatchPDF(batch, codes) {
           (row + 1) * codeHeight -
           (codeIndex === 0 ? 0 : -headerHeight);
 
-        drawCodeBox(page, code, x, y, codeWidth, codeHeight);
+        await drawCodeBox(page, code, x, y, codeWidth, codeHeight);
 
         col++;
         if (col >= codesPerRow) {
@@ -122,10 +123,10 @@ function drawHeader(page, batch, pageWidth, pageHeight, margin, headerHeight) {
 }
 
 /**
- * Draw a code box with code value and placeholder for QR code
- * Layout: Code value on top, space for QR code in middle, status at bottom
+ * Draw a code box with code value and QR code image
+ * Layout: Code value on top, QR code in middle, status at bottom
  */
-function drawCodeBox(page, code, x, y, width, height) {
+async function drawCodeBox(page, code, x, y, width, height) {
   const borderColor = rgb(200 / 255, 200 / 255, 200 / 255);
   const textColor = rgb(0, 0, 0);
   const padding = 8;
@@ -149,13 +150,95 @@ function drawCodeBox(page, code, x, y, width, height) {
     font: undefined,
   });
 
-  // QR code placeholder/label
-  page.drawText("(QR Code)", {
-    x: x + width / 2 - 15,
-    y: y + height / 2 - 5,
-    size: 8,
-    color: rgb(150 / 255, 150 / 255, 150 / 255),
-  });
+  // Try to embed QR code image
+  try {
+    if (code.qrImagePath) {
+      // Get absolute path to uploads folder
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      const uploadsPath = path.join(__dirname, "../../uploads");
+      
+      // Try different path variations
+      let qrFilePath = null;
+      
+      // If path is relative (starts with /uploads or just has filename)
+      if (code.qrImagePath.startsWith("/uploads")) {
+        qrFilePath = path.join(uploadsPath, code.qrImagePath.replace("/uploads", ""));
+      } else if (code.qrImagePath.includes("uploads")) {
+        // Extract the part after uploads folder
+        const uploadsIndex = code.qrImagePath.indexOf("uploads");
+        qrFilePath = path.join(uploadsPath, code.qrImagePath.substring(uploadsIndex + 7));
+      } else {
+        // Assume it's just the filename
+        qrFilePath = path.join(uploadsPath, "qrcodes", code.qrImagePath);
+      }
+
+      console.log(`[PDF_QR] Attempting to load QR code: ${code.codeValue}`);
+      console.log(`[PDF_QR] QR path from DB: ${code.qrImagePath}`);
+      console.log(`[PDF_QR] Resolved file path: ${qrFilePath}`);
+
+      // Check if file exists
+      if (fs.existsSync(qrFilePath)) {
+        try {
+          // Read image file
+          const imageBytes = fs.readFileSync(qrFilePath);
+          console.log(`[PDF_QR] QR image loaded - Size: ${imageBytes.length} bytes`);
+
+          // Embed image in PDF
+          const image = await page.doc.embedPng(imageBytes);
+
+          // Calculate QR code box size (leave space for code and status)
+          const qrSize = Math.min(width - padding * 2, height - 50);
+          const qrX = x + (width - qrSize) / 2;
+          const qrY = y + (height - qrSize) / 2 - 10;
+
+          // Draw QR code image
+          page.drawImage(image, {
+            x: qrX,
+            y: qrY,
+            width: qrSize,
+            height: qrSize,
+          });
+
+          console.log(`[PDF_QR] QR embedded successfully for ${code.codeValue}`);
+        } catch (imgError) {
+          console.warn(`[PDF_QR] Failed to embed QR image: ${imgError.message}`);
+          // Fall back to placeholder
+          page.drawText("(QR Code)", {
+            x: x + width / 2 - 15,
+            y: y + height / 2 - 5,
+            size: 8,
+            color: rgb(150 / 255, 150 / 255, 150 / 255),
+          });
+        }
+      } else {
+        console.warn(`[PDF_QR] QR file not found: ${qrFilePath}`);
+        // Draw placeholder
+        page.drawText("(QR Code)", {
+          x: x + width / 2 - 15,
+          y: y + height / 2 - 5,
+          size: 8,
+          color: rgb(150 / 255, 150 / 255, 150 / 255),
+        });
+      }
+    } else {
+      console.warn(`[PDF_QR] No qrImagePath for code: ${code.codeValue}`);
+      page.drawText("(QR Code)", {
+        x: x + width / 2 - 15,
+        y: y + height / 2 - 5,
+        size: 8,
+        color: rgb(150 / 255, 150 / 255, 150 / 255),
+      });
+    }
+  } catch (error) {
+    console.error(`[PDF_QR] Error processing QR code: ${error.message}`);
+    page.drawText("(Error)", {
+      x: x + width / 2 - 15,
+      y: y + height / 2 - 5,
+      size: 8,
+      color: rgb(1, 0, 0), // Red
+    });
+  }
 
   // Status
   const status = code.isUsed ? "USED" : "UNUSED";
