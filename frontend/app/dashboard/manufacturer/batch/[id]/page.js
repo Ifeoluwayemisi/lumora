@@ -428,8 +428,9 @@ export default function BatchDetailPage() {
               <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <img
                   src={
-                    selectedCode.qrCodeUrl ||
-                    `data:image/png;base64,${selectedCode.qrCode}`
+                    selectedCode.qrImagePath
+                      ? `${process.env.NEXT_PUBLIC_API_URL}${selectedCode.qrImagePath}`
+                      : "https://via.placeholder.com/256?text=QR+Not+Available"
                   }
                   alt={`QR Code for ${selectedCode.codeValue}`}
                   className="w-64 h-64 object-contain"

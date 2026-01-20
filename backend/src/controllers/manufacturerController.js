@@ -962,6 +962,7 @@ export async function getBatchDetail(req, res) {
             id: true,
             codeValue: true,
             isUsed: true,
+            qrImagePath: true,
             createdAt: true,
           },
           orderBy: { createdAt: "asc" },
