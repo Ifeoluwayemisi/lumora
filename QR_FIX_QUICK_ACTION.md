@@ -3,6 +3,7 @@
 ## The Issue
 
 Your database has **old QR code paths** from before the fix:
+
 ```
 ❌ /opt/render/project/src/backend/uploads/qrcodes/LUM-JS8FMW.png
 ✅ /uploads/qrcodes/LUM-JS8FMW.png
@@ -24,6 +25,7 @@ curl -X POST https://lumoraorg.onrender.com/api/admin/system/fix-qr-paths \
 ```
 
 **Expected response:**
+
 ```json
 {
   "success": true,
@@ -63,6 +65,7 @@ After running the fix:
 ## Success Indicators
 
 After fix, you should see in browser console:
+
 ```
 [GET_BATCH_DETAIL] Sample QR paths from database:
   - LUM-JS8FMW: /uploads/qrcodes/LUM-JS8FMW.png ✅
@@ -70,6 +73,7 @@ After fix, you should see in browser console:
 ```
 
 And in Render logs:
+
 ```
 [GET] /uploads/qrcodes/LUM-JS8FMW.png - 200 ✅
 ```

@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 import { requestLogger } from "./middleware/requestLogger.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -56,6 +57,45 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // Serve static files (uploads folder for QR codes, certificates, etc.)
 console.log("[APP_INIT] Serving static files from:", uploadsPath);
+
+// Diagnostic: Check if uploads directory exists
+if (fs.existsSync(uploadsPath)) {
+  console.log("[APP_INIT] ✓ Uploads directory exists");
+  const qrCodesDir = path.join(uploadsPath, "qrcodes");
+  if (fs.existsSync(qrCodesDir)) {
+    try {
+      const files = fs.readdirSync(qrCodesDir);
+      console.log(`[APP_INIT] ✓ QR codes directory has ${files.length} files`);
+      if (files.length > 0 && files.length <= 5) {
+        console.log("[APP_INIT] Files:", files);
+      }
+    } catch (err) {
+      console.error("[APP_INIT] Error reading QR directory:", err.message);
+    }
+  } else {
+    console.warn(
+      "[APP_INIT] ⚠️  QR codes directory does not exist:",
+      qrCodesDir,
+    );
+  }
+} else {
+  console.error("[APP_INIT] ❌ Uploads directory NOT FOUND:", uploadsPath);
+}
+
+// Add diagnostic middleware for static file requests
+app.use("/uploads", (req, res, next) => {
+  const filePath = path.join(uploadsPath, req.path);
+  const relativePath = path.relative(uploadsPath, filePath);
+
+  if (req.path.includes("qrcodes")) {
+    console.log(`[STATIC_REQUEST] ${req.path}`);
+    console.log(`[STATIC_REQUEST] Looking for: ${filePath}`);
+    console.log(`[STATIC_REQUEST] Exists: ${fs.existsSync(filePath)}`);
+  }
+
+  next();
+});
+
 app.use("/uploads", express.static(uploadsPath));
 
 // Security headers

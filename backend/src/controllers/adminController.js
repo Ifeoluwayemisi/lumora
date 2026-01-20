@@ -6,6 +6,9 @@ import {
 } from "../services/adminService.js";
 import prisma from "../models/prismaClient.js";
 import { fixQRPathsInDatabase } from "../utils/fixQRPaths.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 export async function listVerifications(req, res) {
   try {
@@ -71,6 +74,79 @@ export async function fixQRPaths(req, res) {
     res.status(500).json({
       success: false,
       error: "Failed to fix QR paths",
+      message: err.message,
+    });
+  }
+}
+
+/**
+ * Diagnostic endpoint - check QR files status
+ * Admin only
+ */
+export async function diagnosticQRStatus(req, res) {
+  try {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const uploadsPath = path.join(__dirname, "../../uploads");
+    const qrCodesDir = path.join(uploadsPath, "qrcodes");
+
+    console.log("[DIAGNOSTIC] Checking QR files status...");
+
+    const diagnostics = {
+      uploadsPath,
+      qrCodesDir,
+      uploadsExists: fs.existsSync(uploadsPath),
+      qrDirExists: fs.existsSync(qrCodesDir),
+      qrFiles: [],
+      databaseCodes: [],
+      missingFiles: [],
+      summary: {},
+    };
+
+    // Check database codes
+    const allCodes = await prisma.code.findMany({
+      select: { codeValue: true, qrImagePath: true },
+      take: 20,
+    });
+
+    diagnostics.databaseCodes = allCodes;
+
+    // Check actual files
+    if (diagnostics.qrDirExists) {
+      try {
+        const files = fs.readdirSync(qrCodesDir);
+        diagnostics.qrFiles = files;
+        diagnostics.summary.totalFiles = files.length;
+
+        // Check which database codes are missing files
+        for (const code of allCodes) {
+          const fileName = path.basename(code.qrImagePath);
+          if (!files.includes(fileName)) {
+            diagnostics.missingFiles.push({
+              codeValue: code.codeValue,
+              expectedPath: code.qrImagePath,
+              fileName,
+            });
+          }
+        }
+      } catch (err) {
+        diagnostics.summary.readError = err.message;
+      }
+    }
+
+    diagnostics.summary = {
+      totalDatabaseCodes: allCodes.length,
+      totalFilesOnDisk: diagnostics.qrFiles.length,
+      missingFiles: diagnostics.missingFiles.length,
+      uploadsPathExists: diagnostics.uploadsExists,
+      qrDirExists: diagnostics.qrDirExists,
+    };
+
+    res.status(200).json(diagnostics);
+  } catch (err) {
+    console.error("[DIAGNOSTIC] Error:", err);
+    res.status(500).json({
+      error: "Diagnostic failed",
       message: err.message,
     });
   }

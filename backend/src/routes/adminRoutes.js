@@ -8,6 +8,7 @@ import {
   listHighRiskCodes,
   listPredictedHotspots,
   fixQRPaths,
+  diagnosticQRStatus,
 } from "../controllers/adminController.js";
 
 import {
@@ -59,6 +60,7 @@ router.patch("/manufacturers/:manufacturerId/reject", rejectManufacturer);
 router.post("/system/migrate", triggerMigrations);
 router.get("/system/database-status", checkDatabaseStatus);
 router.post("/system/fix-qr-paths", fixQRPaths);
+router.get("/system/diagnostic-qr-status", diagnosticQRStatus);
 
 // Dispute Resolution Endpoints
 router.get("/disputes/stats/overview", getStats);

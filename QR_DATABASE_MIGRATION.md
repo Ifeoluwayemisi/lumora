@@ -10,6 +10,7 @@ Should be:        /uploads/qrcodes/LUM-JS8FMW.png
 ```
 
 This causes:
+
 - ❌ QR files return 404 when requested from frontend
 - ❌ Frontend can't display QR codes
 - ❌ PDF generation can't find images
@@ -44,6 +45,7 @@ curl -X POST https://lumoraorg.onrender.com/api/admin/system/fix-qr-paths \
 ```
 
 Response:
+
 ```json
 {
   "success": true,
@@ -86,12 +88,14 @@ ensureQRPathsFixed();
 ## What Gets Fixed
 
 ### Before Migration
+
 ```
 Code Value: LUM-JS8FMW
 QR Path:    /opt/render/project/src/backend/uploads/qrcodes/LUM-JS8FMW.png  ❌
 ```
 
 ### After Migration
+
 ```
 Code Value: LUM-JS8FMW
 QR Path:    /uploads/qrcodes/LUM-JS8FMW.png  ✅
@@ -100,6 +104,7 @@ QR Path:    /uploads/qrcodes/LUM-JS8FMW.png  ✅
 ## Steps to Deploy
 
 1. **Deploy Latest Code**
+
    ```bash
    git pull origin main
    # Redeploy on Render
@@ -126,6 +131,7 @@ QR Path:    /uploads/qrcodes/LUM-JS8FMW.png  ✅
 After running the migration, check logs for:
 
 ### Success Indicators ✅
+
 ```
 [FIX_QR_PATHS] Starting database path migration...
 [FIX_QR_PATHS] Found 123 codes with absolute paths
@@ -134,6 +140,7 @@ After running the migration, check logs for:
 ```
 
 ### Error Indicators ❌
+
 ```
 [FIX_QR_PATHS] Found 0 codes with absolute paths  (No old codes - already fixed or new data)
 [ADMIN_FIX_QR] Error: ...  (Database error - check connectivity)
@@ -142,6 +149,7 @@ After running the migration, check logs for:
 ## After Migration
 
 Once migration is complete:
+
 - ✅ All QR paths in database are relative
 - ✅ Frontend can find and display QR images
 - ✅ PDF generation can embed actual QR codes
@@ -149,15 +157,16 @@ Once migration is complete:
 
 ## Files Changed
 
-| File | Change |
-|------|--------|
-| `backend/src/utils/fixQRPaths.js` | New migration utility |
-| `backend/src/controllers/adminController.js` | Added fixQRPaths endpoint |
-| `backend/src/routes/adminRoutes.js` | Added route for fix endpoint |
+| File                                         | Change                       |
+| -------------------------------------------- | ---------------------------- |
+| `backend/src/utils/fixQRPaths.js`            | New migration utility        |
+| `backend/src/controllers/adminController.js` | Added fixQRPaths endpoint    |
+| `backend/src/routes/adminRoutes.js`          | Added route for fix endpoint |
 
 ## Technical Details
 
 The migration:
+
 1. Queries all codes with `qrImagePath` containing `/opt/render/`
 2. For each code, extracts the `/uploads/...` part
 3. Updates the code record with the relative path
