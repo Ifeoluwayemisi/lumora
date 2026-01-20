@@ -181,11 +181,11 @@ export default function TeamPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">
         <div className="p-4 pt-12 md:pt-16">
           {/* Header */}
-          <div className="bg-white dark:bg-gray-800 border-b dark:border-gray-700 rounded-xl shadow-sm border border-gray-100 mb-6">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm mb-6">
             <div className="p-6">
               <div className="flex justify-between items-center">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-50">
                     Team Management
                   </h1>
                   <p className="text-gray-600 dark:text-gray-400 mt-2">
@@ -194,7 +194,7 @@ export default function TeamPage() {
                 </div>
                 <button
                   onClick={() => setShowInviteModal(true)}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-medium"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 font-medium transition-colors"
                 >
                   + Invite Member
                 </button>
@@ -208,9 +208,9 @@ export default function TeamPage() {
             ) : (
               <div className="p-6">
                 {/* Team Members Section */}
-                <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 mb-6">
-                  <div className="p-6 border-b border-gray-200 dark:border-gray-600">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 mb-6">
+                  <div className="p-6 border-b border-gray-200 dark:border-slate-700">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-50">
                       Team Members ({members.length})
                     </h2>
                   </div>
@@ -222,21 +222,21 @@ export default function TeamPage() {
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-600 border-b border-gray-200 dark:border-gray-600">
+                        <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-200 dark:border-slate-700">
                           <tr>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">
                               Name
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">
                               Email
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">
                               Role
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">
                               Joined
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">
                               Actions
                             </th>
                           </tr>
@@ -245,9 +245,9 @@ export default function TeamPage() {
                           {members.map((member) => (
                             <tr
                               key={member.id}
-                              className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition"
+                              className="border-b border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition"
                             >
-                              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                              <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
                                 {member.name}
                               </td>
                               <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
@@ -266,23 +266,27 @@ export default function TeamPage() {
                               <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                                 {new Date(member.joinedAt).toLocaleDateString()}
                               </td>
-                              <td className="px-6 py-4">
+                              <td className="px-6 py-4 flex gap-3">
                                 <button
                                   onClick={() => {
                                     setSelectedMember(member);
                                     setNewRole(member.role);
                                     setShowRoleModal(true);
                                   }}
-                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium mr-4"
+                                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium transition-colors"
                                 >
                                   Edit Role
                                 </button>
-                                <button
-                                  onClick={() => handleRemoveMember(member.id)}
-                                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm font-medium"
-                                >
-                                  Remove
-                                </button>
+                                {member.id !== manufacturerId && (
+                                  <button
+                                    onClick={() =>
+                                      handleRemoveMember(member.id)
+                                    }
+                                    className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm font-medium transition-colors"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           ))}
@@ -293,9 +297,9 @@ export default function TeamPage() {
                 </div>
 
                 {/* Pending Invites Section */}
-                <div className="bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
-                  <div className="p-6 border-b border-gray-200 dark:border-gray-600">
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700">
+                  <div className="p-6 border-b border-gray-200 dark:border-slate-700">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-gray-50">
                       Pending Invitations ({invites.length})
                     </h2>
                   </div>
@@ -307,21 +311,21 @@ export default function TeamPage() {
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full">
-                        <thead className="bg-gray-50 dark:bg-gray-600 border-b border-gray-200 dark:border-gray-600">
+                        <thead className="bg-gray-50 dark:bg-slate-700 border-b border-gray-200 dark:border-slate-700">
                           <tr>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">
                               Email
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">
                               Role
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">
                               Sent
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">
                               Expires
                             </th>
-                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-200">
+                            <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-100">
                               Actions
                             </th>
                           </tr>
@@ -330,9 +334,9 @@ export default function TeamPage() {
                           {invites.map((invite) => (
                             <tr
                               key={invite.id}
-                              className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition"
+                              className="border-b border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 transition"
                             >
-                              <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                              <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                                 {invite.email}
                               </td>
                               <td className="px-6 py-4">
@@ -358,7 +362,7 @@ export default function TeamPage() {
                               <td className="px-6 py-4">
                                 <button
                                   onClick={() => handleCancelInvite(invite.id)}
-                                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm font-medium"
+                                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-sm font-medium transition-colors"
                                 >
                                   Cancel
                                 </button>
@@ -410,14 +414,14 @@ export default function TeamPage() {
           {/* Invite Modal */}
           {showInviteModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full border border-gray-200 dark:border-slate-700">
+                <div className="p-6 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-50">
                     Invite Team Member
                   </h2>
                   <button
                     onClick={() => setShowInviteModal(false)}
-                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
                   >
                     ✕
                   </button>
@@ -425,7 +429,7 @@ export default function TeamPage() {
 
                 <div className="p-6 space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                       Email Address
                     </label>
                     <input
@@ -435,12 +439,12 @@ export default function TeamPage() {
                       onChange={(e) =>
                         setInviteData({ ...inviteData, email: e.target.value })
                       }
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                       Role
                     </label>
                     <select
@@ -448,7 +452,7 @@ export default function TeamPage() {
                       onChange={(e) =>
                         setInviteData({ ...inviteData, role: e.target.value })
                       }
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                     >
                       <option value="viewer">Viewer (View only)</option>
                       <option value="editor">Editor (Create codes)</option>
@@ -456,22 +460,22 @@ export default function TeamPage() {
                     </select>
                   </div>
 
-                  <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 p-3 rounded-lg">
                     An invitation email will be sent to the email address with a
                     link to join the team. The invitation expires in 7 days.
                   </p>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-gray-700 p-6 border-t border-gray-200 dark:border-gray-600 flex justify-end gap-3">
+                <div className="bg-gray-50 dark:bg-slate-800 p-6 border-t border-gray-200 dark:border-slate-700 flex justify-end gap-3">
                   <button
                     onClick={() => setShowInviteModal(false)}
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                    className="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSendInvite}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
                   >
                     Send Invitation
                   </button>
@@ -483,9 +487,9 @@ export default function TeamPage() {
           {/* Role Update Modal */}
           {showRoleModal && selectedMember && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
-                <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+              <div className="bg-white dark:bg-slate-900 rounded-lg shadow-xl max-w-md w-full border border-gray-200 dark:border-slate-700">
+                <div className="p-6 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-50">
                     Update Member Role
                   </h2>
                   <button
@@ -493,7 +497,7 @@ export default function TeamPage() {
                       setShowRoleModal(false);
                       setSelectedMember(null);
                     }}
-                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors"
                   >
                     ✕
                   </button>
@@ -501,19 +505,19 @@ export default function TeamPage() {
 
                 <div className="p-6 space-y-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                       Updating role for: <strong>{selectedMember.name}</strong>
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                       New Role
                     </label>
                     <select
                       value={newRole}
                       onChange={(e) => setNewRole(e.target.value)}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100"
                     >
                       <option value="viewer">Viewer (View only)</option>
                       <option value="editor">Editor (Create codes)</option>
@@ -521,25 +525,25 @@ export default function TeamPage() {
                     </select>
                   </div>
 
-                  <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-slate-800 p-3 rounded-lg">
                     This change will take effect immediately. The team member
                     will see their updated permissions on next login.
                   </p>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-gray-700 p-6 border-t border-gray-200 dark:border-gray-600 flex justify-end gap-3">
+                <div className="bg-gray-50 dark:bg-slate-800 p-6 border-t border-gray-200 dark:border-slate-700 flex justify-end gap-3">
                   <button
                     onClick={() => {
                       setShowRoleModal(false);
                       setSelectedMember(null);
                     }}
-                    className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"
+                    className="px-4 py-2 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-slate-600 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleUpdateRole}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
                   >
                     Update Role
                   </button>
