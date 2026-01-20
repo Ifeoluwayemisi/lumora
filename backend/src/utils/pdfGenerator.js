@@ -98,7 +98,7 @@ function drawHeader(page, batch, pageWidth, pageHeight, margin, headerHeight) {
       x: x + 10,
       y: y + 40,
       size: 10,
-      color: rgb(80, 80, 80),
+      color: rgb(80 / 255, 80 / 255, 80 / 255),
     },
   );
 
@@ -108,7 +108,7 @@ function drawHeader(page, batch, pageWidth, pageHeight, margin, headerHeight) {
       x: x + 10,
       y: y + 20,
       size: 10,
-      color: rgb(80, 80, 80),
+      color: rgb(80 / 255, 80 / 255, 80 / 255),
     },
   );
 
@@ -117,7 +117,7 @@ function drawHeader(page, batch, pageWidth, pageHeight, margin, headerHeight) {
     start: { x: x, y: y - 5 },
     end: { x: pageWidth - margin, y: y - 5 },
     thickness: 1,
-    color: rgb(200, 200, 200),
+    color: rgb(200 / 255, 200 / 255, 200 / 255),
   });
 }
 
@@ -126,7 +126,7 @@ function drawHeader(page, batch, pageWidth, pageHeight, margin, headerHeight) {
  * Layout: Code value on top, space for QR code in middle, status at bottom
  */
 function drawCodeBox(page, code, x, y, width, height) {
-  const borderColor = rgb(200, 200, 200);
+  const borderColor = rgb(200 / 255, 200 / 255, 200 / 255);
   const textColor = rgb(0, 0, 0);
   const padding = 8;
 
@@ -154,12 +154,12 @@ function drawCodeBox(page, code, x, y, width, height) {
     x: x + width / 2 - 15,
     y: y + height / 2 - 5,
     size: 8,
-    color: rgb(150, 150, 150),
+    color: rgb(150 / 255, 150 / 255, 150 / 255),
   });
 
   // Status
   const status = code.isUsed ? "USED" : "UNUSED";
-  const statusColor = code.isUsed ? rgb(200, 0, 0) : rgb(0, 150, 0);
+  const statusColor = code.isUsed ? rgb(200 / 255, 0, 0) : rgb(0, 150 / 255, 0);
 
   page.drawText(status, {
     x: x + width - 40,
@@ -173,7 +173,7 @@ function drawCodeBox(page, code, x, y, width, height) {
     x: x + padding,
     y: y + padding,
     size: 7,
-    color: rgb(150, 150, 150),
+    color: rgb(150 / 255, 150 / 255, 150 / 255),
   });
 }
 

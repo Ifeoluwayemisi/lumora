@@ -1141,7 +1141,7 @@ export async function downloadBatchCodes(req, res) {
     console.log("[DOWNLOAD_BATCH_CODES] Codes included:", batch.codes.length);
 
     // CRITICAL: Clear any previous headers and set CSV headers ONLY
-    res.clearHeader("Content-Encoding");
+    res.removeHeader("Content-Encoding");
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     res.setHeader(
       "Content-Disposition",

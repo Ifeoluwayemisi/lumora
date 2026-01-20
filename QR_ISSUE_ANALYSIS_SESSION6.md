@@ -3,6 +3,7 @@
 ## Summary
 
 Added extensive logging throughout the application to diagnose and fix:
+
 1. **QR Code Display Issues** - URLs showing absolute paths instead of relative paths
 2. **PDF/CSV Download Issues** - Files downloading with wrong MIME type
 
@@ -13,7 +14,9 @@ Added extensive logging throughout the application to diagnose and fix:
 ### Backend Improvements
 
 #### 1. QR Code Generator (`backend/src/utils/qrGenerator.js`)
+
 Added detailed logging that shows:
+
 - Working directory and output directory
 - File generation process
 - Actual file path being saved
@@ -21,14 +24,18 @@ Added detailed logging that shows:
 - File verification (size in bytes)
 
 #### 2. Batch Detail Endpoint (`backend/src/controllers/manufacturerController.js`)
+
 Added logging that shows:
+
 - Request parameters (Batch ID, User ID)
 - Manufacturer verification
 - **Sample QR paths from database** (this is critical!)
 - Number of codes being returned
 
 #### 3. CSV Download Endpoint (`backend/src/controllers/manufacturerController.js`)
+
 Added logging that shows:
+
 - Request parameters
 - CSV generation and size
 - **Headers being set (Content-Type MUST be text/csv)**
@@ -39,14 +46,18 @@ Added logging that shows:
 ### Frontend Improvements
 
 #### 1. Batch Fetch (`frontend/app/dashboard/manufacturer/batch/[id]/page.js`)
+
 Added logging that shows:
+
 - Batch ID being fetched
 - Total codes received
 - **Sample codes with their qrImagePath values from API**
 - Whether paths are relative or absolute
 
 #### 2. QR Modal Display (`frontend/app/dashboard/manufacturer/batch/[id]/page.js`)
+
 Added intelligent logging that:
+
 - Logs raw path from database
 - Detects if path contains absolute prefix (`/opt/render/`)
 - **Automatically extracts `/uploads/...` part if absolute**
@@ -54,7 +65,9 @@ Added intelligent logging that:
 - Logs success or failure with all details
 
 #### 3. File Downloads (`frontend/app/dashboard/manufacturer/batch/[id]/page.js`)
+
 Added logging for both PDF and CSV downloads:
+
 - Response headers received
 - Blob type and size
 - File download trigger
@@ -67,6 +80,7 @@ Added logging for both PDF and CSV downloads:
 ### When You Deploy and Test:
 
 **In Render Backend Console:**
+
 ```
 [QR_GENERATOR] Working directory: /opt/render/project/src/backend
 [QR_GENERATOR] QR output directory: /opt/render/project/src/backend/uploads/qrcodes
@@ -80,6 +94,7 @@ Added logging for both PDF and CSV downloads:
 ```
 
 **In Browser Console:**
+
 ```
 [BATCH_FETCH] Starting fetch for batch: batch-12345
 [BATCH_FETCH] Sample codes from API:
@@ -95,6 +110,7 @@ Added logging for both PDF and CSV downloads:
 ```
 
 **For CSV Download:**
+
 ```
 [DOWNLOAD_CSV] Starting CSV download
 [DOWNLOAD_CSV] Content-Type: text/csv; charset=utf-8
@@ -108,6 +124,7 @@ Added logging for both PDF and CSV downloads:
 ## Key Insights From Error Message
 
 Your error shows:
+
 ```
 https://lumoraorg.onrender.com/opt/render/project/src/backend/uploads/qrcodes/LUM-JS8FMW.png
 ```
@@ -138,11 +155,11 @@ This tells us the **database is storing absolute file paths** instead of relativ
 
 ## Files Modified
 
-| File | Lines Added | Purpose |
-|------|-------------|---------|
-| `backend/src/utils/qrGenerator.js` | ~40 | Log QR generation pipeline |
-| `backend/src/controllers/manufacturerController.js` | ~80 | Log batch detail & CSV download |
-| `frontend/app/dashboard/manufacturer/batch/[id]/page.js` | ~150 | Log fetch, QR modal, downloads |
+| File                                                     | Lines Added | Purpose                         |
+| -------------------------------------------------------- | ----------- | ------------------------------- |
+| `backend/src/utils/qrGenerator.js`                       | ~40         | Log QR generation pipeline      |
+| `backend/src/controllers/manufacturerController.js`      | ~80         | Log batch detail & CSV download |
+| `frontend/app/dashboard/manufacturer/batch/[id]/page.js` | ~150        | Log fetch, QR modal, downloads  |
 
 ---
 
@@ -163,4 +180,3 @@ This tells us the **database is storing absolute file paths** instead of relativ
 5. ⏳ **We'll diagnose and apply the right fix**
 
 The logging is comprehensive enough that we should be able to identify the exact issue from the console output.
-
