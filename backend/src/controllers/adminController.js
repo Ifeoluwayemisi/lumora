@@ -6,6 +6,7 @@ import {
 } from "../services/adminService.js";
 import prisma from "../models/prismaClient.js";
 import { fixQRPathsInDatabase } from "../utils/fixQRPaths.js";
+import { regenerateQRFiles } from "../utils/regenerateQRFiles.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -147,6 +148,35 @@ export async function diagnosticQRStatus(req, res) {
     console.error("[DIAGNOSTIC] Error:", err);
     res.status(500).json({
       error: "Diagnostic failed",
+      message: err.message,
+    });
+  }
+}
+
+/**
+ * Regenerate QR files for all codes in database
+ * Creates missing QR PNG files on disk
+ * Admin only
+ */
+export async function regenerateQRFilesEndpoint(req, res) {
+  try {
+    console.log("[ADMIN] Regenerating QR files for all codes...");
+    const result = await regenerateQRFiles();
+
+    res.status(200).json({
+      success: true,
+      message: `QR files regenerated: ${result.regenerated}/${result.total} codes processed, ${result.errors} errors`,
+      regenerated: result.regenerated,
+      total: result.total,
+      errors: result.errors,
+      filesOnDisk: result.filesOnDisk,
+      errorDetails: result.errorDetails,
+    });
+  } catch (err) {
+    console.error("[ADMIN_REGENERATE_QR] Error:", err);
+    res.status(500).json({
+      success: false,
+      error: "Failed to regenerate QR files",
       message: err.message,
     });
   }

@@ -9,6 +9,7 @@ import {
   listPredictedHotspots,
   fixQRPaths,
   diagnosticQRStatus,
+  regenerateQRFilesEndpoint,
 } from "../controllers/adminController.js";
 
 import {
@@ -61,6 +62,7 @@ router.post("/system/migrate", triggerMigrations);
 router.get("/system/database-status", checkDatabaseStatus);
 router.post("/system/fix-qr-paths", fixQRPaths);
 router.get("/system/diagnostic-qr-status", diagnosticQRStatus);
+router.post("/system/regenerate-qr-files", regenerateQRFilesEndpoint);
 
 // Dispute Resolution Endpoints
 router.get("/disputes/stats/overview", getStats);
