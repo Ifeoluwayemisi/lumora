@@ -1,4 +1,5 @@
 import { generateCodesForBatch } from "../services/codeService.js";
+import prisma from "../models/prismaClient.js";
 
 /**
  * Generate codes for a product batch

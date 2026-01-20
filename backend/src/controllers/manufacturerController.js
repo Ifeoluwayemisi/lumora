@@ -8,6 +8,38 @@ import { parseISO, isValid } from "date-fns";
 import { generateBatchPDF, generateBatchCSV } from "../utils/pdfGenerator.js";
 
 /**
+ * Get manufacturer profile
+ */
+export async function getProfile(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        verified: true,
+        accountStatus: true,
+      },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    res.status(200).json({ manufacturer });
+  } catch (err) {
+    console.error("[GET_PROFILE] Error:", err.message);
+    res.status(500).json({ error: "Failed to get profile" });
+  }
+}
+
+/**
  * Get manufacturer dashboard overview
  * Returns: stats, quota, recent alerts, plan info
  */

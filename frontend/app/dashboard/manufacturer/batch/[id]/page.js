@@ -435,6 +435,7 @@ export default function BatchDetailPage() {
                   alt={`QR Code for ${selectedCode.codeValue}`}
                   className="w-64 h-64 object-contain"
                   onError={(e) => {
+                    console.error("[QR_IMAGE_ERROR] Failed to load QR:", e);
                     e.target.src =
                       "https://via.placeholder.com/256?text=QR+Not+Available";
                   }}

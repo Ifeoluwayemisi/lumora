@@ -4,6 +4,7 @@ import { authMiddleware } from "../middleware/authMiddleware.js";
 import { roleMiddleware } from "../middleware/roleMiddleware.js";
 import {
   getDashboard,
+  getProfile,
   getProducts,
   getProduct,
   addProduct,
@@ -79,6 +80,7 @@ router.use(authMiddleware, roleMiddleware("MANUFACTURER"));
 
 // Dashboard
 router.get("/dashboard", getDashboard);
+router.get("/profile", getProfile);
 router.patch("/profile", updateProfile);
 
 // Analytics
