@@ -165,29 +165,29 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-        <DashboardSidebar />
-        <div className="flex-1 p-4 pt-12 md:pt-4 md:ml-64">
-          <div className="flex items-center justify-center h-96">
-            <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">
-                Loading settings...
-              </p>
-            </div>
+      <>
+        <DashboardSidebar userRole="manufacturer" />
+        <MobileBottomNav userRole="manufacturer" />
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">
+              Loading settings...
+            </p>
           </div>
         </div>
-        <MobileBottomNav />
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      <DashboardSidebar />
-      <div className="flex-1 p-4 pt-12 md:pt-4 md:ml-64 pb-20 md:pb-4">
-        {/* Header */}
-        <div className="mb-8">
+    <>
+      <DashboardSidebar userRole="manufacturer" />
+      <MobileBottomNav userRole="manufacturer" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">
+        <div className="p-4 pt-12 md:pt-16">
+          {/* Header */}
+          <div className="mb-8">
           <Link
             href="/dashboard/manufacturer"
             className="text-green-600 hover:text-green-700 font-medium mb-4 inline-flex items-center gap-2"
@@ -444,8 +444,8 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
-
-      <MobileBottomNav />
-    </div>
+        </div>
+      </div>
+    </>
   );
 }

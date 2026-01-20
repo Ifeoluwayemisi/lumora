@@ -141,185 +141,188 @@ export default function HelpPage() {
   })).filter((cat) => cat.items.length > 0);
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
-      <DashboardSidebar />
-      <div className="flex-1 p-4 pt-12 md:pt-4 md:ml-64 pb-20 md:pb-4">
-        {/* Header */}
-        <div className="mb-8">
-          <Link
-            href="/dashboard/manufacturer"
-            className="text-green-600 hover:text-green-700 font-medium mb-4 inline-flex items-center gap-2"
-          >
-            <FiArrowLeft /> Back to Dashboard
-          </Link>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Help & Support
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Find answers to common questions and get support
-          </p>
-        </div>
-
-        {/* Quick Links */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <a
-            href="https://docs.lumora.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
-          >
-            <FiBook className="w-8 h-8 text-blue-600 dark:text-blue-400 mb-3" />
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-              Documentation
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Read full documentation
-            </p>
-          </a>
-
-          <a
-            href="https://youtube.com/@lumora"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
-          >
-            <FiMessageSquare className="w-8 h-8 text-red-600 dark:text-red-400 mb-3" />
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-              Video Tutorials
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Learn with video guides
-            </p>
-          </a>
-
-          <a
-            href="mailto:support@lumora.app"
-            className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
-          >
-            <FiHelpCircle className="w-8 h-8 text-green-600 dark:text-green-400 mb-3" />
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
-              Contact Support
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Email support@lumora.app
-            </p>
-          </a>
-        </div>
-
-        {/* Search FAQ */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-8">
-          <div className="relative">
-            <FiSearch className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search FAQ..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-          </div>
-        </div>
-
-        {/* FAQ Sections */}
-        <div className="space-y-4">
-          {filteredFAQ.length === 0 ? (
-            <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-              <p className="text-gray-600 dark:text-gray-400">
-                No results found for "{searchTerm}". Try different search terms.
-              </p>
-            </div>
-          ) : (
-            filteredFAQ.map((category, catIndex) => (
-              <div
-                key={catIndex}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
-              >
-                <button
-                  onClick={() =>
-                    setExpandedCategory(
-                      expandedCategory === catIndex ? -1 : catIndex,
-                    )
-                  }
-                  className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                >
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {category.category}
-                  </h2>
-                  <FiChevronDown
-                    className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform ${
-                      expandedCategory === catIndex ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {expandedCategory === catIndex && (
-                  <div className="border-t border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
-                    {category.items.map((item, itemIndex) => (
-                      <div key={itemIndex} className="px-6 py-4">
-                        <button
-                          onClick={() =>
-                            setExpandedQuestion(
-                              expandedQuestion === `${catIndex}-${itemIndex}`
-                                ? null
-                                : `${catIndex}-${itemIndex}`,
-                            )
-                          }
-                          className="w-full flex justify-between items-start text-left hover:opacity-75 transition-opacity"
-                        >
-                          <p className="font-medium text-gray-900 dark:text-white pr-4">
-                            {item.question}
-                          </p>
-                          <FiChevronDown
-                            className={`w-5 h-5 text-gray-600 dark:text-gray-400 flex-shrink-0 transition-transform ${
-                              expandedQuestion === `${catIndex}-${itemIndex}`
-                                ? "rotate-180"
-                                : ""
-                            }`}
-                          />
-                        </button>
-
-                        {expandedQuestion === `${catIndex}-${itemIndex}` && (
-                          <p className="mt-3 text-gray-600 dark:text-gray-400 leading-relaxed">
-                            {item.answer}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* Support Card */}
-        <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl border border-green-200 dark:border-green-800">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            Still need help?
-          </h3>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
-            Our support team is available 24/7 to help you with any questions or
-            issues.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <a
-              href="mailto:support@lumora.app"
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-center"
+    <>
+      <DashboardSidebar userRole="manufacturer" />
+      <MobileBottomNav userRole="manufacturer" />
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">
+        <div className="p-4 pt-12 md:pt-16">
+          {/* Header */}
+          <div className="mb-8">
+            <Link
+              href="/dashboard/manufacturer"
+              className="text-green-600 hover:text-green-700 font-medium mb-4 inline-flex items-center gap-2"
             >
-              Email Support
-            </a>
+              <FiArrowLeft /> Back to Dashboard
+            </Link>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              Help & Support
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Find answers to common questions and get support
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <a
-              href="https://discord.gg/lumora"
+              href="https://docs.lumora.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-center"
+              className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
             >
-              Join Discord Community
+              <FiBook className="w-8 h-8 text-blue-600 dark:text-blue-400 mb-3" />
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                Documentation
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Read full documentation
+              </p>
             </a>
+
+            <a
+              href="https://youtube.com/@lumora"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
+            >
+              <FiMessageSquare className="w-8 h-8 text-red-600 dark:text-red-400 mb-3" />
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                Video Tutorials
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Learn with video guides
+              </p>
+            </a>
+
+            <a
+              href="mailto:support@lumora.app"
+              className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
+            >
+              <FiHelpCircle className="w-8 h-8 text-green-600 dark:text-green-400 mb-3" />
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                Contact Support
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Email support@lumora.app
+              </p>
+            </a>
+          </div>
+
+          {/* Search FAQ */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-8">
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-3 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search FAQ..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+          </div>
+
+          {/* FAQ Sections */}
+          <div className="space-y-4">
+            {filteredFAQ.length === 0 ? (
+              <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <p className="text-gray-600 dark:text-gray-400">
+                  No results found for "{searchTerm}". Try different search
+                  terms.
+                </p>
+              </div>
+            ) : (
+              filteredFAQ.map((category, catIndex) => (
+                <div
+                  key={catIndex}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden"
+                >
+                  <button
+                    onClick={() =>
+                      setExpandedCategory(
+                        expandedCategory === catIndex ? -1 : catIndex,
+                      )
+                    }
+                    className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {category.category}
+                    </h2>
+                    <FiChevronDown
+                      className={`w-5 h-5 text-gray-600 dark:text-gray-400 transition-transform ${
+                        expandedCategory === catIndex ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {expandedCategory === catIndex && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
+                      {category.items.map((item, itemIndex) => (
+                        <div key={itemIndex} className="px-6 py-4">
+                          <button
+                            onClick={() =>
+                              setExpandedQuestion(
+                                expandedQuestion === `${catIndex}-${itemIndex}`
+                                  ? null
+                                  : `${catIndex}-${itemIndex}`,
+                              )
+                            }
+                            className="w-full flex justify-between items-start text-left hover:opacity-75 transition-opacity"
+                          >
+                            <p className="font-medium text-gray-900 dark:text-white pr-4">
+                              {item.question}
+                            </p>
+                            <FiChevronDown
+                              className={`w-5 h-5 text-gray-600 dark:text-gray-400 flex-shrink-0 transition-transform ${
+                                expandedQuestion === `${catIndex}-${itemIndex}`
+                                  ? "rotate-180"
+                                  : ""
+                              }`}
+                            />
+                          </button>
+
+                          {expandedQuestion === `${catIndex}-${itemIndex}` && (
+                            <p className="mt-3 text-gray-600 dark:text-gray-400 leading-relaxed">
+                              {item.answer}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Support Card */}
+          <div className="mt-8 p-6 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl border border-green-200 dark:border-green-800">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Still need help?
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              Our support team is available 24/7 to help you with any questions
+              or issues.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <a
+                href="mailto:support@lumora.app"
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors text-center"
+              >
+                Email Support
+              </a>
+              <a
+                href="https://discord.gg/lumora"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-center"
+              >
+                Join Discord Community
+              </a>
+            </div>
           </div>
         </div>
       </div>
-      <MobileBottomNav />
-    </div>
+    </>
   );
 }

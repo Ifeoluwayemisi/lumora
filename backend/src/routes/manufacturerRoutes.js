@@ -18,6 +18,11 @@ import {
   updateProfile,
 } from "../controllers/manufacturerController.js";
 import {
+  flagCode,
+  unflagCode,
+  getFlaggedCodes,
+} from "../controllers/codeController.js";
+import {
   uploadDocument,
   getDocuments,
   deleteDocument,
@@ -283,5 +288,27 @@ router.delete(
 
 // Public endpoint for accepting invites
 router.post("/team/invite/:token/accept", acceptTeamInvite);
+
+// Code Flagging Routes
+router.post(
+  "/codes/:codeId/flag",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  flagCode,
+);
+
+router.post(
+  "/codes/:codeId/unflag",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  unflagCode,
+);
+
+router.get(
+  "/codes/flagged",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getFlaggedCodes,
+);
 
 export default router;

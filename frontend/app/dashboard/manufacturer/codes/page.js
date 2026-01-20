@@ -47,7 +47,8 @@ export default function CodesPage() {
     } catch (err) {
       console.error("[FETCH_DATA] Error:", err.response?.data || err.message);
       toast.error(
-        "Failed to load codes - " + (err.response?.data?.message || err.message)
+        "Failed to load codes - " +
+          (err.response?.data?.message || err.message),
       );
       setCodes([]);
       setProducts([]);
@@ -60,8 +61,9 @@ export default function CodesPage() {
     const matchesSearch = codeLog.code
       ?.toLowerCase()
       .includes(searchTerm.toLowerCase());
-    // Note: codeLog might be verification log, adjust filtering as needed
-    return matchesSearch;
+    const matchesProduct =
+      productFilter === "ALL" || codeLog.productId === productFilter;
+    return matchesSearch && matchesProduct;
   });
 
   // Code statistics
@@ -69,7 +71,7 @@ export default function CodesPage() {
     total: codes.length,
     verified: codes.filter((c) => c.verificationState === "VERIFIED").length,
     suspicious: codes.filter((c) =>
-      ["SUSPICIOUS_PATTERN", "CODE_ALREADY_USED"].includes(c.verificationState)
+      ["SUSPICIOUS_PATTERN", "CODE_ALREADY_USED"].includes(c.verificationState),
     ).length,
   };
 
