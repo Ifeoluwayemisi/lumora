@@ -244,8 +244,44 @@ router.get(
   roleMiddleware("manufacturer"),
   checkCanCreateCode,
 );
+// Notifications endpoint - for manufacturer dashboard
+router.get(
+  "/notifications",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  async (req, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
 
-// Team Management
+      // Import prisma dynamically to avoid circular dependencies
+      const prismaModule = await import("../models/prismaClient.js");
+      const prisma = prismaModule.default;
+
+      const notifications = await prisma.notification.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      });
+
+      return res.status(200).json({
+        notifications,
+      });
+    } catch (err) {
+      console.error("[GET_NOTIFICATIONS] Error:", err.message);
+      return res.status(500).json({
+        error: "Failed to fetch notifications",
+        message:
+          process.env.NODE_ENV === "development"
+            ? err.message
+            : "Please try again later",
+      });
+    }
+  },
+);
+// Team Management (with and without manufacturerId for flexibility)
 router.get(
   "/:manufacturerId/team",
   authMiddleware,
@@ -283,6 +319,49 @@ router.delete(
 
 router.delete(
   "/:manufacturerId/team/invites/:inviteId",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  cancelTeamInvite,
+);
+
+// Simplified team routes (without manufacturerId in path)
+router.get(
+  "/team",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getAllTeamMembers,
+);
+
+router.get(
+  "/team/pending-invites",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getPendingTeamInvites,
+);
+
+router.post(
+  "/team/invite",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  sendTeamInvite,
+);
+
+router.patch(
+  "/team/:memberId/role",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  updateTeamMemberRole,
+);
+
+router.delete(
+  "/team/:memberId",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  deleteTeamMember,
+);
+
+router.delete(
+  "/team/invites/:inviteId",
   authMiddleware,
   roleMiddleware("manufacturer"),
   cancelTeamInvite,

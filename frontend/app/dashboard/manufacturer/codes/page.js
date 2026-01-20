@@ -37,6 +37,7 @@ export default function CodesPage() {
     notes: "",
   });
   const [flagging, setFlagging] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -45,13 +46,15 @@ export default function CodesPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [codesRes, productsRes] = await Promise.all([
+      const [codesRes, productsRes, profileRes] = await Promise.all([
         api.get(`/manufacturer/history?limit=${pageSize}&page=${page}`),
         api.get("/manufacturer/products?limit=100"),
+        api.get("/manufacturer/profile"),
       ]);
 
       setCodes(codesRes.data?.data || []);
       setProducts(productsRes.data?.data || []);
+      setIsPremium(profileRes.data?.manufacturer?.plan === "PREMIUM");
     } catch (err) {
       console.error("[FETCH_DATA] Error:", err.response?.data || err.message);
       toast.error(
@@ -331,11 +334,31 @@ export default function CodesPage() {
                           </td>
                           <td className="px-6 py-4">
                             <button
-                              onClick={() => handleFlagCode(log)}
-                              className="px-3 py-1 text-xs font-medium rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-                              title="Flag this code as suspicious or blacklist"
+                              onClick={() => {
+                                if (!isPremium) {
+                                  toast.error(
+                                    "Upgrade to Premium to flag codes",
+                                  );
+                                  return;
+                                }
+                                handleFlagCode(log);
+                              }}
+                              disabled={!isPremium}
+                              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                                isPremium
+                                  ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 cursor-pointer"
+                                  : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50"
+                              }`}
+                              title={
+                                isPremium
+                                  ? "Flag this code as suspicious or blacklist"
+                                  : "Premium feature - Upgrade to unlock"
+                              }
                             >
-                              🚩 Flag
+                              🚩 Flag{" "}
+                              {!isPremium && (
+                                <span className="text-xs">🔒</span>
+                              )}
                             </button>
                           </td>
                         </tr>
@@ -380,7 +403,7 @@ export default function CodesPage() {
           </div>
 
           {/* Flag Code Modal */}
-          {showFlagModal && selectedCode && (
+          {showFlagModal && selectedCode && isPremium && (
             <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
               <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
                 <div className="p-6 border-b border-gray-200 dark:border-gray-700">

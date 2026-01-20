@@ -1167,8 +1167,14 @@ export async function downloadBatchPDF(req, res) {
       return res.status(404).json({ error: "Batch not found" });
     }
 
-    // Generate PDF
-    const pdfBuffer = await generateBatchPDF(batch, batch.codes);
+    // Generate PDF with error handling
+    let pdfBuffer;
+    try {
+      pdfBuffer = await generateBatchPDF(batch, batch.codes);
+    } catch (pdfError) {
+      console.error("[DOWNLOAD_BATCH_PDF] PDF generation error:", pdfError);
+      throw new Error(`PDF generation failed: ${pdfError.message}`);
+    }
 
     // Set headers for file download
     res.setHeader("Content-Type", "application/pdf");
@@ -1180,6 +1186,7 @@ export async function downloadBatchPDF(req, res) {
     return res.status(200).send(pdfBuffer);
   } catch (err) {
     console.error("[DOWNLOAD_BATCH_PDF] Error:", err.message);
+    console.error("[DOWNLOAD_BATCH_PDF] Stack:", err.stack);
     return res.status(500).json({
       error: "Failed to generate PDF",
       message:
