@@ -2,15 +2,20 @@
 
 import { useState, useRef, useEffect } from "react";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import { toast } from "react-toastify";
+import Link from "next/link";
+import api from "@/services/api";
 
 export default function ExportAnalyticsPage() {
+  const [isPremium, setIsPremium] = useState(false);
   const [startDate, setStartDate] = useState(
     new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
   );
   const [endDate, setEndDate] = useState(
     new Date().toISOString().split("T")[0],
   );
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [exportData, setExportData] = useState(null);
   const [selectedExports, setSelectedExports] = useState({
     revenue: true,
@@ -22,7 +27,7 @@ export default function ExportAnalyticsPage() {
   const [jsPDF, setJsPDF] = useState(null);
   const chartRef = useRef(null);
 
-  // Load PDF libraries on client side only
+  // Load PDF libraries and check premium on client side only
   useEffect(() => {
     const loadLibraries = async () => {
       try {
@@ -30,8 +35,14 @@ export default function ExportAnalyticsPage() {
         const jsPDFModule = await import("jspdf");
         setHtml2canvas(() => html2canvasModule.default);
         setJsPDF(() => jsPDFModule.jsPDF);
+
+        // Check if premium
+        const profileRes = await api.get("/manufacturer/profile");
+        setIsPremium(profileRes.data?.manufacturer?.plan === "PREMIUM");
       } catch (error) {
-        console.warn("Failed to load PDF libraries:", error);
+        console.warn("Failed to load libraries or check plan:", error);
+      } finally {
+        setLoading(false);
       }
     };
     loadLibraries();
@@ -231,16 +242,61 @@ export default function ExportAnalyticsPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">
         <div className="p-4 pt-12 md:pt-16">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Export Analytics
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
-              Export your analytics data in CSV or PDF format
-            </p>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Export Analytics
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">
+                Export your analytics data in CSV or PDF format
+              </p>
+            </div>
+            {isPremium && (
+              <div className="px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg text-sm font-semibold">
+                ✓ Premium
+              </div>
+            )}
           </div>
 
-          <div className="max-w-4xl">
+          {/* Premium Feature Banner */}
+          {!isPremium && (
+            <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-lg flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-amber-900 dark:text-amber-300">
+                  🚀 Unlock Advanced Analytics
+                </p>
+                <p className="text-xs text-amber-800 dark:text-amber-400 mt-1">
+                  Export detailed analytics, revenue reports, and custom data - Premium feature
+                </p>
+              </div>
+              <Link
+                href="/dashboard/manufacturer/settings#billing"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+              >
+                Upgrade Now
+              </Link>
+            </div>
+          )}
+
+          {/* Access Control */}
+          {!isPremium ? (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+              <div className="text-5xl mb-4">🔒</div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Premium Feature
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Advanced analytics and data exports are available in our Premium plan.
+              </p>
+              <Link
+                href="/dashboard/manufacturer/settings#billing"
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors inline-block"
+              >
+                Upgrade to Premium
+              </Link>
+            </div>
+          ) : (
+            <div className="max-w-4xl">
             {/* Date Range Selection */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -508,6 +564,7 @@ export default function ExportAnalyticsPage() {
               </ul>
             </div>
           </div>
+          )}
         </div>
       </div>
     </>
