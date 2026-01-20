@@ -47,11 +47,8 @@ app.use(requestLogger);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-// Ensure all responses are JSON
-app.use((req, res, next) => {
-  res.setHeader("Content-Type", "application/json");
-  next();
-});
+// Serve static files (uploads folder for QR codes, certificates, etc.)
+app.use("/uploads", express.static("uploads"));
 
 // Security headers
 app.use((req, res, next) => {

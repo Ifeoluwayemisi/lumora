@@ -29,6 +29,14 @@ export default function CodesPage() {
   const [productFilter, setProductFilter] = useState("ALL");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(50);
+  const [showFlagModal, setShowFlagModal] = useState(false);
+  const [selectedCode, setSelectedCode] = useState(null);
+  const [flagFormData, setFlagFormData] = useState({
+    reason: "suspicious_pattern",
+    severity: "medium",
+    notes: "",
+  });
+  const [flagging, setFlagging] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -77,6 +85,47 @@ export default function CodesPage() {
 
   const getProductName = (productId) => {
     return products.find((p) => p.id === productId)?.name || "Unknown";
+  };
+
+  const handleFlagCode = (code) => {
+    setSelectedCode(code);
+    setShowFlagModal(true);
+  };
+
+  const submitFlagCode = async () => {
+    if (!selectedCode || !flagFormData.reason) {
+      toast.error("Please select a reason");
+      return;
+    }
+
+    setFlagging(true);
+    try {
+      await api.post(`/manufacturer/codes/${selectedCode.id}/flag`, {
+        reason: flagFormData.reason,
+        severity: flagFormData.severity,
+        notes: flagFormData.notes,
+      });
+
+      toast.success("Code flagged successfully");
+      setShowFlagModal(false);
+      setSelectedCode(null);
+      setFlagFormData({
+        reason: "suspicious_pattern",
+        severity: "medium",
+        notes: "",
+      });
+
+      // Refresh codes
+      await fetchData();
+    } catch (error) {
+      console.error("[FLAG_CODE] Error:", error);
+      toast.error(
+        "Failed to flag code - " +
+          (error.response?.data?.error || error.message),
+      );
+    } finally {
+      setFlagging(false);
+    }
   };
 
   const getStatusBadge = (state) => {
@@ -228,6 +277,9 @@ export default function CodesPage() {
                       <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
                         Location
                       </th>
+                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -277,6 +329,15 @@ export default function CodesPage() {
                               <span className="text-gray-400">—</span>
                             )}
                           </td>
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() => handleFlagCode(log)}
+                              className="px-3 py-1 text-xs font-medium rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                              title="Flag this code as suspicious or blacklist"
+                            >
+                              🚩 Flag
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
@@ -317,6 +378,118 @@ export default function CodesPage() {
               these closely as they may indicate counterfeit activity.
             </p>
           </div>
+
+          {/* Flag Code Modal */}
+          {showFlagModal && selectedCode && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    🚩 Flag Code
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Code:{" "}
+                    <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-xs">
+                      {selectedCode.code?.substring(0, 20)}...
+                    </code>
+                  </p>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Reason
+                    </label>
+                    <select
+                      value={flagFormData.reason}
+                      onChange={(e) =>
+                        setFlagFormData({
+                          ...flagFormData,
+                          reason: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                      <option value="suspicious_pattern">
+                        Suspicious Pattern
+                      </option>
+                      <option value="duplicate_use">
+                        Duplicate/Multiple Uses
+                      </option>
+                      <option value="counterfeits">
+                        Suspected Counterfeit
+                      </option>
+                      <option value="blacklist">Blacklist (Stolen/Lost)</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Severity
+                    </label>
+                    <select
+                      value={flagFormData.severity}
+                      onChange={(e) =>
+                        setFlagFormData({
+                          ...flagFormData,
+                          severity: e.target.value,
+                        })
+                      }
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                      <option value="critical">Critical</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Notes (Optional)
+                    </label>
+                    <textarea
+                      value={flagFormData.notes}
+                      onChange={(e) =>
+                        setFlagFormData({
+                          ...flagFormData,
+                          notes: e.target.value,
+                        })
+                      }
+                      placeholder="Add details about why this code is being flagged..."
+                      className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                      rows="3"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+                  <button
+                    onClick={() => setShowFlagModal(false)}
+                    disabled={flagging}
+                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={submitFlagCode}
+                    disabled={flagging}
+                    className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {flagging ? (
+                      <>
+                        <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+                        Flagging...
+                      </>
+                    ) : (
+                      <>🚩 Flag Code</>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>

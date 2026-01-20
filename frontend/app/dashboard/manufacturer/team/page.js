@@ -44,11 +44,23 @@ export default function TeamPage() {
         api.get(`/manufacturer/team/pending-invites`),
       ]);
 
-      setMembers(membersRes.data?.members || []);
-      setInvites(invitesRes.data?.invites || []);
+      console.log("[TEAM_MEMBERS] Response:", membersRes.data);
+      console.log("[TEAM_INVITES] Response:", invitesRes.data);
+
+      setMembers(
+        membersRes.data?.members || membersRes.data?.data?.members || [],
+      );
+      setInvites(
+        invitesRes.data?.invites || invitesRes.data?.data?.invites || [],
+      );
     } catch (error) {
-      console.error("Error fetching team data:", error);
-      toast.error("Failed to load team data");
+      console.error("[TEAM_ERROR] Full error:", error);
+      console.error("[TEAM_ERROR] Response data:", error.response?.data);
+      console.error("[TEAM_ERROR] Response status:", error.response?.status);
+      toast.error(
+        "Failed to load team data - " +
+          (error.response?.data?.error || error.message),
+      );
     } finally {
       setLoading(false);
     }

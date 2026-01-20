@@ -21,7 +21,7 @@ export default function NotificationsPage() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await api.get("/manufacturer/notifications");
+      const response = await api.get("/user/notifications");
       setNotifications(response.data?.notifications || []);
     } catch (err) {
       console.error("[FETCH_NOTIFICATIONS] Error:", err);
