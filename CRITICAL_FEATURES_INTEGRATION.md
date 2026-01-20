@@ -9,9 +9,11 @@
 ## 📦 What Was Built
 
 ### 1. ✅ Email Notification Service
+
 **File**: `backend/src/services/notificationService.js` (ALREADY EXISTS - FULLY FEATURED)
 
 **Already Implemented**:
+
 - ✅ SMTP configuration (Gmail, Mailgun, etc.)
 - ✅ Verification notifications (GENUINE, FAKE, SUSPICIOUS)
 - ✅ Payment notifications (success/failed)
@@ -21,6 +23,7 @@
 - ✅ Email sending with HTML templates
 
 **Usage**:
+
 ```javascript
 import { sendVerificationNotification } from "../services/notificationService.js";
 
@@ -35,9 +38,11 @@ await sendVerificationNotification({
 ---
 
 ### 2. ✅ Dynamic Risk Score Calculation
+
 **File**: `backend/src/services/aiRiskService.js` (ENHANCED)
 
 **New Functions**:
+
 - `calculateRisk()` - Enhanced with 5 detection rules (was 3)
   - Geographic clustering detection
   - Temporal anomaly detection
@@ -54,10 +59,11 @@ await sendVerificationNotification({
   - Run daily/weekly via cron
 
 **Usage**:
+
 ```javascript
-import { 
+import {
   recalculateManufacturerRiskScore,
-  recalculateAllManufacturerRiskScores 
+  recalculateAllManufacturerRiskScores,
 } from "../services/aiRiskService.js";
 
 // Single manufacturer
@@ -71,9 +77,11 @@ const results = await recalculateAllManufacturerRiskScores();
 ---
 
 ### 3. ✅ Dynamic Trust Score Algorithm
+
 **File**: `backend/src/services/dynamicTrustScoreService.js` (NEW)
 
 **Functions**:
+
 - `calculateDynamicTrustScore(manufacturerId)` - Main calculation
   - Verification success rate (40% weight)
   - Payment history (25% weight)
@@ -90,10 +98,11 @@ const results = await recalculateAllManufacturerRiskScores();
 - `recalculateAllTrustScores()` - Batch job
 
 **Usage**:
+
 ```javascript
-import { 
+import {
   calculateDynamicTrustScore,
-  getTrustScoreTrend 
+  getTrustScoreTrend,
 } from "../services/dynamicTrustScoreService.js";
 
 const trustData = await calculateDynamicTrustScore("mfg123");
@@ -108,9 +117,11 @@ console.log(`Trend: ${trend.trend}, Avg: ${trend.averageScore}`);
 ---
 
 ### 4. ✅ Website Legitimacy Checker
+
 **File**: `backend/src/services/websiteLegitimacyService.js` (NEW)
 
 **Functions**:
+
 - `checkWebsiteLegitimacy(manufacturerId)` - Main check
   - Domain registration verification
   - SSL certificate validation
@@ -123,16 +134,16 @@ console.log(`Trend: ${trend.trend}, Avg: ${trend.averageScore}`);
 - `recheckAllManufacturerWebsites()` - Batch job
 
 **Risk Scoring**:
+
 - Domain age < 30 days: +35 points (very suspicious)
 - No valid SSL: +25 points
 - Domain flagged/blacklisted: +40 points
 - Company name not found: +15 points
 
 **Usage**:
+
 ```javascript
-import { 
-  checkWebsiteLegitimacy 
-} from "../services/websiteLegitimacyService.js";
+import { checkWebsiteLegitimacy } from "../services/websiteLegitimacyService.js";
 
 const result = await checkWebsiteLegitimacy("mfg123");
 console.log(`Verdict: ${result.verdict}`); // LEGITIMATE, MODERATE, SUSPICIOUS
@@ -141,6 +152,7 @@ console.log(`Recommendation: ${result.recommendation}`);
 ```
 
 **Environment Variables Needed**:
+
 ```
 WHOIS_API_KEY=your_whois_api_key
 VIRUSTOTAL_API_KEY=your_virustotal_key
@@ -149,9 +161,11 @@ VIRUSTOTAL_API_KEY=your_virustotal_key
 ---
 
 ### 5. ✅ Document Forgery Detection
+
 **File**: `backend/src/services/documentForgeryDetectionService.js` (NEW)
 
 **Functions**:
+
 - `checkDocumentForForgery(manufacturerId, documentType, filePath)` - Main check
   - Error Level Analysis (ELA) - detect image manipulation
   - Metadata tampering detection
@@ -164,6 +178,7 @@ VIRUSTOTAL_API_KEY=your_virustotal_key
 - `getDocumentCheckHistory(manufacturerId)` - Check history
 
 **Forgery Risk Scoring**:
+
 - ELA detects manipulation: +30 points
 - Metadata tampered: +25 points
 - Low quality document: +20 points
@@ -171,20 +186,20 @@ VIRUSTOTAL_API_KEY=your_virustotal_key
 - Missing authenticity marks: +10 points
 
 **Document Types**:
+
 - NAFDAC_LICENSE
 - BUSINESS_CERT
 - PHOTO_ID
 
 **Usage**:
+
 ```javascript
-import { 
-  checkDocumentForForgery 
-} from "../services/documentForgeryDetectionService.js";
+import { checkDocumentForForgery } from "../services/documentForgeryDetectionService.js";
 
 const result = await checkDocumentForForgery(
   "mfg123",
   "NAFDAC_LICENSE",
-  "/uploads/nafdac_123.jpg"
+  "/uploads/nafdac_123.jpg",
 );
 
 console.log(`Verdict: ${result.verdict}`); // LEGITIMATE, MODERATE_RISK, SUSPICIOUS, LIKELY_FORGED
@@ -194,9 +209,11 @@ console.log(`Risk: ${result.riskScore}`);
 ---
 
 ### 6. ✅ Rate Limiting
+
 **File**: `backend/src/services/rateLimitService.js` (ENHANCED)
 
 **Rate Limits**:
+
 - CODE_GENERATION: 100/hour
 - VERIFICATION: 1000/hour
 - API: 10000/hour
@@ -204,13 +221,14 @@ console.log(`Risk: ${result.riskScore}`);
 - TEAM_INVITE: 10/hour
 
 **Functions**:
+
 - `checkRateLimit(key, action)` - Check if action allowed
   - Returns: { allowed, remaining, resetTime, limit }
 
 - `getRateLimitStatus(userId)` - Get all rate limits for user
 
 - `createRateLimitMiddleware(action)` - Express middleware
-  - Adds X-RateLimit-* headers
+  - Adds X-RateLimit-\* headers
   - Returns 429 if exceeded
 
 - `resetRateLimit(key, action)` - Admin reset
@@ -218,10 +236,11 @@ console.log(`Risk: ${result.riskScore}`);
 - `scheduleRateLimitCleanup()` - Auto-cleanup old entries
 
 **Usage**:
+
 ```javascript
-import { 
+import {
   checkRateLimit,
-  createRateLimitMiddleware 
+  createRateLimitMiddleware,
 } from "../services/rateLimitService.js";
 
 // Check manually
@@ -229,23 +248,26 @@ const status = checkRateLimit(userId, "CODE_GENERATION");
 if (!status.allowed) {
   return res.status(429).json({
     error: "Rate limit exceeded",
-    retryAfter: status.resetTime
+    retryAfter: status.resetTime,
   });
 }
 
 // Or use middleware
-router.post("/codes/generate",
+router.post(
+  "/codes/generate",
   createRateLimitMiddleware("CODE_GENERATION"),
-  generateCodesHandler
+  generateCodesHandler,
 );
 ```
 
 ---
 
 ### 7. ✅ Encryption Service
+
 **File**: `backend/src/services/encryptionService.js` (NEW)
 
 **Functions**:
+
 - `encryptData(data)` - Encrypt any string
 - `decryptData(encryptedData)` - Decrypt
 - `hashPassword(password)` - Hash password (PBKDF2)
@@ -257,12 +279,13 @@ router.post("/codes/generate",
 - `maskSensitiveData(data)` - Mask for logging
 
 **Usage**:
+
 ```javascript
-import { 
+import {
   encryptData,
   decryptData,
   encryptApiKey,
-  maskSensitiveData 
+  maskSensitiveData,
 } from "../services/encryptionService.js";
 
 // Encrypt/decrypt
@@ -281,6 +304,7 @@ console.log(`API Key: ${maskSensitiveData(apiKey)}`); // "abc1****"
 ```
 
 **Environment Variable**:
+
 ```
 ENCRYPTION_KEY=<32-byte hex key>
 ```
@@ -292,11 +316,13 @@ To generate: Call `generateEncryptionKey()` once
 ## 🔗 INTEGRATION CHECKLIST
 
 ### Step 1: Database Schema Updates
+
 Add these fields to `Manufacturer` model in `schema.prisma`:
+
 ```prisma
 model Manufacturer {
   // ... existing fields ...
-  
+
   riskScore        Int?        @default(50)
   trustScore       Int?        @default(50)
   lastRiskAssessment DateTime?
@@ -304,7 +330,7 @@ model Manufacturer {
   websiteVerified  Boolean?    @default(false)
   businessCertificateVerified Boolean? @default(false)
   nafdacLicenseVerified Boolean? @default(false)
-  
+
   // Relations
   websiteChecks WebsiteLegitimacyCheck[]
   documentChecks DocumentForgerCheck[]
@@ -362,6 +388,7 @@ model UserNotifications {
 ```
 
 ### Step 2: Run Migration
+
 ```bash
 cd backend
 npx prisma migrate dev --name add_critical_features
@@ -371,81 +398,112 @@ npx prisma db push
 ### Step 3: Add API Endpoints
 
 Create `backend/src/routes/adminSecurityRoutes.js`:
+
 ```javascript
 import express from "express";
 import { verifyToken, verifyAdmin } from "../middleware/auth.js";
-import { 
+import {
   recalculateManufacturerRiskScore,
-  recalculateAllManufacturerRiskScores 
+  recalculateAllManufacturerRiskScores,
 } from "../services/aiRiskService.js";
-import { 
+import {
   calculateDynamicTrustScore,
-  recalculateAllTrustScores 
+  recalculateAllTrustScores,
 } from "../services/dynamicTrustScoreService.js";
-import { 
+import {
   checkWebsiteLegitimacy,
-  recheckAllManufacturerWebsites 
+  recheckAllManufacturerWebsites,
 } from "../services/websiteLegitimacyService.js";
-import { 
-  checkAllManufacturerDocuments 
-} from "../services/documentForgeryDetectionService.js";
+import { checkAllManufacturerDocuments } from "../services/documentForgeryDetectionService.js";
 
 const router = express.Router();
 
 // Recalculate risk scores
-router.post("/security/recalculate-risk/:manufacturerId", verifyToken, verifyAdmin, async (req, res) => {
-  try {
-    const result = await recalculateManufacturerRiskScore(req.params.manufacturerId);
-    res.json({ success: true, data: result });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+router.post(
+  "/security/recalculate-risk/:manufacturerId",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const result = await recalculateManufacturerRiskScore(
+        req.params.manufacturerId,
+      );
+      res.json({ success: true, data: result });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  },
+);
 
 // Recalculate all risk scores
-router.post("/security/recalculate-all-risks", verifyToken, verifyAdmin, async (req, res) => {
-  try {
-    const results = await recalculateAllManufacturerRiskScores();
-    res.json({ success: true, count: results.length, data: results });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+router.post(
+  "/security/recalculate-all-risks",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const results = await recalculateAllManufacturerRiskScores();
+      res.json({ success: true, count: results.length, data: results });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  },
+);
 
 // Recalculate trust scores
-router.post("/security/recalculate-trust/:manufacturerId", verifyToken, verifyAdmin, async (req, res) => {
-  try {
-    const result = await calculateDynamicTrustScore(req.params.manufacturerId);
-    res.json({ success: true, data: result });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+router.post(
+  "/security/recalculate-trust/:manufacturerId",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const result = await calculateDynamicTrustScore(
+        req.params.manufacturerId,
+      );
+      res.json({ success: true, data: result });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  },
+);
 
 // Check website legitimacy
-router.post("/security/check-website/:manufacturerId", verifyToken, verifyAdmin, async (req, res) => {
-  try {
-    const result = await checkWebsiteLegitimacy(req.params.manufacturerId);
-    res.json({ success: true, data: result });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+router.post(
+  "/security/check-website/:manufacturerId",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const result = await checkWebsiteLegitimacy(req.params.manufacturerId);
+      res.json({ success: true, data: result });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  },
+);
 
 // Check documents for forgery
-router.post("/security/check-documents/:manufacturerId", verifyToken, verifyAdmin, async (req, res) => {
-  try {
-    const results = await checkAllManufacturerDocuments(req.params.manufacturerId);
-    res.json({ success: true, count: results.length, data: results });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-});
+router.post(
+  "/security/check-documents/:manufacturerId",
+  verifyToken,
+  verifyAdmin,
+  async (req, res) => {
+    try {
+      const results = await checkAllManufacturerDocuments(
+        req.params.manufacturerId,
+      );
+      res.json({ success: true, count: results.length, data: results });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  },
+);
 
 export default router;
 ```
 
 Add to `backend/src/app.js`:
+
 ```javascript
 import adminSecurityRoutes from "./routes/adminSecurityRoutes.js";
 app.use("/api/admin", adminSecurityRoutes);
@@ -454,6 +512,7 @@ app.use("/api/admin", adminSecurityRoutes);
 ### Step 4: Setup Scheduled Jobs
 
 Create `backend/src/jobs/securityJobs.js`:
+
 ```javascript
 import { recalculateAllManufacturerRiskScores } from "../services/aiRiskService.js";
 import { recalculateAllTrustScores } from "../services/dynamicTrustScoreService.js";
@@ -463,34 +522,43 @@ import { scheduleRateLimitCleanup } from "../services/rateLimitService.js";
 // Run daily at 2 AM
 export function setupSecurityJobs() {
   // Risk score recalculation (daily)
-  setInterval(async () => {
-    console.log("[JOBS] Running daily risk score recalculation...");
-    try {
-      await recalculateAllManufacturerRiskScores();
-    } catch (err) {
-      console.error("[JOBS] Risk recalc failed:", err.message);
-    }
-  }, 24 * 60 * 60 * 1000);
+  setInterval(
+    async () => {
+      console.log("[JOBS] Running daily risk score recalculation...");
+      try {
+        await recalculateAllManufacturerRiskScores();
+      } catch (err) {
+        console.error("[JOBS] Risk recalc failed:", err.message);
+      }
+    },
+    24 * 60 * 60 * 1000,
+  );
 
   // Trust score recalculation (daily)
-  setInterval(async () => {
-    console.log("[JOBS] Running daily trust score recalculation...");
-    try {
-      await recalculateAllTrustScores();
-    } catch (err) {
-      console.error("[JOBS] Trust recalc failed:", err.message);
-    }
-  }, 24 * 60 * 60 * 1000);
+  setInterval(
+    async () => {
+      console.log("[JOBS] Running daily trust score recalculation...");
+      try {
+        await recalculateAllTrustScores();
+      } catch (err) {
+        console.error("[JOBS] Trust recalc failed:", err.message);
+      }
+    },
+    24 * 60 * 60 * 1000,
+  );
 
   // Website recheck (weekly)
-  setInterval(async () => {
-    console.log("[JOBS] Running weekly website legitimacy checks...");
-    try {
-      await recheckAllManufacturerWebsites();
-    } catch (err) {
-      console.error("[JOBS] Website recheck failed:", err.message);
-    }
-  }, 7 * 24 * 60 * 60 * 1000);
+  setInterval(
+    async () => {
+      console.log("[JOBS] Running weekly website legitimacy checks...");
+      try {
+        await recheckAllManufacturerWebsites();
+      } catch (err) {
+        console.error("[JOBS] Website recheck failed:", err.message);
+      }
+    },
+    7 * 24 * 60 * 60 * 1000,
+  );
 
   // Rate limit cleanup
   scheduleRateLimitCleanup(24);
@@ -500,6 +568,7 @@ export function setupSecurityJobs() {
 ```
 
 Add to `backend/src/server.js`:
+
 ```javascript
 import { setupSecurityJobs } from "./jobs/securityJobs.js";
 
@@ -510,6 +579,7 @@ setupSecurityJobs();
 ### Step 5: Environment Variables
 
 Add to `.env`:
+
 ```
 # Encryption
 ENCRYPTION_KEY=<run generateEncryptionKey() to get this>
@@ -554,6 +624,7 @@ curl -X POST http://localhost:3001/api/admin/security/check-documents/mfg123 \
 ## 📊 PRODUCTION DEPLOYMENT
 
 1. **Generate encryption key**:
+
    ```javascript
    import { generateEncryptionKey } from "./services/encryptionService.js";
    generateEncryptionKey(); // Save output to .env
