@@ -53,13 +53,16 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
+      console.log("Sending 2FA verification:", { tempToken, twoFactorCode });
       const response = await adminAuthApi.loginStep2(tempToken, twoFactorCode);
+      console.log("2FA response:", response);
       // response is the entire object: { success: true, data: { token, admin, ... } }
       localStorage.setItem("admin_user", JSON.stringify(response.data.admin));
       localStorage.setItem("admin_token", response.data.token);
 
       router.push("/admin/dashboard");
     } catch (err) {
+      console.error("2FA error:", err);
       setError(
         err.response?.data?.message ||
           err.response?.data?.data?.message ||
