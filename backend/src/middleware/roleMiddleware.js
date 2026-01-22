@@ -1,13 +1,16 @@
 /**
  * Role-based Access Control Middleware
  * Restricts endpoint access to specific user roles
+ * Supports both regular users (req.user) and admin users (req.admin)
  *
- * Usage: app.use('/api/admin', roleMiddleware('ADMIN'))
+ * Usage: roleMiddleware("ADMIN") or roleMiddleware("ADMIN", "MODERATOR")
  */
-export function roleMiddleware(allowedRole) {
+export function roleMiddleware(...allowedRoles) {
   return (req, res, next) => {
-    // Check if user is authenticated
-    if (!req.user) {
+    // Check if user or admin is authenticated
+    const user = req.user || req.admin;
+    
+    if (!user) {
       return res.status(401).json({
         error: "Unauthorized",
         message: "Authentication required",
@@ -15,14 +18,14 @@ export function roleMiddleware(allowedRole) {
     }
 
     // Normalize role comparison (handle both uppercase and lowercase)
-    const userRole = req.user.role?.toUpperCase();
-    const requiredRole = allowedRole?.toUpperCase();
+    const userRole = user.role?.toUpperCase();
+    const normalizedRoles = allowedRoles.map((r) => r.toUpperCase());
 
-    // Check if user has the required role
-    if (userRole !== requiredRole) {
+    // Check if user has any of the allowed roles
+    if (!normalizedRoles.includes(userRole)) {
       return res.status(403).json({
         error: "Forbidden",
-        message: `This action requires ${requiredRole} role. You have ${userRole} role.`,
+        message: `This action requires one of ${normalizedRoles.join(", ")} roles. You have ${userRole} role.`,
       });
     }
 
@@ -31,32 +34,9 @@ export function roleMiddleware(allowedRole) {
 }
 
 /**
- * Multiple Role Middleware
- * Allow access to users with any of the specified roles
+ * DEPRECATED: Use roleMiddleware with multiple arguments instead
+ * Multiple Role Middleware - Allow access to users with any of the specified roles
  */
 export function roleMiddlewareMultiple(allowedRoles) {
-  return (req, res, next) => {
-    // Check if user is authenticated
-    if (!req.user) {
-      return res.status(401).json({
-        error: "Unauthorized",
-        message: "Authentication required",
-      });
-    }
-
-    const userRole = req.user.role?.toUpperCase();
-    const normalizedRoles = allowedRoles.map((r) => r.toUpperCase());
-
-    // Check if user has any of the allowed roles
-    if (!normalizedRoles.includes(userRole)) {
-      return res.status(403).json({
-        error: "Forbidden",
-        message: `This action requires one of: ${normalizedRoles.join(
-          ", "
-        )}. You have ${userRole} role.`,
-      });
-    }
-
-    next();
-  };
+  return roleMiddleware(...allowedRoles);
 }
