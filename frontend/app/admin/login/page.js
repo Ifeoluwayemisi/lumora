@@ -16,6 +16,7 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [tempToken, setTempToken] = useState("");
+  const [adminId, setAdminId] = useState("");
 
   // Step 2: 2FA
   const [twoFactorCode, setTwoFactorCode] = useState("");
@@ -32,7 +33,8 @@ export default function AdminLoginPage() {
 
     try {
       const response = await adminAuthApi.loginStep1(email, password);
-      setTempToken(response.tempToken);
+      setTempToken(response.data.tempToken);
+      setAdminId(response.data.adminId);
       setStep(2);
     } catch (err) {
       setError(
@@ -51,11 +53,11 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const response = await adminAuthApi.loginStep2(tempToken, twoFactorCode);
+      const response = await adminAuthApi.loginStep2(tempToken, twoFactorCode, adminId);
 
       // Save to localStorage
-      localStorage.setItem("admin_user", JSON.stringify(response.user));
-      localStorage.setItem("admin_token", response.authToken);
+      localStorage.setItem("admin_user", JSON.stringify(response.data.user));
+      localStorage.setItem("admin_token", response.data.authToken);
 
       router.push("/admin/dashboard");
     } catch (err) {
@@ -141,7 +143,11 @@ export default function AdminLoginPage() {
                 type="text"
                 placeholder="000000"
                 value={twoFactorCode}
-                onChange={(e) => setTwoFactorCode(e.target.value.slice(0, 6).replace(/\D/g, ""))}
+                onChange={(e) =>
+                  setTwoFactorCode(
+                    e.target.value.slice(0, 6).replace(/\D/g, ""),
+                  )
+                }
                 maxLength="6"
                 required
                 disabled={isLoading}

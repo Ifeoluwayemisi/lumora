@@ -83,10 +83,11 @@ export const adminAuthApi = {
   },
 
   // Step 2: 2FA token verification
-  loginStep2: async (tempToken, twoFactorCode) => {
+  loginStep2: async (tempToken, twoFactorCode, adminId) => {
     const response = await adminApi.post("/auth/login/step2", {
+      adminId,
       tempToken,
-      twoFactorCode,
+      twoFactorToken: twoFactorCode,
     });
     return response.data;
   },
@@ -437,7 +438,10 @@ export const adminUsersApi = {
 
   // Suspend user account
   suspendUser: async (userId, data) => {
-    const response = await adminApi.post(`/admin/users/${userId}/suspend`, data);
+    const response = await adminApi.post(
+      `/admin/users/${userId}/suspend`,
+      data,
+    );
     return response.data;
   },
 
