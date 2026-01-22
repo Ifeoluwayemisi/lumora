@@ -1,5 +1,5 @@
 import express from "express";
-import { authMiddleware } from "../middleware/authMiddleware.js";
+import { adminAuthMiddleware } from "../middleware/adminAuthMiddleware.js";
 import { roleMiddleware } from "../middleware/roleMiddleware.js";
 
 // Import admin controllers
@@ -22,28 +22,28 @@ router.post("/auth/login/step2", adminAuthController.adminLoginStep2Controller);
 // Protected routes
 router.get(
   "/auth/profile",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST", "SUPPORT"),
   adminAuthController.getAdminProfileController,
 );
 
 router.post(
   "/auth/change-password",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST", "SUPPORT"),
   adminAuthController.changeAdminPasswordController,
 );
 
 router.post(
   "/auth/logout",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST", "SUPPORT"),
   adminAuthController.adminLogoutController,
 );
 
 router.get(
   "/auth/admins",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN"),
   adminAuthController.listAdminUsersController,
 );
@@ -52,56 +52,56 @@ router.get(
 
 router.get(
   "/dashboard/metrics",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
   adminDashboardController.getGlobalMetricsController,
 );
 
 router.get(
   "/dashboard/authenticity",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
   adminDashboardController.getAuthenticityBreakdownController,
 );
 
 router.get(
   "/dashboard/trend",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
   adminDashboardController.getVerificationTrendController,
 );
 
 router.get(
   "/dashboard/hotspots",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
   adminDashboardController.getHotspotClustersController,
 );
 
 router.get(
   "/dashboard/high-risk-manufacturers",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR"),
   adminDashboardController.getHighRiskManufacturersController,
 );
 
 router.get(
   "/dashboard/ai-health",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "ANALYST"),
   adminDashboardController.getAIHealthScoreController,
 );
 
 router.get(
   "/dashboard/alerts",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR"),
   adminDashboardController.getCriticalAlertsController,
 );
 
 router.get(
   "/dashboard/export",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN"),
   adminDashboardController.exportDashboardDataController,
 );
@@ -110,56 +110,56 @@ router.get(
 
 router.get(
   "/manufacturers/review-queue",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   manufacturerReviewController.getReviewQueueController,
 );
 
 // router.get(
 //   "/manufacturers/review-queue/stats",
-//   authMiddleware,
+//   adminAuthMiddleware,
 //   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
 //   manufacturerReviewController.getReviewQueueStatsController,
 // );
 
 router.get(
   "/manufacturers/:manufacturerId/review",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   manufacturerReviewController.getManufacturerApplication,
 );
 
 // router.get(
 //   "/manufacturers/:manufacturerId/admin-view",
-//   authMiddleware,
+//   adminAuthMiddleware,
 //   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
 //   manufacturerReviewController.getManufacturerAdminViewController,
 // );
 
 router.post(
   "/manufacturers/:manufacturerId/approve",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   manufacturerReviewController.approveManufacturer,
 );
 
 router.post(
   "/manufacturers/:manufacturerId/reject",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   manufacturerReviewController.rejectManufacturer,
 );
 
 router.post(
   "/manufacturers/:manufacturerId/request-docs",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   manufacturerReviewController.requestMoreInfo,
 );
 
 // router.post(
 //   "/manufacturers/:manufacturerId/suspend",
-//   authMiddleware,
+//   adminAuthMiddleware,
 //   roleMiddleware("SUPER_ADMIN"),
 //   manufacturerReviewController.suspendManufacturerController,
 // );
@@ -168,56 +168,56 @@ router.post(
 
 router.get(
   "/reports",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   userReportController.getUserReportsController,
 );
 
 router.get(
   "/reports/stats",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   userReportController.getReportStatsController,
 );
 
 router.get(
   "/reports/risk-breakdown",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   userReportController.getReportsByRiskController,
 );
 
 router.get(
   "/reports/hotspots",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   userReportController.getReportHotspotsController,
 );
 
 router.get(
   "/reports/:reportId",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   userReportController.getReportDetailController,
 );
 
 router.post(
   "/reports/:reportId/review",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   userReportController.markReportReviewedController,
 );
 
 router.post(
   "/reports/:reportId/link-case",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   userReportController.linkReportToCaseController,
 );
 
 router.post(
   "/reports/:reportId/dismiss",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   userReportController.dismissReportController,
 );
@@ -226,56 +226,56 @@ router.post(
 
 router.get(
   "/cases",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   caseManagementController.getCaseFilesController,
 );
 
 router.post(
   "/cases",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   caseManagementController.createCaseController,
 );
 
 router.get(
   "/cases/stats",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   caseManagementController.getCaseStatsController,
 );
 
 router.get(
   "/cases/search",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   caseManagementController.searchCasesController,
 );
 
 router.get(
   "/cases/:caseId",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   caseManagementController.getCaseDetailController,
 );
 
 router.post(
   "/cases/:caseId/status",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   caseManagementController.updateCaseStatusController,
 );
 
 router.post(
   "/cases/:caseId/notes",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
   caseManagementController.addCaseNoteController,
 );
 
 router.post(
   "/cases/:caseId/escalate-nafdac",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN"),
   caseManagementController.escalateCaseToNAFDACController,
 );
@@ -284,35 +284,35 @@ router.post(
 
 router.get(
   "/audit-logs",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN"),
   auditLogController.getAuditLogsController,
 );
 
 router.get(
   "/audit-logs/:resourceType/:resourceId",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN"),
   auditLogController.getResourceAuditLogsController,
 );
 
 router.get(
   "/audit-logs/admin/:adminId",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN"),
   auditLogController.getAdminHistoryController,
 );
 
 router.post(
   "/audit-logs/suspicious/:adminId",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN"),
   auditLogController.checkSuspiciousActivityController,
 );
 
 router.get(
   "/audit-logs/export",
-  authMiddleware,
+  adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN"),
   auditLogController.exportAuditLogsController,
 );
