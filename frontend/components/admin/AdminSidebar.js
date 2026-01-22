@@ -31,6 +31,7 @@ export default function AdminSidebar({ isOpen = false, onClose = () => {} }) {
   };
 
   // Menu items based on role
+  // Version: 1.2 - Complete admin sidebar with all 9 pages
   const getMenuItems = () => {
     const baseItems = [
       { href: "/admin/dashboard", label: "Dashboard", icon: FiHome },
