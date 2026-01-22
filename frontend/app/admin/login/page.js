@@ -1,7 +1,11 @@
 "use client";
 
+// Mark this page as dynamic to prevent static prerendering
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { AdminProvider } from "@/context/AdminContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { adminAuthApi } from "@/services/adminApi";
 import {
@@ -12,7 +16,8 @@ import {
 } from "@/components/admin/AdminComponents";
 import { FiMail, FiLock, FiShield } from "react-icons/fi";
 
-export default function AdminLoginPage() {
+// Inner component that uses the hook
+function AdminLoginContent() {
   const router = useRouter();
   const { login, isHydrated, adminUser } = useAdmin();
 
@@ -217,5 +222,14 @@ export default function AdminLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Outer component that wraps with AdminProvider
+export default function AdminLoginPage() {
+  return (
+    <AdminProvider>
+      <AdminLoginContent />
+    </AdminProvider>
   );
 }

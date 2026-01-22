@@ -1,5 +1,8 @@
 "use client";
 
+// Mark admin routes as dynamic to prevent static prerendering
+export const dynamic = "force-dynamic";
+
 import { AdminProvider } from "@/context/AdminContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import RoleGuard from "@/components/admin/RoleGuard";
