@@ -121,16 +121,16 @@ export async function adminLoginStep1Controller(req, res) {
  */
 export async function adminLoginStep2Controller(req, res) {
   try {
-    const { adminId, twoFactorToken, tempToken } = req.body;
+    const { tempToken, twoFactorCode } = req.body;
 
-    if (!adminId || !twoFactorToken || !tempToken) {
+    if (!tempToken || !twoFactorCode) {
       return res.status(400).json({
         success: false,
         error: "Missing required fields",
       });
     }
 
-    // Verify temp token
+    // Verify temp token and extract adminId
     let decoded;
     try {
       decoded = jwt.verify(tempToken, process.env.JWT_SECRET);
@@ -141,17 +141,19 @@ export async function adminLoginStep2Controller(req, res) {
       });
     }
 
-    if (decoded.adminId !== adminId || decoded.step !== "2fa_pending") {
+    if (decoded.step !== "2fa_pending") {
       return res.status(401).json({
         success: false,
         error: "Invalid 2FA session",
       });
     }
 
+    const adminId = decoded.adminId;
+
     // Verify 2FA token
     const is2FAValid = await adminAuthService.verify2FAToken(
       adminId,
-      twoFactorToken,
+      twoFactorCode,
     );
 
     if (!is2FAValid) {
