@@ -4,486 +4,482 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 import { adminManufacturerApi } from "@/services/adminApi";
+import { useAdmin } from "@/hooks/useAdmin";
 import {
-  AdminCard,
-  AdminLoadingSpinner,
-  AdminErrorMessage,
-  AdminButton,
-  AdminBadge,
-  AdminInput,
-  AdminSelect,
-  AdminModal,
-  AdminTextarea,
-} from "@/components/admin/AdminComponents";
-import {
-  FiSearch,
-  FiDownload,
-  FiRefreshCw,
+  FiChevronRight,
   FiEye,
   FiCheck,
   FiX,
+  FiAlertCircle,
+  FiDownload,
+  FiRefreshCw,
+  FiZap,
+  FiTrendingDown,
 } from "react-icons/fi";
 
-export default function ManufacturerReviewPage() {
-  const [manufacturers, setManufacturers] = useState([]);
+export default function ManufacturersPage() {
+  const { adminUser, isHydrated } = useAdmin();
+  
+  // UI State
+  const [activeTab, setActiveTab] = useState("pending");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState(0);
-  const [status, setStatus] = useState("PENDING");
-  const [search, setSearch] = useState("");
-
-  // Modal states
-  const [detailModal, setDetailModal] = useState(false);
-  const [actionModal, setActionModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  
+  // Data
+  const [reviewQueue, setReviewQueue] = useState([]);
+  const [stats, setStats] = useState(null);
   const [selectedMfg, setSelectedMfg] = useState(null);
-  const [actionType, setActionType] = useState("APPROVE"); // APPROVE, REJECT, SUSPEND
-  const [actionNotes, setActionNotes] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
 
+  // Fetch review queue
+  const fetchReviewQueue = async (page = 1) => {
+    try {
+      setError("");
+      const res = await adminManufacturerApi.getReviewQueue(page, 10);
+      setReviewQueue(res.data.items || []);
+      setPagination({
+        page: res.data.currentPage,
+        limit: res.data.pageSize,
+        total: res.data.total,
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load review queue");
+      console.error("[MANUFACTURERS] Error:", err);
+    }
+  };
+
+  // Fetch stats
+  const fetchStats = async () => {
+    try {
+      const res = await adminManufacturerApi.getReviewQueueStats();
+      setStats(res.data);
+    } catch (err) {
+      console.error("[STATS] Error:", err);
+    }
+  };
+
+  // Initial load
   useEffect(() => {
-    fetchManufacturers();
-  }, [page, pageSize, status, search]);
-
-  const fetchManufacturers = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await adminManufacturerApi.getReviewQueue(
-        status,
-        (page - 1) * pageSize,
-        pageSize,
-        search || undefined,
+    if (isHydrated && adminUser) {
+      Promise.all([fetchReviewQueue(), fetchStats()]).then(() =>
+        setIsLoading(false)
       );
-      setManufacturers(response.data || []);
-      setTotal(response.total || 0);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to load manufacturers");
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [isHydrated, adminUser]);
 
-  const handleAction = async () => {
-    if (!selectedMfg) return;
-    setSubmitting(true);
-    setError("");
-
+  // Approval handler
+  const handleApprove = async (mfgId) => {
+    if (!window.confirm("Approve this manufacturer?")) return;
     try {
-      if (actionType === "APPROVE") {
-        await adminManufacturerApi.approveManufacturer(selectedMfg.id, {
-          notes: actionNotes,
-        });
-        setSuccess(`Manufacturer ${selectedMfg.name} approved successfully`);
-      } else if (actionType === "REJECT") {
-        await adminManufacturerApi.rejectManufacturer(selectedMfg.id, {
-          reason: actionNotes,
-        });
-        setSuccess(`Manufacturer ${selectedMfg.name} rejected successfully`);
-      } else if (actionType === "SUSPEND") {
-        await adminManufacturerApi.suspendManufacturer(selectedMfg.id, {
-          reason: actionNotes,
-        });
-        setSuccess(`Manufacturer ${selectedMfg.name} suspended successfully`);
-      }
-
-      setActionModal(false);
-      setDetailModal(false);
-      setActionNotes("");
+      setIsProcessing(true);
+      await adminManufacturerApi.approveManufacturer(mfgId);
       setSelectedMfg(null);
-      await fetchManufacturers();
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(""), 3000);
+      await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
     } catch (err) {
-      setError(err.response?.data?.message || "Action failed");
+      setError(
+        err.response?.data?.message || "Failed to approve manufacturer"
+      );
     } finally {
-      setSubmitting(false);
+      setIsProcessing(false);
     }
   };
 
-  const getRiskColor = (score) => {
-    if (score >= 75) return "text-red-600";
-    if (score >= 50) return "text-yellow-600";
-    return "text-green-600";
+  // Rejection handler
+  const handleReject = async (mfgId, reason) => {
+    if (!reason.trim()) {
+      setError("Rejection reason is required");
+      return;
+    }
+    try {
+      setIsProcessing(true);
+      await adminManufacturerApi.rejectManufacturer(mfgId, reason);
+      setSelectedMfg(null);
+      await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to reject manufacturer");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const getStatusColor = (status) => {
-    const variants = {
-      PENDING: "warning",
-      APPROVED: "success",
-      REJECTED: "danger",
-      SUSPENDED: "danger",
-    };
-    return variants[status] || "default";
+  // Suspend handler
+  const handleSuspend = async (mfgId) => {
+    if (!window.confirm("Suspend this manufacturer account?")) return;
+    try {
+      setIsProcessing(true);
+      await adminManufacturerApi.suspendManufacturer(mfgId);
+      setSelectedMfg(null);
+      await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Failed to suspend manufacturer"
+      );
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  if (isLoading && manufacturers.length === 0) return <AdminLoadingSpinner />;
+  // Audit trigger
+  const handleAudit = async (mfgId) => {
+    try {
+      setIsProcessing(true);
+      await adminManufacturerApi.forceAudit(mfgId);
+      setSelectedMfg(null);
+      await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to trigger audit");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
-  const totalPages = Math.ceil(total / pageSize);
+  if (!isHydrated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <FiZap className="w-8 h-8 text-blue-600 animate-spin" />
+      </div>
+    );
+  }
+
+  const totalPages = Math.ceil(pagination.total / pagination.limit);
 
   return (
-    <div className="space-y-6">
-      {error && <AdminErrorMessage message={error} />}
-      {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800">
-          ✓ {success}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-12">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30">
+        <div className="px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Manufacturer Management
+              </h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Review & approve new manufacturer applications
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                setIsRefreshing(true);
+                await Promise.all([
+                  fetchReviewQueue(pagination.page),
+                  fetchStats(),
+                ]);
+                setIsRefreshing(false);
+              }}
+              disabled={isRefreshing}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition disabled:opacity-50"
+            >
+              <FiRefreshCw
+                className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Error Banner */}
+      {error && (
+        <div className="mx-6 mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-start gap-3">
+          <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-800 dark:text-red-200">
+              {error}
+            </p>
+          </div>
+          <button
+            onClick={() => setError("")}
+            className="text-red-600 dark:text-red-200"
+          >
+            <FiX className="w-5 h-5" />
+          </button>
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Manufacturer Review
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Verify and approve new manufacturers
-          </p>
-        </div>
-        <AdminButton onClick={fetchManufacturers} disabled={isLoading}>
-          <FiRefreshCw size={18} />
-          Refresh
-        </AdminButton>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow p-4 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <AdminInput
-            label="Search by Name/ID"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Enter manufacturer name or ID..."
-          />
-          <AdminSelect
-            label="Status"
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="PENDING">Pending Review</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-            <option value="SUSPENDED">Suspended</option>
-          </AdminSelect>
-          <div className="flex items-end">
-            <AdminButton className="w-full" onClick={fetchManufacturers}>
-              <FiSearch size={18} />
-              Search
-            </AdminButton>
+      {/* Stats Cards */}
+      {stats && (
+        <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+            <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+              Pending Review
+            </p>
+            <p className="text-2xl font-bold text-blue-600">
+              {stats.pendingCount || 0}
+            </p>
+          </div>
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+            <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+              Approved
+            </p>
+            <p className="text-2xl font-bold text-green-600">
+              {stats.approvedCount || 0}
+            </p>
+          </div>
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+            <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+              Rejected
+            </p>
+            <p className="text-2xl font-bold text-red-600">
+              {stats.rejectedCount || 0}
+            </p>
+          </div>
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+            <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
+              Suspended
+            </p>
+            <p className="text-2xl font-bold text-orange-600">
+              {stats.suspendedCount || 0}
+            </p>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <AdminCard
-          title="Total in Queue"
-          value={total.toString()}
-          icon={FiSearch}
-        />
-        <AdminCard
-          title="Current Page"
-          value={`${page} of ${totalPages}`}
-          icon={FiRefreshCw}
-        />
-        <AdminCard
-          title="Page Size"
-          value={pageSize.toString()}
-          icon={FiDownload}
-        />
-      </div>
-
-      {/* Manufacturer List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                  Manufacturer Name
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                  Registration ID
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                  Location
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                  Risk Score
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                  Documents
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {manufacturers.length > 0 ? (
-                manufacturers.map((mfg) => (
-                  <tr
-                    key={mfg.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <p className="font-semibold text-gray-900">{mfg.name}</p>
-                      <p className="text-sm text-gray-600">{mfg.email}</p>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {mfg.registrationId}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {mfg.location}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`text-lg font-bold ${getRiskColor(mfg.riskScore)}`}
-                      >
-                        {mfg.riskScore}%
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <AdminBadge variant="default">
-                        {mfg.documentsVerified}/{mfg.totalDocuments}
-                      </AdminBadge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <AdminBadge variant={getStatusColor(mfg.status)}>
-                        {mfg.status}
-                      </AdminBadge>
-                    </td>
-                    <td className="px-6 py-4">
-                      <AdminButton
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedMfg(mfg);
-                          setDetailModal(true);
-                        }}
-                      >
-                        <FiEye size={16} />
-                        View
-                      </AdminButton>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="7"
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
-                    No manufacturers found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between p-4 border-t bg-gray-50">
-            <div className="text-sm text-gray-600">
-              Showing {(page - 1) * pageSize + 1} to{" "}
-              {Math.min(page * pageSize, total)} of {total}
-            </div>
-            <div className="flex gap-2">
-              <AdminButton
-                size="sm"
-                disabled={page === 1}
-                onClick={() => setPage(page - 1)}
-              >
-                Previous
-              </AdminButton>
-              <input
-                type="number"
-                min={1}
-                max={totalPages}
-                value={page}
-                onChange={(e) =>
-                  setPage(
-                    Math.min(
-                      totalPages,
-                      Math.max(1, parseInt(e.target.value) || 1),
-                    ),
-                  )
-                }
-                className="px-2 py-1 border border-gray-300 rounded text-sm w-12 text-center"
-              />
-              <span className="px-2 py-1 text-sm text-gray-600">
-                of {totalPages}
-              </span>
-              <AdminButton
-                size="sm"
-                disabled={page === totalPages}
-                onClick={() => setPage(page + 1)}
-              >
-                Next
-              </AdminButton>
-            </div>
+      {/* Main Content */}
+      <div className="px-6 py-6 space-y-6">
+        {isLoading ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-12 text-center">
+            <FiZap className="w-8 h-8 mx-auto text-blue-600 animate-spin" />
           </div>
+        ) : reviewQueue.length === 0 ? (
+          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-12 text-center">
+            <FiCheck className="w-12 h-12 mx-auto text-green-600 mb-3 opacity-50" />
+            <p className="text-gray-600 dark:text-gray-400">
+              No manufacturers awaiting review
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Review Queue Table */}
+            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                        Company
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                        Contact Email
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                        Status
+                      </th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                        Submitted
+                      </th>
+                      <th className="text-right py-3 px-4 font-semibold text-gray-900 dark:text-white">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-800">
+                    {reviewQueue.map((mfg) => (
+                      <tr
+                        key={mfg.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
+                        onClick={() => setSelectedMfg(mfg)}
+                      >
+                        <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">
+                          {mfg.companyName}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
+                          {mfg.email}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              mfg.status === "PENDING"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                : mfg.status === "APPROVED"
+                                  ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                  : mfg.status === "REJECTED"
+                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+                            }`}
+                          >
+                            {mfg.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
+                          {new Date(mfg.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="text-right py-3 px-4">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedMfg(mfg);
+                            }}
+                            className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium flex items-center justify-end gap-1"
+                          >
+                            <FiEye className="w-4 h-4" />
+                            Review
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing page {pagination.page} of {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => fetchReviewQueue(Math.max(1, pagination.page - 1))}
+                    disabled={pagination.page === 1}
+                    className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() =>
+                      fetchReviewQueue(Math.min(totalPages, pagination.page + 1))
+                    }
+                    disabled={pagination.page === totalPages}
+                    className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
       {/* Detail Modal */}
-      {detailModal && selectedMfg && (
-        <AdminModal
-          title={`Manufacturer Details - ${selectedMfg.name}`}
-          onClose={() => {
-            setDetailModal(false);
-            setSelectedMfg(null);
-          }}
-        >
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Name</p>
-                <p className="font-semibold text-gray-900">
-                  {selectedMfg.name}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Registration ID</p>
-                <p className="font-semibold text-gray-900">
-                  {selectedMfg.registrationId}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Email</p>
-                <p className="font-semibold text-gray-900">
-                  {selectedMfg.email}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Location</p>
-                <p className="font-semibold text-gray-900">
-                  {selectedMfg.location}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Risk Score</p>
-                <p
-                  className={`text-lg font-bold ${getRiskColor(selectedMfg.riskScore)}`}
-                >
-                  {selectedMfg.riskScore}%
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Documents Verified</p>
-                <p className="font-semibold text-gray-900">
-                  {selectedMfg.documentsVerified}/{selectedMfg.totalDocuments}
-                </p>
-              </div>
+      {selectedMfg && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto border border-gray-200 dark:border-gray-800">
+            <div className="sticky top-0 bg-gray-50 dark:bg-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                {selectedMfg.companyName}
+              </h2>
+              <button
+                onClick={() => setSelectedMfg(null)}
+                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
             </div>
 
-            {selectedMfg.notes && (
-              <div>
-                <p className="text-sm text-gray-600 mb-2">Notes</p>
-                <div className="bg-gray-50 p-3 rounded text-sm text-gray-700">
-                  {selectedMfg.notes}
+            <div className="px-6 py-6 space-y-4">
+              {/* Company Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Email
+                  </label>
+                  <p className="text-gray-900 dark:text-white">
+                    {selectedMfg.email}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Phone
+                  </label>
+                  <p className="text-gray-900 dark:text-white">
+                    {selectedMfg.phoneNumber || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Location
+                  </label>
+                  <p className="text-gray-900 dark:text-white">
+                    {selectedMfg.state || "N/A"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Submitted
+                  </label>
+                  <p className="text-gray-900 dark:text-white">
+                    {new Date(selectedMfg.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
-            )}
 
-            {selectedMfg.status === "PENDING" && (
-              <div className="flex gap-2 pt-4 border-t">
-                <AdminButton
-                  variant="success"
-                  onClick={() => {
-                    setActionType("APPROVE");
-                    setActionModal(true);
-                  }}
+              {/* Documents */}
+              {selectedMfg.documents && selectedMfg.documents.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Submitted Documents
+                  </label>
+                  <div className="space-y-2 mt-2">
+                    {selectedMfg.documents.map((doc, idx) => (
+                      <a
+                        key={idx}
+                        href={doc.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition"
+                      >
+                        <FiDownload className="w-4 h-4 text-blue-600" />
+                        <span className="text-blue-600 dark:text-blue-400 text-sm">
+                          {doc.name}
+                        </span>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Risk Analysis */}
+              {selectedMfg.riskScore && (
+                <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                  <p className="text-sm font-medium text-orange-900 dark:text-orange-200">
+                    AI Risk Assessment: {selectedMfg.riskScore}%
+                  </p>
+                  <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
+                    {selectedMfg.riskAnalysis || "No analysis available"}
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="border-t border-gray-200 dark:border-gray-800 pt-6 flex gap-3">
+                <button
+                  onClick={() => handleApprove(selectedMfg.id)}
+                  disabled={isProcessing}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  <FiCheck size={16} />
+                  <FiCheck className="w-4 h-4" />
                   Approve
-                </AdminButton>
-                <AdminButton
-                  variant="danger"
-                  onClick={() => {
-                    setActionType("REJECT");
-                    setActionModal(true);
-                  }}
+                </button>
+                <button
+                  onClick={() => handleReject(selectedMfg.id, "Document verification failed")}
+                  disabled={isProcessing}
+                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  <FiX size={16} />
+                  <FiX className="w-4 h-4" />
                   Reject
-                </AdminButton>
-                <AdminButton
-                  variant="secondary"
-                  onClick={() => {
-                    setActionType("SUSPEND");
-                    setActionModal(true);
-                  }}
+                </button>
+                <button
+                  onClick={() => handleAudit(selectedMfg.id)}
+                  disabled={isProcessing}
+                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <FiTrendingDown className="w-4 h-4" />
+                  Audit
+                </button>
+                <button
+                  onClick={() => handleSuspend(selectedMfg.id)}
+                  disabled={isProcessing}
+                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition disabled:opacity-50"
                 >
                   Suspend
-                </AdminButton>
+                </button>
               </div>
-            )}
-          </div>
-        </AdminModal>
-      )}
-
-      {/* Action Modal */}
-      {actionModal && selectedMfg && (
-        <AdminModal
-          title={`${actionType} Manufacturer`}
-          onClose={() => setActionModal(false)}
-        >
-          <div className="space-y-4">
-            <p className="text-gray-700">
-              {actionType === "APPROVE" &&
-                `Approve ${selectedMfg.name} as a verified manufacturer?`}
-              {actionType === "REJECT" &&
-                `Reject ${selectedMfg.name} from the platform?`}
-              {actionType === "SUSPEND" &&
-                `Suspend ${selectedMfg.name} temporarily?`}
-            </p>
-
-            <AdminTextarea
-              label={
-                actionType === "APPROVE"
-                  ? "Approval Notes"
-                  : actionType === "REJECT"
-                    ? "Rejection Reason"
-                    : "Suspension Reason"
-              }
-              value={actionNotes}
-              onChange={(e) => setActionNotes(e.target.value)}
-              placeholder={`Enter ${actionType.toLowerCase()} reason...`}
-              required
-            />
-
-            <div className="flex gap-2 pt-4 border-t">
-              <AdminButton
-                variant={actionType === "APPROVE" ? "success" : "danger"}
-                onClick={handleAction}
-                disabled={submitting || !actionNotes}
-              >
-                {submitting ? "Processing..." : actionType}
-              </AdminButton>
-              <AdminButton
-                variant="outline"
-                onClick={() => setActionModal(false)}
-                disabled={submitting}
-              >
-                Cancel
-              </AdminButton>
             </div>
           </div>
-        </AdminModal>
+        </div>
       )}
     </div>
   );
