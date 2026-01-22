@@ -21,20 +21,24 @@ import {
 
 export default function ReportsPage() {
   const { adminUser, isHydrated } = useAdmin();
-  
+
   // UI State
   const [activeTab, setActiveTab] = useState("new");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // Data
   const [reports, setReports] = useState([]);
   const [stats, setStats] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
-  
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+  });
+
   // Report action
   const [actionNotes, setActionNotes] = useState("");
   const [escalateToNAFDAC, setEscalateToNAFDAC] = useState(false);
@@ -49,13 +53,9 @@ export default function ReportsPage() {
         escalated: "ESCALATED",
         closed: "CLOSED",
       };
-      
-      const res = await adminReportsApi.getReports(
-        page,
-        10,
-        statusMap[status]
-      );
-      
+
+      const res = await adminReportsApi.getReports(page, 10, statusMap[status]);
+
       setReports(res.data.items || []);
       setPagination({
         page: res.data.currentPage,
@@ -82,7 +82,7 @@ export default function ReportsPage() {
   useEffect(() => {
     if (isHydrated && adminUser) {
       Promise.all([fetchReports(1, activeTab), fetchStats()]).then(() =>
-        setIsLoading(false)
+        setIsLoading(false),
       );
     }
   }, [isHydrated, adminUser, activeTab]);
@@ -101,7 +101,10 @@ export default function ReportsPage() {
       });
       setSelectedReport(null);
       setActionNotes("");
-      await Promise.all([fetchReports(pagination.page, activeTab), fetchStats()]);
+      await Promise.all([
+        fetchReports(pagination.page, activeTab),
+        fetchStats(),
+      ]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to review report");
     } finally {
@@ -119,11 +122,12 @@ export default function ReportsPage() {
       });
       setSelectedReport(null);
       setActionNotes("");
-      await Promise.all([fetchReports(pagination.page, activeTab), fetchStats()]);
+      await Promise.all([
+        fetchReports(pagination.page, activeTab),
+        fetchStats(),
+      ]);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to escalate to NAFDAC"
-      );
+      setError(err.response?.data?.message || "Failed to escalate to NAFDAC");
     } finally {
       setIsProcessing(false);
     }
@@ -380,7 +384,9 @@ export default function ReportsPage() {
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => fetchReports(Math.max(1, pagination.page - 1), activeTab)}
+                    onClick={() =>
+                      fetchReports(Math.max(1, pagination.page - 1), activeTab)
+                    }
                     disabled={pagination.page === 1}
                     className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                   >
@@ -388,7 +394,10 @@ export default function ReportsPage() {
                   </button>
                   <button
                     onClick={() =>
-                      fetchReports(Math.min(totalPages, pagination.page + 1), activeTab)
+                      fetchReports(
+                        Math.min(totalPages, pagination.page + 1),
+                        activeTab,
+                      )
                     }
                     disabled={pagination.page === totalPages}
                     className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
@@ -496,29 +505,30 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Photos */}
-                {selectedReport.photoUrls && selectedReport.photoUrls.length > 0 && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-3">
-                      Photos Uploaded
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {selectedReport.photoUrls.map((url, idx) => (
-                        <a
-                          key={idx}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-600 transition flex items-center gap-2"
-                        >
-                          <FiUpload className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm text-blue-600 dark:text-blue-400">
-                            Photo {idx + 1}
-                          </span>
-                        </a>
-                      ))}
+                {selectedReport.photoUrls &&
+                  selectedReport.photoUrls.length > 0 && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-3">
+                        Photos Uploaded
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {selectedReport.photoUrls.map((url, idx) => (
+                          <a
+                            key={idx}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-600 transition flex items-center gap-2"
+                          >
+                            <FiUpload className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm text-blue-600 dark:text-blue-400">
+                              Photo {idx + 1}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
 
               {/* Admin Review Notes */}
@@ -539,7 +549,9 @@ export default function ReportsPage() {
               <div className="border-t border-gray-200 dark:border-gray-800 pt-6 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => handleMarkAsReviewed(selectedReport.id, "VALID")}
+                    onClick={() =>
+                      handleMarkAsReviewed(selectedReport.id, "VALID")
+                    }
                     disabled={isProcessing}
                     className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
                   >
@@ -547,7 +559,9 @@ export default function ReportsPage() {
                     Mark as Valid (Genuine Issue)
                   </button>
                   <button
-                    onClick={() => handleMarkAsReviewed(selectedReport.id, "FALSE_ALARM")}
+                    onClick={() =>
+                      handleMarkAsReviewed(selectedReport.id, "FALSE_ALARM")
+                    }
                     disabled={isProcessing}
                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
                   >
@@ -555,7 +569,12 @@ export default function ReportsPage() {
                     Mark as False Alarm
                   </button>
                   <button
-                    onClick={() => handleMarkAsReviewed(selectedReport.id, "NEEDS_INVESTIGATION")}
+                    onClick={() =>
+                      handleMarkAsReviewed(
+                        selectedReport.id,
+                        "NEEDS_INVESTIGATION",
+                      )
+                    }
                     disabled={isProcessing}
                     className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
                   >
