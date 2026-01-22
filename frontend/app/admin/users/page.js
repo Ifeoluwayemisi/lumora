@@ -50,7 +50,7 @@ export default function UserManagementPage() {
       setStats(statsRes.data);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Failed to load user management data"
+        err.response?.data?.message || "Failed to load user management data",
       );
       console.error("[USER_MGMT] Error:", err);
     } finally {
@@ -78,7 +78,7 @@ export default function UserManagementPage() {
     (user) =>
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.phone && user.phone.includes(searchQuery))
+      (user.phone && user.phone.includes(searchQuery)),
   );
 
   // Suspend user action
@@ -354,7 +354,7 @@ export default function UserManagementPage() {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
-                                }
+                                },
                               )}
                             </td>
                             <td className="py-3 px-4">
@@ -464,7 +464,7 @@ export default function UserManagementPage() {
                     </p>
                     <p className="font-medium text-gray-900 dark:text-white">
                       {new Date(selectedUser.createdAt).toLocaleDateString(
-                        "en-US"
+                        "en-US",
                       )}
                     </p>
                   </div>
@@ -512,7 +512,7 @@ export default function UserManagementPage() {
                     <p className="font-medium text-gray-900 dark:text-white">
                       {selectedUser.lastVerificationDate
                         ? new Date(
-                            selectedUser.lastVerificationDate
+                            selectedUser.lastVerificationDate,
                           ).toLocaleDateString("en-US")
                         : "Never"}
                     </p>
