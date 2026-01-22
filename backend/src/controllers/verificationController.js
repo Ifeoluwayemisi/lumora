@@ -87,6 +87,25 @@ export async function verifyManual(req, res, next) {
           userEmail: req.user?.email,
           location: { latitude, longitude },
         });
+
+        // Create suspicious activity alert if high-risk verification detected
+        if (
+          result.verificationState === "SUSPICIOUS_PATTERN" ||
+          result.verificationState === "CODE_ALREADY_USED"
+        ) {
+          const { createSuspiciousActivityAlert } =
+            await import("../services/notificationService.js");
+          const alertDetails =
+            result.verificationState === "SUSPICIOUS_PATTERN"
+              ? `⚠️ Suspicious verification pattern detected for code ${codeValue.substring(0, 8)}...`
+              : `⚠️ Code ${codeValue.substring(0, 8)}... was already verified`;
+
+          await createSuspiciousActivityAlert(
+            result.code.manufacturerId,
+            alertDetails,
+            result.verificationState,
+          );
+        }
       } catch (notifError) {
         console.warn("[VERIFY_MANUAL] Notification error:", notifError.message);
         // Don't fail verification because of notification error
@@ -160,6 +179,25 @@ export async function verifyQR(req, res, next) {
           userEmail: req.user?.email,
           location: { latitude, longitude },
         });
+
+        // Create suspicious activity alert if high-risk verification detected
+        if (
+          result.verificationState === "SUSPICIOUS_PATTERN" ||
+          result.verificationState === "CODE_ALREADY_USED"
+        ) {
+          const { createSuspiciousActivityAlert } =
+            await import("../services/notificationService.js");
+          const alertDetails =
+            result.verificationState === "SUSPICIOUS_PATTERN"
+              ? `⚠️ Suspicious verification pattern detected for code ${codeValue.substring(0, 8)}...`
+              : `⚠️ Code ${codeValue.substring(0, 8)}... was already verified`;
+
+          await createSuspiciousActivityAlert(
+            result.code.manufacturerId,
+            alertDetails,
+            result.verificationState,
+          );
+        }
       } catch (notifError) {
         console.warn("[VERIFY_QR] Notification error:", notifError.message);
         // Don't fail verification because of notification error

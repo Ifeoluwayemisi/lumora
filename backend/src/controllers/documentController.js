@@ -66,6 +66,17 @@ export const uploadDocument = async (req, res) => {
       },
     });
 
+    // Enforce reupload restrictions per spec:
+    // - Can't reupload if status is "approved"
+    // - Can reupload if status is "rejected" or "pending_review"
+    if (existingDoc && existingDoc.status === "approved") {
+      return res.status(403).json({
+        error: "Cannot reupload approved documents",
+        message:
+          "This document has been approved and cannot be modified. Contact admin if you need to make changes.",
+      });
+    }
+
     // Generate unique filename
     const filename = `${manufacturerId}_${documentType}_${Date.now()}${path.extname(
       req.file.originalname,
@@ -75,29 +86,34 @@ export const uploadDocument = async (req, res) => {
     // Save file
     fs.writeFileSync(filepath, req.file.buffer);
 
-    // Save to database
-    const document = await prisma.document.upsert({
-      where: {
-        manufacturerId_type: {
-          manufacturerId,
-          type: documentType,
-        },
-      },
-      update: {
-        filename,
-        filepath,
-        status: "pending_review",
-        uploadedAt: new Date(),
-      },
-      create: {
-        manufacturerId,
-        type: documentType,
-        filename,
-        filepath,
-        status: "pending_review",
-        uploadedAt: new Date(),
-      },
-    });
+    // If document exists and is rejected/pending, update it
+    // Otherwise create new
+    const document = existingDoc
+      ? await prisma.document.update({
+          where: {
+            manufacturerId_type: {
+              manufacturerId,
+              type: documentType,
+            },
+          },
+          data: {
+            filename,
+            filepath,
+            status: "pending_review",
+            uploadedAt: new Date(),
+            rejectionReason: null, // Clear previous rejection reason on reupload
+          },
+        })
+      : await prisma.document.create({
+          data: {
+            manufacturerId,
+            type: documentType,
+            filename,
+            filepath,
+            status: "pending_review",
+            uploadedAt: new Date(),
+          },
+        });
 
     console.log(
       `[DOCUMENT] ${documentType} uploaded for manufacturer ${manufacturerId}`,

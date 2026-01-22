@@ -845,6 +845,22 @@ export async function addBatch(req, res) {
       quantity,
     });
 
+    // Check if quota is running low and create warning notification
+    const { createQuotaWarning } =
+      await import("../services/notificationService.js");
+    const newCodesCount = await prisma.code.count({
+      where: {
+        manufacturerId,
+        createdAt: { gte: today },
+      },
+    });
+    const quotaRemaining = dailyLimit - newCodesCount;
+
+    // Create warning if less than 25% of daily quota remains
+    if (quotaRemaining <= Math.ceil(dailyLimit * 0.25)) {
+      await createQuotaWarning(manufacturerId, quotaRemaining, dailyLimit);
+    }
+
     return res.status(201).json({
       message: "Batch created successfully",
       batch,

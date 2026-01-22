@@ -105,6 +105,13 @@ export default function ManufacturerProfilePage() {
   const handleDocumentUpload = async (documentType, file) => {
     if (!file) return;
 
+    // Check if document is already approved
+    const docStatus = getDocumentStatus(documentType);
+    if (docStatus?.status === "approved") {
+      toast.error("This document has been approved and cannot be modified");
+      return;
+    }
+
     setUploadingDoc(documentType);
     try {
       const formData = new FormData();
@@ -116,7 +123,7 @@ export default function ManufacturerProfilePage() {
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
-        }
+        },
       );
 
       toast.success(`${documentType} uploaded successfully`);
@@ -305,9 +312,9 @@ export default function ManufacturerProfilePage() {
                                   "approved"
                                     ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
                                     : getDocumentStatus(doc.id).status ===
-                                      "rejected"
-                                    ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
-                                    : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                                        "rejected"
+                                      ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                                      : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
                                 }`}
                               >
                                 {getDocumentStatus(doc.id).status ===
@@ -328,20 +335,30 @@ export default function ManufacturerProfilePage() {
                               onChange={(e) =>
                                 handleDocumentUpload(
                                   doc.id,
-                                  e.target.files?.[0]
+                                  e.target.files?.[0],
                                 )
                               }
-                              disabled={uploadingDoc === doc.id}
+                              disabled={
+                                uploadingDoc === doc.id ||
+                                getDocumentStatus(doc.id)?.status === "approved"
+                              }
                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                               className="hidden"
                             />
                             <label
                               htmlFor={`file-${doc.id}`}
-                              className="inline-block text-sm px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold transition-colors cursor-pointer"
+                              className={`inline-block text-sm px-3 py-1 rounded-lg font-semibold transition-colors ${
+                                getDocumentStatus(doc.id)?.status === "approved"
+                                  ? "bg-gray-400 cursor-not-allowed text-gray-600"
+                                  : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                              } ${uploadingDoc === doc.id ? "bg-gray-400 cursor-wait" : ""}`}
                             >
                               {uploadingDoc === doc.id
                                 ? "Uploading..."
-                                : "Upload File"}
+                                : getDocumentStatus(doc.id)?.status ===
+                                    "approved"
+                                  ? "Approved - Cannot Edit"
+                                  : "Upload File"}
                             </label>
                           </div>
                         </div>
@@ -420,8 +437,8 @@ export default function ManufacturerProfilePage() {
                             (manufacturer?.trustScore || 0) >= 80
                               ? "bg-green-500"
                               : (manufacturer?.trustScore || 0) >= 50
-                              ? "bg-yellow-500"
-                              : "bg-red-500"
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
                           }`}
                           style={{
                             width: `${manufacturer?.trustScore || 0}%`,
@@ -444,8 +461,8 @@ export default function ManufacturerProfilePage() {
                         manufacturer?.riskLevel === "LOW"
                           ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
                           : manufacturer?.riskLevel === "MEDIUM"
-                          ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
-                          : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                            ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300"
+                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
                       }`}
                     >
                       {manufacturer?.riskLevel || "MEDIUM"}

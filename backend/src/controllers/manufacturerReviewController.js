@@ -80,19 +80,30 @@ export async function getManufacturerApplication(req, res) {
 
 /**
  * Approve manufacturer application
+ * Calculates initial trust and risk scores based on document verification
  */
 export async function approveManufacturer(req, res) {
   try {
     const { manufacturerId } = req.params;
     const { notes } = req.body;
 
+    // Import dynamic score calculation functions
+    const { calculateDynamicTrustScore } =
+      await import("../services/dynamicTrustScoreService.js");
+    const { recalculateManufacturerRiskScore } =
+      await import("../services/aiRiskService.js");
+
+    // Calculate dynamic trust score on approval (based on documents verified)
+    const trustData = await calculateDynamicTrustScore(manufacturerId);
+    const riskData = await recalculateManufacturerRiskScore(manufacturerId);
+
     const manufacturer = await prisma.manufacturer.update({
       where: { id: manufacturerId },
       data: {
         accountStatus: "active",
         verified: true,
-        riskLevel: "LOW",
-        trustScore: 100,
+        riskLevel: riskData.riskLevel || "MEDIUM",
+        trustScore: trustData.trustScore || 75, // Default 75 for newly approved
       },
     });
 
@@ -101,6 +112,10 @@ export async function approveManufacturer(req, res) {
     res.status(200).json({
       message: "Manufacturer approved successfully",
       manufacturer,
+      scores: {
+        trustScore: manufacturer.trustScore,
+        riskLevel: manufacturer.riskLevel,
+      },
     });
   } catch (err) {
     console.error("[APPROVE_MANUFACTURER] Error:", err);

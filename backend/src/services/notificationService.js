@@ -337,3 +337,117 @@ export async function testEmailConfiguration() {
     return false;
   }
 }
+
+/**
+ * Create in-app notification for a user
+ * @param {string} userId - User ID
+ * @param {string} type - Notification type (VERIFICATION, ALERT, QUOTA_WARNING, SUSPICIOUS_ACTIVITY, etc.)
+ * @param {string} message - Notification message
+ */
+export async function createNotification(userId, type, message) {
+  try {
+    const notification = await prisma.userNotifications.create({
+      data: {
+        userId,
+        type,
+        message,
+        read: false,
+      },
+    });
+
+    console.log(
+      `[NOTIFICATION_IN_APP] Created ${type} notification for user ${userId}`,
+    );
+    return notification;
+  } catch (error) {
+    console.error(
+      "[NOTIFICATION_IN_APP] Error creating notification:",
+      error.message,
+    );
+    return null;
+  }
+}
+
+/**
+ * Create suspicious activity alert
+ * @param {string} manufacturerId - Manufacturer ID
+ * @param {string} details - Alert details
+ * @param {string} alertType - Type of suspicious activity
+ */
+export async function createSuspiciousActivityAlert(
+  manufacturerId,
+  details,
+  alertType = "SUSPICIOUS_ACTIVITY",
+) {
+  try {
+    // Get manufacturer's user
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      select: { userId: true, email: true, name: true },
+    });
+
+    if (!manufacturer) {
+      console.warn(
+        "[SUSPICIOUS_ALERT] Manufacturer not found:",
+        manufacturerId,
+      );
+      return null;
+    }
+
+    // Create in-app notification
+    const notification = await createNotification(
+      manufacturer.userId,
+      alertType,
+      details,
+    );
+
+    return notification;
+  } catch (error) {
+    console.error("[SUSPICIOUS_ALERT] Error:", error.message);
+    return null;
+  }
+}
+
+/**
+ * Create quota warning notification
+ * @param {string} manufacturerId - Manufacturer ID
+ * @param {number} remaining - Remaining codes
+ * @param {number} limit - Daily limit
+ */
+export async function createQuotaWarning(manufacturerId, remaining, limit) {
+  try {
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      select: { userId: true, name: true },
+    });
+
+    if (!manufacturer) {
+      console.warn("[QUOTA_WARNING] Manufacturer not found:", manufacturerId);
+      return null;
+    }
+
+    const percentageRemaining = ((remaining / limit) * 100).toFixed(0);
+    let message = `Your daily code quota is running low: ${remaining}/${limit} remaining`;
+    let alertType = "QUOTA_WARNING";
+
+    // Critical warning if less than 10% remaining
+    if (remaining <= Math.ceil(limit * 0.1)) {
+      message = `⚠️ CRITICAL: Only ${remaining} codes remaining today (${percentageRemaining}%)`;
+      alertType = "QUOTA_CRITICAL";
+    } else if (remaining <= Math.ceil(limit * 0.25)) {
+      // Warning if less than 25% remaining
+      message = `⚠️ Warning: ${remaining} codes remaining (${percentageRemaining}% of daily limit)`;
+    }
+
+    const notification = await createNotification(
+      manufacturer.userId,
+      alertType,
+      message,
+    );
+
+    return notification;
+  } catch (error) {
+    console.error("[QUOTA_WARNING] Error:", error.message);
+    return null;
+  }
+}
