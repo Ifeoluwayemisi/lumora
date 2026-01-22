@@ -416,4 +416,68 @@ export const adminAuditApi = {
   },
 };
 
+export const adminUsersApi = {
+  // Get all users with filtering
+  getUsers: async (filters = {}) => {
+    const response = await adminApi.get("/admin/users", { params: filters });
+    return response.data;
+  },
+
+  // Get user statistics
+  getUserStats: async () => {
+    const response = await adminApi.get("/admin/users/stats");
+    return response.data;
+  },
+
+  // Get single user details
+  getUser: async (userId) => {
+    const response = await adminApi.get(`/admin/users/${userId}`);
+    return response.data;
+  },
+
+  // Suspend user account
+  suspendUser: async (userId, data) => {
+    const response = await adminApi.post(`/admin/users/${userId}/suspend`, data);
+    return response.data;
+  },
+
+  // Unsuspend/restore user account
+  unsuspendUser: async (userId) => {
+    const response = await adminApi.post(`/admin/users/${userId}/unsuspend`);
+    return response.data;
+  },
+
+  // Flag user for review
+  flagUser: async (userId, data) => {
+    const response = await adminApi.post(`/admin/users/${userId}/flag`, data);
+    return response.data;
+  },
+
+  // Unflag user
+  unflagUser: async (userId) => {
+    const response = await adminApi.post(`/admin/users/${userId}/unflag`);
+    return response.data;
+  },
+};
+
+export const adminSettingsApi = {
+  // Get admin settings
+  getSettings: async () => {
+    const response = await adminApi.get("/admin/settings");
+    return response.data;
+  },
+
+  // Update admin settings
+  updateSettings: async (settings) => {
+    const response = await adminApi.put("/admin/settings", settings);
+    return response.data;
+  },
+
+  // Reset settings to defaults
+  resetSettings: async () => {
+    const response = await adminApi.post("/admin/settings/reset");
+    return response.data;
+  },
+};
+
 export default adminApi;

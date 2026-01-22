@@ -39,6 +39,7 @@ export default function AdminSidebar() {
       { href: "/admin/cases", label: "Cases", icon: FiFileText },
     ];
 
+    // Moderators and Super Admins can review manufacturers
     if (hasRole("MODERATOR") || hasRole("SUPER_ADMIN")) {
       baseItems.push({
         href: "/admin/manufacturers",
@@ -47,15 +48,24 @@ export default function AdminSidebar() {
       });
     }
 
+    // Super Admins can view audit logs and manage users
     if (hasRole("SUPER_ADMIN")) {
-      baseItems.push({
-        href: "/admin/audit",
-        label: "Audit Logs",
-        icon: FiActivity,
-      });
+      baseItems.push(
+        {
+          href: "/admin/audit-logs",
+          label: "Audit Logs",
+          icon: FiActivity,
+        },
+        {
+          href: "/admin/users",
+          label: "User Management",
+          icon: FiList,
+        },
+      );
     }
 
-    if (hasRole("ANALYST")) {
+    // Moderators and Super Admins can monitor AI
+    if (hasRole("MODERATOR") || hasRole("SUPER_ADMIN")) {
       baseItems.push({
         href: "/admin/oversight",
         label: "AI Oversight",
@@ -63,6 +73,7 @@ export default function AdminSidebar() {
       });
     }
 
+    // All authenticated users can access profile and settings
     baseItems.push(
       { href: "/admin/profile", label: "Profile", icon: FiUser },
       { href: "/admin/settings", label: "Settings", icon: FiSettings },
