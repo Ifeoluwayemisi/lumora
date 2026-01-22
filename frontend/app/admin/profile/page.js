@@ -312,7 +312,7 @@ export default function ProfilePage() {
                           day: "numeric",
                           hour: "2-digit",
                           minute: "2-digit",
-                        }
+                        },
                       )
                     : "Never"}
                 </p>
@@ -400,8 +400,9 @@ export default function ProfilePage() {
           </h2>
           <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              Your role as <span className="font-semibold">{adminUser.role}</span> grants
-              you the following capabilities:
+              Your role as{" "}
+              <span className="font-semibold">{adminUser.role}</span> grants you
+              the following capabilities:
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -418,7 +419,9 @@ export default function ProfilePage() {
                     <div className="flex-shrink-0 mt-0.5">
                       {perm.granted ? (
                         <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-bold">✓</span>
+                          <span className="text-white text-xs font-bold">
+                            ✓
+                          </span>
                         </div>
                       ) : (
                         <div className="w-5 h-5 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
@@ -456,9 +459,9 @@ export default function ProfilePage() {
             {adminUser.role === "VIEWER" && (
               <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <p className="text-sm text-blue-800 dark:text-blue-200">
-                  💡 <strong>Tip:</strong> Request elevated permissions from a SUPER_ADMIN
-                  to access additional features like manufacturer review, reporting, and
-                  case management.
+                  💡 <strong>Tip:</strong> Request elevated permissions from a
+                  SUPER_ADMIN to access additional features like manufacturer
+                  review, reporting, and case management.
                 </p>
               </div>
             )}
@@ -481,8 +484,9 @@ export default function ProfilePage() {
                     SUPER_ADMIN
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Full system access. Can manage all features, users, and audit logs.
-                    Can view immutable audit trail. Highest security clearance.
+                    Full system access. Can manage all features, users, and
+                    audit logs. Can view immutable audit trail. Highest security
+                    clearance.
                   </p>
                 </div>
               </div>
@@ -498,8 +502,9 @@ export default function ProfilePage() {
                     MODERATOR
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Can review manufacturers, reports, and manage cases. Can escalate to
-                    NAFDAC. Cannot access audit logs or manage other users.
+                    Can review manufacturers, reports, and manage cases. Can
+                    escalate to NAFDAC. Cannot access audit logs or manage other
+                    users.
                   </p>
                 </div>
               </div>
@@ -515,8 +520,8 @@ export default function ProfilePage() {
                     VIEWER
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Read-only access to dashboard and metrics. Cannot perform any actions
-                    or modifications. Monitoring only.
+                    Read-only access to dashboard and metrics. Cannot perform
+                    any actions or modifications. Monitoring only.
                   </p>
                 </div>
               </div>
@@ -638,7 +643,8 @@ export default function ProfilePage() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
                 />
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Requirements: 8+ characters, uppercase, number, special character
+                  Requirements: 8+ characters, uppercase, number, special
+                  character
                 </p>
               </div>
 
