@@ -5,12 +5,7 @@ export const dynamic = "force-dynamic";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  AdminInput,
-  AdminButton,
-  AdminErrorMessage,
-} from "@/components/admin/AdminComponents";
-import { FiMail, FiLock, FiShield } from "react-icons/fi";
+import { FiMail, FiLock, FiShield, FiAlertCircle } from "react-icons/fi";
 import { adminAuthApi } from "@/services/adminApi";
 
 export default function AdminLoginPage() {
@@ -85,71 +80,85 @@ export default function AdminLoginPage() {
           <p className="text-slate-400">Secure Access Portal</p>
         </div>
 
-        {/* Error Message */}
-        {error && <AdminErrorMessage message={error} className="mb-6" />}
+        {/* Error Message - Always rendered but hidden if no error */}
+        {error !== "" && (
+          <div className="bg-red-950 border border-red-800 rounded-lg p-4 mb-6 flex items-start gap-3">
+            <FiAlertCircle className="text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-red-200 text-sm">{error}</p>
+          </div>
+        )}
 
         {/* Step 1: Email/Password */}
         {step === 1 && (
           <form onSubmit={handleStep1} className="space-y-4">
-            <AdminInput
-              icon={FiMail}
-              placeholder="Admin Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-              className="mb-4"
-            />
+            {/* Email Input */}
+            <div>
+              <input
+                type="email"
+                placeholder="Admin Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition"
+              />
+            </div>
 
-            <AdminInput
-              icon={FiLock}
-              placeholder="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-              className="mb-6"
-            />
+            {/* Password Input */}
+            <div>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition"
+              />
+            </div>
 
-            <AdminButton
+            {/* Submit Button */}
+            <button
               type="submit"
-              isLoading={isLoading}
-              className="w-full"
+              disabled={isLoading}
+              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition mt-6"
             >
               {isLoading ? "Verifying..." : "Continue"}
-            </AdminButton>
+            </button>
           </form>
         )}
 
         {/* Step 2: 2FA */}
         {step === 2 && (
           <form onSubmit={handleStep2} className="space-y-4">
-            <p className="text-slate-300 text-center mb-4">
+            <p className="text-slate-300 text-center mb-6">
               Enter the 6-digit code from your authenticator app
             </p>
 
-            <AdminInput
-              icon={FiShield}
-              placeholder="000000"
-              type="text"
-              value={twoFactorCode}
-              onChange={(e) => setTwoFactorCode(e.target.value.slice(0, 6))}
-              maxLength="6"
-              required
-              disabled={isLoading}
-              className="mb-6 text-center text-2xl tracking-widest"
-            />
+            {/* 2FA Code Input */}
+            <div>
+              <input
+                type="text"
+                placeholder="000000"
+                value={twoFactorCode}
+                onChange={(e) => setTwoFactorCode(e.target.value.slice(0, 6).replace(/\D/g, ""))}
+                maxLength="6"
+                required
+                disabled={isLoading}
+                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white text-center text-2xl tracking-widest placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition"
+              />
+            </div>
 
-            <AdminButton
+            {/* Submit Button */}
+            <button
               type="submit"
-              isLoading={isLoading}
-              className="w-full"
+              disabled={isLoading}
+              className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition mt-6"
             >
               {isLoading ? "Verifying..." : "Verify Code"}
-            </AdminButton>
+            </button>
 
+            {/* Back Button */}
             <button
               type="button"
               onClick={() => {
