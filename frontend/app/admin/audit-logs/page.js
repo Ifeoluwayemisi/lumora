@@ -19,7 +19,7 @@ import {
 
 export default function AuditLogsPage() {
   const { adminUser, isHydrated } = useAdmin();
-  
+
   // Check access - only SUPER_ADMIN
   useEffect(() => {
     if (isHydrated && adminUser && adminUser.role !== "SUPER_ADMIN") {
@@ -31,12 +31,16 @@ export default function AuditLogsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // Data
   const [logs, setLogs] = useState([]);
   const [selectedLog, setSelectedLog] = useState(null);
-  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0 });
-  
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 20,
+    total: 0,
+  });
+
   // Filters
   const [filterAction, setFilterAction] = useState("");
   const [filterAdmin, setFilterAdmin] = useState("");
@@ -53,9 +57,9 @@ export default function AuditLogsPage() {
         filterAction || undefined,
         filterAdmin || undefined,
         startDate || undefined,
-        endDate || undefined
+        endDate || undefined,
       );
-      
+
       setLogs(res.data.items || []);
       setPagination({
         page: res.data.currentPage,
@@ -88,7 +92,7 @@ export default function AuditLogsPage() {
         filterAction || undefined,
         filterAdmin || undefined,
         startDate || undefined,
-        endDate || undefined
+        endDate || undefined,
       );
       // Trigger file download
       const blob = new Blob([JSON.stringify(res.data, null, 2)], {
@@ -135,11 +139,16 @@ export default function AuditLogsPage() {
   const totalPages = Math.ceil(pagination.total / pagination.limit);
 
   const getActionColor = (action) => {
-    if (action.includes("CREATE")) return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-    if (action.includes("UPDATE")) return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-    if (action.includes("DELETE")) return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-    if (action.includes("APPROVE")) return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-    if (action.includes("REJECT")) return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+    if (action.includes("CREATE"))
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    if (action.includes("UPDATE"))
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+    if (action.includes("DELETE"))
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+    if (action.includes("APPROVE"))
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+    if (action.includes("REJECT"))
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
     return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
   };
 
@@ -333,14 +342,17 @@ export default function AuditLogsPage() {
                         <td className="py-3 px-4">
                           <span
                             className={`px-2 py-1 text-xs font-semibold rounded ${getActionColor(
-                              log.action
+                              log.action,
                             )}`}
                           >
                             {log.action}
                           </span>
                         </td>
                         <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
-                          {log.entityType} {log.entityId ? `(${log.entityId.substring(0, 8)}...)` : ""}
+                          {log.entityType}{" "}
+                          {log.entityId
+                            ? `(${log.entityId.substring(0, 8)}...)`
+                            : ""}
                         </td>
                         <td className="py-3 px-4 text-gray-600 dark:text-gray-400 max-w-xs truncate">
                           {log.reason || "—"}
@@ -368,7 +380,8 @@ export default function AuditLogsPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Showing page {pagination.page} of {totalPages} ({pagination.total} total logs)
+                  Showing page {pagination.page} of {totalPages} (
+                  {pagination.total} total logs)
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -436,7 +449,7 @@ export default function AuditLogsPage() {
                     </label>
                     <p
                       className={`px-2 py-1 w-fit rounded font-semibold text-sm ${getActionColor(
-                        selectedLog.action
+                        selectedLog.action,
                       )}`}
                     >
                       {selectedLog.action}
