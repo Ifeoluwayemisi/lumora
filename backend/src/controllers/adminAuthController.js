@@ -121,25 +121,19 @@ export async function adminLoginStep1Controller(req, res) {
  */
 export async function adminLoginStep2Controller(req, res) {
   try {
-    console.log("[ADMIN_LOGIN_STEP2] Full req.body:", JSON.stringify(req.body));
-    console.log("[ADMIN_LOGIN_STEP2] req.body keys:", Object.keys(req.body || {}));
-    
-    const { tempToken, twoFactorCode } = req.body;
+    // Backend receives twoFactorToken (renamed from twoFactorCode)
+    const { tempToken, twoFactorToken, twoFactorCode } = req.body;
+    const code = twoFactorToken || twoFactorCode;
 
     console.log("[ADMIN_LOGIN_STEP2] Received body:", req.body);
-    console.log(
-      "[ADMIN_LOGIN_STEP2] tempToken:",
-      tempToken,
-      "twoFactorCode:",
-      twoFactorCode,
-    );
+    console.log("[ADMIN_LOGIN_STEP2] tempToken:", tempToken, "code:", code);
 
-    if (!tempToken || !twoFactorCode) {
+    if (!tempToken || !code) {
       console.error(
         "[ADMIN_LOGIN_STEP2] Missing fields - tempToken:",
         !!tempToken,
-        "twoFactorCode:",
-        !!twoFactorCode,
+        "code:",
+        !!code,
       );
       return res.status(400).json({
         success: false,
@@ -168,10 +162,7 @@ export async function adminLoginStep2Controller(req, res) {
     const adminId = decoded.adminId;
 
     // Verify 2FA token
-    const is2FAValid = await adminAuthService.verify2FAToken(
-      adminId,
-      twoFactorCode,
-    );
+    const is2FAValid = await adminAuthService.verify2FAToken(adminId, code);
 
     if (!is2FAValid) {
       return res.status(401).json({
