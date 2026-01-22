@@ -81,10 +81,6 @@ function AdminLoginContent() {
     }
   };
 
-  if (!isHydrated) {
-    return <AdminLoadingSpinner />;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -116,7 +112,7 @@ function AdminLoginContent() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@lumora.io"
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || !isHydrated}
                   icon={FiMail}
                 />
 
@@ -127,18 +123,19 @@ function AdminLoginContent() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  disabled={isLoading}
+                  disabled={isLoading || !isHydrated}
                   icon={FiLock}
                 />
 
                 <AdminButton
                   variant="primary"
                   size="md"
-                  isLoading={isLoading}
+                  isLoading={isLoading || !isHydrated}
                   className="w-full"
                   type="submit"
+                  disabled={!isHydrated}
                 >
-                  Continue
+                  {!isHydrated ? "Loading..." : "Continue"}
                 </AdminButton>
               </form>
 
@@ -183,7 +180,7 @@ function AdminLoginContent() {
                     maxLength="6"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest font-mono"
                     required
-                    disabled={isLoading}
+                    disabled={isLoading || !isHydrated}
                     autoComplete="off"
                   />
                 </div>
@@ -191,11 +188,12 @@ function AdminLoginContent() {
                 <AdminButton
                   variant="primary"
                   size="md"
-                  isLoading={isLoading}
+                  isLoading={isLoading || !isHydrated}
                   className="w-full"
                   type="submit"
+                  disabled={!isHydrated}
                 >
-                  Verify
+                  {!isHydrated ? "Loading..." : "Verify"}
                 </AdminButton>
               </form>
 
