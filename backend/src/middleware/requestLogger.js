@@ -10,11 +10,18 @@ export function requestLogger(req, res, next) {
   req.id = requestId;
 
   // Log incoming request
-  console.log(`[REQ-${requestId}] ${req.method} ${req.path}`, {
+  const logData = {
     query: Object.keys(req.query).length > 0 ? req.query : undefined,
     userId: req.user?.id,
     timestamp: new Date().toISOString(),
-  });
+  };
+  
+  // Add body logging for POST/PUT/PATCH requests
+  if (["POST", "PUT", "PATCH"].includes(req.method)) {
+    logData.bodyKeys = req.body ? Object.keys(req.body) : [];
+  }
+  
+  console.log(`[REQ-${requestId}] ${req.method} ${req.path}`, logData);
 
   // Capture the original res.json function
   const originalJson = res.json;
