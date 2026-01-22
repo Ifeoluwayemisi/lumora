@@ -32,11 +32,13 @@ export default function AdminLoginPage() {
 
     try {
       const response = await adminAuthApi.loginStep1(email, password);
-      setTempToken(response.tempToken);
+      // response is the entire object: { success: true, data: { tempToken, ... } }
+      setTempToken(response.data.tempToken);
       setStep(2);
     } catch (err) {
       setError(
         err.response?.data?.message ||
+          err.response?.data?.data?.message ||
           "Login failed. Please check your credentials.",
       );
     } finally {
@@ -52,8 +54,7 @@ export default function AdminLoginPage() {
 
     try {
       const response = await adminAuthApi.loginStep2(tempToken, twoFactorCode);
-
-      // Save to localStorage - response has data.admin and data.token
+      // response is the entire object: { success: true, data: { token, admin, ... } }
       localStorage.setItem("admin_user", JSON.stringify(response.data.admin));
       localStorage.setItem("admin_token", response.data.token);
 
@@ -61,6 +62,7 @@ export default function AdminLoginPage() {
     } catch (err) {
       setError(
         err.response?.data?.message ||
+          err.response?.data?.data?.message ||
           "2FA verification failed. Please try again.",
       );
     } finally {
