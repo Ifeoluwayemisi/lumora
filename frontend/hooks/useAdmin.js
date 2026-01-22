@@ -32,9 +32,9 @@ export function useAdminPermission(action) {
 /**
  * Hook for pagination state management
  */
-export function usePagination(initialPage = 1, pageSize = 50) {
+export function usePagination(initialPage = 1, defaultPageSize = 50) {
   const [page, setPage] = React.useState(initialPage);
-  const [pageSize, setPageSize] = React.useState(pageSize);
+  const [pageSize, setPageSize] = React.useState(defaultPageSize);
 
   const skip = (page - 1) * pageSize;
 

@@ -10,7 +10,7 @@ import {
   AdminErrorMessage,
   AdminLoadingSpinner,
 } from "@/components/admin/AdminComponents";
-import { FiMail, FiLock, FiShieldAlert } from "react-icons/fi";
+import { FiMail, FiLock, FiShield } from "react-icons/fi";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -152,7 +152,7 @@ export default function AdminLoginPage() {
             <>
               <div className="mb-6">
                 <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mx-auto mb-4">
-                  <FiShieldAlert className="text-blue-600" size={24} />
+                  <FiShield className="text-blue-600" size={24} />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 text-center">
                   Two-Factor Authentication
