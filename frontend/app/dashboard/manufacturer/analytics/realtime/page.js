@@ -72,10 +72,12 @@ export default function RealTimeAnalyticsPage() {
   }
 
   const authData = analytics?.codeAuthenticity || {};
-  const geoData = (analytics?.geoDistribution?.topLocations || []).map((loc) => ({
-    name: loc.location,
-    value: loc.count,
-  }));
+  const geoData = (analytics?.geoDistribution?.topLocations || []).map(
+    (loc) => ({
+      name: loc.location,
+      value: loc.count,
+    }),
+  );
   const batchData = analytics?.batchExpiration || {};
 
   const productChartData = productMetrics
@@ -112,9 +114,21 @@ export default function RealTimeAnalyticsPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
             <div className="flex border-b border-gray-200">
               {[
-                { id: "authenticity", label: "Code Authenticity", icon: FiTrendingUp },
-                { id: "geographic", label: "Geographic Distribution", icon: FiMap },
-                { id: "products", label: "Product Performance", icon: FiBarChart2 },
+                {
+                  id: "authenticity",
+                  label: "Code Authenticity",
+                  icon: FiTrendingUp,
+                },
+                {
+                  id: "geographic",
+                  label: "Geographic Distribution",
+                  icon: FiMap,
+                },
+                {
+                  id: "products",
+                  label: "Product Performance",
+                  icon: FiBarChart2,
+                },
                 { id: "expiration", label: "Batch Expiration", icon: FiClock },
               ].map(({ id, label, icon: Icon }) => (
                 <button
@@ -179,7 +193,9 @@ export default function RealTimeAnalyticsPage() {
                           style={{ width: `${authData.riskScore}%` }}
                         ></div>
                       </div>
-                      <span className="font-bold text-lg">{authData.riskScore || 0}</span>
+                      <span className="font-bold text-lg">
+                        {authData.riskScore || 0}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -219,7 +235,10 @@ export default function RealTimeAnalyticsPage() {
                         <h3 className="font-semibold mb-4">Top Locations</h3>
                         <div className="space-y-3">
                           {geoData.map((loc, idx) => (
-                            <div key={idx} className="flex justify-between items-center">
+                            <div
+                              key={idx}
+                              className="flex justify-between items-center"
+                            >
                               <span className="text-gray-700">{loc.name}</span>
                               <span className="font-semibold">{loc.value}</span>
                             </div>
@@ -228,7 +247,9 @@ export default function RealTimeAnalyticsPage() {
                       </div>
                     </>
                   ) : (
-                    <p className="text-gray-500">No geographic data available</p>
+                    <p className="text-gray-500">
+                      No geographic data available
+                    </p>
                   )}
                 </div>
               )}
@@ -256,20 +277,35 @@ export default function RealTimeAnalyticsPage() {
                             <thead className="bg-gray-50">
                               <tr>
                                 <th className="px-4 py-2 text-left">Product</th>
-                                <th className="px-4 py-2 text-left">Authenticity</th>
-                                <th className="px-4 py-2 text-left">Verifications</th>
-                                <th className="px-4 py-2 text-left">Risk Score</th>
+                                <th className="px-4 py-2 text-left">
+                                  Authenticity
+                                </th>
+                                <th className="px-4 py-2 text-left">
+                                  Verifications
+                                </th>
+                                <th className="px-4 py-2 text-left">
+                                  Risk Score
+                                </th>
                               </tr>
                             </thead>
                             <tbody>
                               {productMetrics.map((product) => (
-                                <tr key={product.productId} className="border-t">
-                                  <td className="px-4 py-2">{product.productName}</td>
-                                  <td className="px-4 py-2">{product.authenticityRate}%</td>
+                                <tr
+                                  key={product.productId}
+                                  className="border-t"
+                                >
+                                  <td className="px-4 py-2">
+                                    {product.productName}
+                                  </td>
+                                  <td className="px-4 py-2">
+                                    {product.authenticityRate}%
+                                  </td>
                                   <td className="px-4 py-2">
                                     {product.totalVerifications}
                                   </td>
-                                  <td className="px-4 py-2">{product.riskScore}</td>
+                                  <td className="px-4 py-2">
+                                    {product.riskScore}
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>
@@ -294,7 +330,9 @@ export default function RealTimeAnalyticsPage() {
                       </p>
                     </div>
                     <div className="bg-yellow-50 p-4 rounded-lg">
-                      <p className="text-gray-600 text-sm">Expiring in 30 Days</p>
+                      <p className="text-gray-600 text-sm">
+                        Expiring in 30 Days
+                      </p>
                       <p className="text-2xl font-bold text-yellow-600">
                         {batchData.expiringIn30Days || 0}
                       </p>

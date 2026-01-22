@@ -105,7 +105,9 @@ export default function ApiKeyManagementPage() {
   };
 
   const getRecentApiLogs = () => {
-    return auditLogs.filter((log) => log.actionType.includes("api")).slice(0, 5);
+    return auditLogs
+      .filter((log) => log.actionType.includes("api"))
+      .slice(0, 5);
   };
 
   if (loading) {
@@ -176,7 +178,9 @@ export default function ApiKeyManagementPage() {
                 <div>
                   {apiKeys.length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-gray-500 mb-4">No API keys created yet</p>
+                      <p className="text-gray-500 mb-4">
+                        No API keys created yet
+                      </p>
                       <button
                         onClick={() => setShowCreateModal(true)}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -193,9 +197,12 @@ export default function ApiKeyManagementPage() {
                         >
                           <div className="flex justify-between items-start mb-4">
                             <div>
-                              <h3 className="font-semibold text-gray-900">{key.name}</h3>
+                              <h3 className="font-semibold text-gray-900">
+                                {key.name}
+                              </h3>
                               <p className="text-xs text-gray-500 mt-1">
-                                Created {new Date(key.createdAt).toLocaleDateString()}
+                                Created{" "}
+                                {new Date(key.createdAt).toLocaleDateString()}
                               </p>
                             </div>
                             <span
@@ -215,8 +222,12 @@ export default function ApiKeyManagementPage() {
                               <p className="font-mono text-sm">{key.scope}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-gray-600">Rate Limit</p>
-                              <p className="font-semibold">{key.rateLimit}/day</p>
+                              <p className="text-xs text-gray-600">
+                                Rate Limit
+                              </p>
+                              <p className="font-semibold">
+                                {key.rateLimit}/day
+                              </p>
                             </div>
                             <div>
                               <p className="text-xs text-gray-600">Usage</p>
@@ -226,7 +237,9 @@ export default function ApiKeyManagementPage() {
                               <p className="text-xs text-gray-600">Last Used</p>
                               <p className="text-sm">
                                 {key.lastUsedAt
-                                  ? new Date(key.lastUsedAt).toLocaleDateString()
+                                  ? new Date(
+                                      key.lastUsedAt,
+                                    ).toLocaleDateString()
                                   : "Never"}
                               </p>
                             </div>
@@ -268,11 +281,16 @@ export default function ApiKeyManagementPage() {
               {activeTab === "activity" && (
                 <div>
                   {getRecentApiLogs().length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">No activity yet</p>
+                    <p className="text-gray-500 text-center py-8">
+                      No activity yet
+                    </p>
                   ) : (
                     <div className="space-y-4">
                       {getRecentApiLogs().map((log, idx) => (
-                        <div key={idx} className="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+                        <div
+                          key={idx}
+                          className="flex justify-between items-center p-4 border border-gray-200 rounded-lg"
+                        >
                           <div>
                             <p className="font-medium text-gray-900">
                               {log.actionType.replace(/_/g, " ").toUpperCase()}
@@ -281,7 +299,9 @@ export default function ApiKeyManagementPage() {
                               {new Date(log.timestamp).toLocaleString()}
                             </p>
                           </div>
-                          <span className="text-xs text-gray-500">{log.ipAddress}</span>
+                          <span className="text-xs text-gray-500">
+                            {log.ipAddress}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -302,11 +322,15 @@ export default function ApiKeyManagementPage() {
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Key Name</label>
+                <label className="block text-sm font-medium mb-2">
+                  Key Name
+                </label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g., Production Integration"
                 />
@@ -316,7 +340,9 @@ export default function ApiKeyManagementPage() {
                 <label className="block text-sm font-medium mb-2">Scope</label>
                 <select
                   value={formData.scope}
-                  onChange={(e) => setFormData({ ...formData, scope: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, scope: e.target.value })
+                  }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="read">Read Only</option>
@@ -326,12 +352,17 @@ export default function ApiKeyManagementPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Rate Limit (requests/day)</label>
+                <label className="block text-sm font-medium mb-2">
+                  Rate Limit (requests/day)
+                </label>
                 <input
                   type="number"
                   value={formData.rateLimit}
                   onChange={(e) =>
-                    setFormData({ ...formData, rateLimit: parseInt(e.target.value) })
+                    setFormData({
+                      ...formData,
+                      rateLimit: parseInt(e.target.value),
+                    })
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   min="1"
@@ -362,7 +393,9 @@ export default function ApiKeyManagementPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold">API Key Created Successfully</h2>
+              <h2 className="text-xl font-bold">
+                API Key Created Successfully
+              </h2>
             </div>
             <div className="p-6">
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">

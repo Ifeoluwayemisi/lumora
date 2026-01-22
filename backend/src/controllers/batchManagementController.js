@@ -40,7 +40,12 @@ export async function createBatchRecallController(req, res) {
       });
     }
 
-    const recall = await createBatchRecall(batchId, manufacturer.id, reason, description);
+    const recall = await createBatchRecall(
+      batchId,
+      manufacturer.id,
+      reason,
+      description,
+    );
 
     // Log audit
     await prisma.analyticsAudit.create({
@@ -137,7 +142,11 @@ export async function updateBatchRecallStatusController(req, res) {
       });
     }
 
-    const updated = await updateBatchRecallStatus(recallId, manufacturer.id, status);
+    const updated = await updateBatchRecallStatus(
+      recallId,
+      manufacturer.id,
+      status,
+    );
 
     // Log audit
     await prisma.analyticsAudit.create({
@@ -232,7 +241,7 @@ export async function getExpiringBatchesController(req, res) {
     const batches = await getBatchesByExpirationRange(
       manufacturer.id,
       new Date(startDate),
-      new Date(endDate)
+      new Date(endDate),
     );
 
     res.json({

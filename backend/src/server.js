@@ -13,12 +13,13 @@ const NODE_ENV = process.env.NODE_ENV || "development";
 
 /**
  * Ensure Prisma client is regenerated at startup
+ * DISABLED: Causes Windows file locking issues
  */
 function ensurePrismaClient() {
   try {
-    console.log("🔄 Ensuring Prisma client is up to date...");
-    execSync("npx prisma generate", { stdio: "inherit" });
-    console.log("✓ Prisma client verified");
+    console.log("🔄 Using cached Prisma client...");
+    // execSync("npx prisma generate", { stdio: "inherit" });
+    console.log("✓ Prisma client ready");
   } catch (error) {
     console.warn(
       "⚠️  Prisma client generation warning (may be cached):",
@@ -80,14 +81,15 @@ async function startServer() {
       console.log(
         `\n🚀 Lumora backend running on port ${PORT} (${NODE_ENV})\n`,
       );
-      
+
       // Initialize security jobs
-      try {
-        securityJobs = setupSecurityJobs();
-      } catch (err) {
-        console.error("Failed to setup security jobs:", err.message);
-      }
-      
+      // DISABLED: Jobs exhausting connection pool - enable only in production
+      // try {
+      //   securityJobs = setupSecurityJobs();
+      // } catch (err) {
+      //   console.error("Failed to setup security jobs:", err.message);
+      // }
+
       if (NODE_ENV === "development") {
         console.log("Environment info:");
         console.log("  ENABLE_AI_RISK:", process.env.ENABLE_AI_RISK || "false");
@@ -109,10 +111,10 @@ async function startServer() {
       console.log("\n SIGINT received, shutting down...");
       cleanupSecurityJobs(securityJobs);
     });
-    } catch (err) {
-      console.error("Failed to start server:", err.message);
-      process.exit(1);
-    }
+  } catch (err) {
+    console.error("Failed to start server:", err.message);
+    process.exit(1);
   }
-  
-  startServer();
+}
+
+startServer();

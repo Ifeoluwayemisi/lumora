@@ -195,7 +195,11 @@ export async function updateApiKeyRateLimitController(req, res) {
       });
     }
 
-    const updated = await updateApiKeyRateLimit(keyId, manufacturer.id, rateLimit);
+    const updated = await updateApiKeyRateLimit(
+      keyId,
+      manufacturer.id,
+      rateLimit,
+    );
 
     // Log audit
     await prisma.analyticsAudit.create({

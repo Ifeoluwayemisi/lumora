@@ -5,7 +5,12 @@ import DashboardSidebar from "@/components/DashboardSidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import api from "@/services/api";
 import { toast } from "react-toastify";
-import { FiArrowLeft, FiAlertTriangle, FiTrendingDown, FiCalendar } from "react-icons/fi";
+import {
+  FiArrowLeft,
+  FiAlertTriangle,
+  FiTrendingDown,
+  FiCalendar,
+} from "react-icons/fi";
 
 export default function BatchManagementPage() {
   const router = useRouter();
@@ -53,7 +58,10 @@ export default function BatchManagementPage() {
     }
 
     try {
-      await api.post(`/manufacturer/batches/${selectedBatch}/recall`, recallForm);
+      await api.post(
+        `/manufacturer/batches/${selectedBatch}/recall`,
+        recallForm,
+      );
       toast.success("Batch recall created");
       setShowRecallModal(false);
       setRecallForm({ reason: "", description: "", recalledUnits: "" });
@@ -75,7 +83,12 @@ export default function BatchManagementPage() {
     );
   }
 
-  const expMetrics = metrics || { expired: 0, expiringIn30Days: 0, active: 0, totalBatches: 0 };
+  const expMetrics = metrics || {
+    expired: 0,
+    expiringIn30Days: 0,
+    active: 0,
+    totalBatches: 0,
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -93,7 +106,9 @@ export default function BatchManagementPage() {
             </button>
             <div>
               <h1 className="text-2xl font-bold">Batch Management</h1>
-              <p className="text-gray-600">Track, recall, and manage product batches</p>
+              <p className="text-gray-600">
+                Track, recall, and manage product batches
+              </p>
             </div>
           </div>
 
@@ -104,8 +119,9 @@ export default function BatchManagementPage() {
               <div>
                 <h3 className="font-semibold text-red-900">Expired Batches</h3>
                 <p className="text-sm text-red-800">
-                  You have {expMetrics.expired} expired batch{expMetrics.expired !== 1 ? "es" : ""}. 
-                  Consider initiating recalls.
+                  You have {expMetrics.expired} expired batch
+                  {expMetrics.expired !== 1 ? "es" : ""}. Consider initiating
+                  recalls.
                 </p>
               </div>
             </div>
@@ -115,9 +131,13 @@ export default function BatchManagementPage() {
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 flex gap-3">
               <FiCalendar className="text-yellow-600 flex-shrink-0 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-yellow-900">Batches Expiring Soon</h3>
+                <h3 className="font-semibold text-yellow-900">
+                  Batches Expiring Soon
+                </h3>
                 <p className="text-sm text-yellow-800">
-                  {expMetrics.expiringIn30Days} batch{expMetrics.expiringIn30Days !== 1 ? "es" : ""} will expire in the next 30 days.
+                  {expMetrics.expiringIn30Days} batch
+                  {expMetrics.expiringIn30Days !== 1 ? "es" : ""} will expire in
+                  the next 30 days.
                 </p>
               </div>
             </div>
@@ -131,15 +151,21 @@ export default function BatchManagementPage() {
             </div>
             <div className="bg-green-50 p-4 rounded-lg shadow-sm border border-green-200">
               <p className="text-gray-600 text-sm">Active</p>
-              <p className="text-3xl font-bold text-green-600">{expMetrics.active}</p>
+              <p className="text-3xl font-bold text-green-600">
+                {expMetrics.active}
+              </p>
             </div>
             <div className="bg-yellow-50 p-4 rounded-lg shadow-sm border border-yellow-200">
               <p className="text-gray-600 text-sm">Expiring Soon</p>
-              <p className="text-3xl font-bold text-yellow-600">{expMetrics.expiringIn30Days}</p>
+              <p className="text-3xl font-bold text-yellow-600">
+                {expMetrics.expiringIn30Days}
+              </p>
             </div>
             <div className="bg-red-50 p-4 rounded-lg shadow-sm border border-red-200">
               <p className="text-gray-600 text-sm">Expired</p>
-              <p className="text-3xl font-bold text-red-600">{expMetrics.expired}</p>
+              <p className="text-3xl font-bold text-red-600">
+                {expMetrics.expired}
+              </p>
             </div>
           </div>
 
@@ -173,32 +199,57 @@ export default function BatchManagementPage() {
               {activeTab === "performance" && (
                 <div>
                   {batchPerformance.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">No batch data available</p>
+                    <p className="text-gray-500 text-center py-8">
+                      No batch data available
+                    </p>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-4 py-3 text-left font-semibold">Batch Number</th>
-                            <th className="px-4 py-3 text-left font-semibold">Authenticity</th>
-                            <th className="px-4 py-3 text-left font-semibold">Verifications</th>
-                            <th className="px-4 py-3 text-left font-semibold">Genuine</th>
-                            <th className="px-4 py-3 text-left font-semibold">Risk Score</th>
-                            <th className="px-4 py-3 text-left font-semibold">Days Left</th>
-                            <th className="px-4 py-3 text-left font-semibold">Actions</th>
+                            <th className="px-4 py-3 text-left font-semibold">
+                              Batch Number
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold">
+                              Authenticity
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold">
+                              Verifications
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold">
+                              Genuine
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold">
+                              Risk Score
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold">
+                              Days Left
+                            </th>
+                            <th className="px-4 py-3 text-left font-semibold">
+                              Actions
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {batchPerformance.map((batch) => (
-                            <tr key={batch.batchNumber} className="border-t hover:bg-gray-50">
+                            <tr
+                              key={batch.batchNumber}
+                              className="border-t hover:bg-gray-50"
+                            >
                               <td className="px-4 py-3 font-mono text-xs">
                                 {batch.batchNumber}
                               </td>
                               <td className="px-4 py-3">
-                                <span className="font-semibold">{batch.authenticityRate}%</span>
+                                <span className="font-semibold">
+                                  {batch.authenticityRate}%
+                                </span>
                               </td>
-                              <td className="px-4 py-3">{batch.totalVerifications}</td>
-                              <td className="px-4 py-3">{batch.genuineCount}</td>
+                              <td className="px-4 py-3">
+                                {batch.totalVerifications}
+                              </td>
+                              <td className="px-4 py-3">
+                                {batch.genuineCount}
+                              </td>
                               <td className="px-4 py-3">
                                 <span
                                   className={`px-2 py-1 rounded text-xs font-medium ${
@@ -251,7 +302,9 @@ export default function BatchManagementPage() {
               {activeTab === "recalls" && (
                 <div>
                   {recalls.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">No recalls initiated</p>
+                    <p className="text-gray-500 text-center py-8">
+                      No recalls initiated
+                    </p>
                   ) : (
                     <div className="space-y-4">
                       {recalls.map((recall) => (
@@ -265,7 +318,9 @@ export default function BatchManagementPage() {
                                 Batch Recall: {recall.reason}
                               </h3>
                               <p className="text-sm text-gray-600 mt-1">
-                                {new Date(recall.initiatedAt).toLocaleDateString()}
+                                {new Date(
+                                  recall.initiatedAt,
+                                ).toLocaleDateString()}
                               </p>
                             </div>
                             <span
@@ -281,11 +336,14 @@ export default function BatchManagementPage() {
                             </span>
                           </div>
 
-                          <p className="text-gray-700 mb-3">{recall.description}</p>
+                          <p className="text-gray-700 mb-3">
+                            {recall.description}
+                          </p>
 
                           <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                             <span className="text-sm text-gray-600">
-                              Recalled Units: {recall.recalledUnits || "Not specified"}
+                              Recalled Units:{" "}
+                              {recall.recalledUnits || "Not specified"}
                             </span>
                             {recall.status === "active" && (
                               <button className="text-sm text-blue-600 hover:text-blue-700">
@@ -337,17 +395,24 @@ export default function BatchManagementPage() {
                   <option value="">Select a reason</option>
                   <option value="quality_issue">Quality Issue</option>
                   <option value="safety_concern">Safety Concern</option>
-                  <option value="counterfeit_detected">Counterfeit Detected</option>
+                  <option value="counterfeit_detected">
+                    Counterfeit Detected
+                  </option>
                   <option value="other">Other</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
+                <label className="block text-sm font-medium mb-2">
+                  Description
+                </label>
                 <textarea
                   value={recallForm.description}
                   onChange={(e) =>
-                    setRecallForm({ ...recallForm, description: e.target.value })
+                    setRecallForm({
+                      ...recallForm,
+                      description: e.target.value,
+                    })
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   rows="4"
@@ -356,12 +421,17 @@ export default function BatchManagementPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Units Recalled (Optional)</label>
+                <label className="block text-sm font-medium mb-2">
+                  Units Recalled (Optional)
+                </label>
                 <input
                   type="number"
                   value={recallForm.recalledUnits}
                   onChange={(e) =>
-                    setRecallForm({ ...recallForm, recalledUnits: e.target.value })
+                    setRecallForm({
+                      ...recallForm,
+                      recalledUnits: e.target.value,
+                    })
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Number of units recalled"

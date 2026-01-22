@@ -1,51 +1,19 @@
-import prisma from "../models/prismaClient.js";
+import * as manufacturerReviewService from "../services/manufacturerReviewService.js";
+import * as auditLogService from "../services/auditLogService.js";
 
 /**
- * List all pending manufacturer applications
+ * Get manufacturer review queue
  */
-export async function getPendingManufacturers(req, res) {
+export async function getReviewQueueController(req, res) {
   try {
-    const { page = 1, limit = 10 } = req.query;
-    const pageNum = Math.max(Number(page), 1);
-    const limitNum = Math.min(Math.max(Number(limit), 1), 100);
-    const skip = (pageNum - 1) * limitNum;
+    const status = req.query.status || "pending";
+    const queue =
+      await manufacturerReviewService.getManufacturerReviewQueue(status);
 
-    const [manufacturers, total] = await Promise.all([
-      prisma.manufacturer.findMany({
-        where: { accountStatus: "pending_verification" },
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          country: true,
-          createdAt: true,
-          trustScore: true,
-          riskLevel: true,
-          documents: {
-            select: {
-              type: true,
-              status: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "asc" },
-        skip,
-        take: limitNum,
-      }),
-      prisma.manufacturer.count({
-        where: { accountStatus: "pending_verification" },
-      }),
-    ]);
-
-    res.status(200).json({
-      data: manufacturers,
-      pagination: {
-        total,
-        page: pageNum,
-        limit: limitNum,
-        pages: Math.ceil(total / limitNum),
-      },
+    return res.status(200).json({
+      success: true,
+      data: queue,
+      count: queue.length,
     });
   } catch (err) {
     console.error("[GET_PENDING_MANUFACTURERS] Error:", err);

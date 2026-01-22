@@ -141,9 +141,9 @@ export async function getBatchExpirationMetrics(manufacturerId) {
 
   return {
     expired,
-    expiringWithin30Days: expiringWithin30Days,
+    expiringWithin30Days: expiringThis30DaysCount,
     active,
-    total: expired + expiringWithin30Days + active,
+    total: expired + expiringThis30DaysCount + active,
   };
 }
 

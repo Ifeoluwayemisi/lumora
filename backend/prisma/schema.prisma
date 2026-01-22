@@ -501,3 +501,155 @@ model AnalyticsAudit {
   @@index([manufacturerId])
   @@index([timestamp])
 }
+
+// ========== ADMIN SYSTEM MODELS ==========
+
+model AdminUser {
+  id                    String             @id @default(uuid())
+  email                 String             @unique
+  passwordHash          String
+  firstName             String
+  lastName              String
+  role                  String             // SUPER_ADMIN, MODERATOR, ANALYST, SUPPORT
+  twoFactorSecret       String?            // TOTP secret (encrypted)
+  twoFactorEnabled      Boolean            @default(true)
+  isActive              Boolean            @default(true)
+  lastLogin             DateTime?
+  lastLoginIp           String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  adminLogs             AdminAuditLog[]
+  manufacturerReviews   ManufacturerReview[]
+  userReports           UserReport[]
+  caseFiles             CaseFile[]
+  caseNotes             CaseNote[]
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@index([lastLogin])
+}
+
+model AdminAuditLog {
+  id                 String       @id @default(uuid())
+  adminId            String
+  action             String       // review_manufacturer, approve, reject, escalate_to_nafdac, etc
+  resourceType       String       // Manufacturer, UserReport, CaseFile, etc
+  resourceId         String
+  beforeState        Json?        // State before change
+  afterState         Json?        // State after change
+  reason             String?
+  ipAddress          String?
+  userAgent          String?
+  timestamp          DateTime     @default(now())
+  admin              AdminUser    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([timestamp])
+  @@index([resourceType])
+  @@index([action])
+}
+
+model ManufacturerReview {
+  id                       String        @id @default(uuid())
+  manufacturerId           String        @unique
+  adminId                  String?
+  status                   String        @default("pending") // pending, approved, rejected, needs_docs
+  riskAssessment           String?       // AI risk summary
+  trustScore               Float?
+  documentVerification     Json?         // { docName: verified }
+  rejectionReason          String?
+  requestedDocuments       String[]      // array of requested doc types
+  reviewedAt               DateTime?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+  admin                    AdminUser?    @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  @@index([manufacturerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model UserReport {
+  id                 String         @id @default(uuid())
+  reporterId         String?        // User ID (may be null for anonymous)
+  reporterEmail      String?        // Optional email for follow-up
+  productName        String?
+  productCode        String?
+  scanType           String?        // MANUAL, QR
+  location           String         // Geographic location
+  latitude           Float?
+  longitude          Float?
+  reason             String         // Looks fake, Side effects, Wrong packaging, Expired, Other
+  description        String?
+  imagePath          String?        // Optional photo of packaging
+  verificationId     String?        // Link to VerificationLog if applicable
+  productId          String?        // Link to Product if identified
+  manufacturerId     String?        // Link to Manufacturer if identified
+  status             String         @default("NEW") // NEW, UNDER_REVIEW, ESCALATED, RESOLVED, DISMISSED
+  riskLevel          String?        // PENDING, LOW, MEDIUM, HIGH, CRITICAL
+  adminNotes         String?
+  reviewedByAdminId  String?
+  relatedCaseId      String?
+  frequency          Int            @default(1) // How many times reported (auto-increment)
+  reportedAt         DateTime       @default(now())
+  reviewedAt         DateTime?
+  admin              AdminUser?     @relation(fields: [reviewedByAdminId], references: [id], onDelete: SetNull)
+  caseFile           CaseFile?      @relation("CaseToReports", fields: [relatedCaseId], references: [id], onDelete: SetNull)
+
+  @@index([reporterId])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([reportedAt])
+  @@index([verificationId])
+  @@index([productId])
+}
+
+model CaseFile {
+  id                 String         @id @default(uuid())
+  caseNumber         String         @unique
+  productId          String?
+  batchId            String?
+  manufacturerId     String?
+  primaryReportId    String?        // First user report that triggered case
+  status             String         @default("open") // open, under_review, escalated, closed
+  severity           String         @default("medium") // low, medium, high, critical
+  title              String
+  description        String?
+  locations          String[]       // Affected regions
+  userReports        UserReport[]   @relation("CaseToReports")
+  aiAnalysis         Json?          // AI risk scoring results
+  verificationEvidence Json?        // Linked verifications
+  nafdacReported     Boolean        @default(false)
+  nafdacReportDate   DateTime?
+  nafdacStatus       String?        // pending, acknowledged, investigating, resolved
+  nafdacReference    String?        // Case number from NAFDAC
+  adminNotes         String?
+  assignedAdminId    String?
+  closedAt           DateTime?
+  closedReason       String?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  notes              CaseNote[]
+  assignedAdmin      AdminUser?     @relation(fields: [assignedAdminId], references: [id], onDelete: SetNull)
+
+  @@index([caseNumber])
+  @@index([status])
+  @@index([severity])
+  @@index([createdAt])
+  @@index([nafdacReported])
+}
+
+model CaseNote {
+  id             String       @id @default(uuid())
+  caseId         String
+  adminId        String
+  content        String
+  isInternal     Boolean      @default(true) // Internal notes only, not shared
+  createdAt      DateTime     @default(now())
+  case           CaseFile     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  admin          AdminUser    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([caseId])
+  @@index([adminId])
+}
