@@ -20,11 +20,10 @@ import {
 import { useState } from "react";
 import { useRouter as useNavRouter } from "next/navigation";
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ isOpen = false, onClose = () => {} }) {
   const pathname = usePathname();
   const router = useNavRouter();
   const { adminUser, logout, hasRole } = useAdmin();
-  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -87,44 +86,42 @@ export default function AdminSidebar() {
 
   return (
     <>
-      {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-4 left-4 z-40">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-2 rounded-lg bg-white shadow-md hover:bg-gray-50"
-        >
-          {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-        </button>
-      </div>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 lg:hidden z-20"
+          onClick={onClose}
+        />
+      )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-white shadow-lg transition-transform duration-300 z-30 lg:z-0 lg:relative lg:translate-x-0 ${
+        className={`fixed left-0 top-0 h-screen w-64 bg-white dark:bg-gray-900 shadow-lg transition-transform duration-300 z-30 lg:z-0 lg:relative lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Logo */}
-        <div className="h-20 flex items-center justify-center border-b border-gray-200">
+        <div className="h-20 flex items-center justify-center border-b border-gray-200 dark:border-gray-800">
           <Link
             href="/admin/dashboard"
-            className="font-bold text-xl text-blue-600"
+            className="font-bold text-xl text-blue-600 dark:text-blue-400 text-center"
           >
             LUMORA
-            <span className="text-xs block text-gray-500">Admin</span>
+            <span className="text-xs block text-gray-500 dark:text-gray-400">Admin</span>
           </Link>
         </div>
 
         {/* User Info */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-              <FiUser className="text-blue-600" />
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <FiUser className="text-blue-600 dark:text-blue-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                 {adminUser?.firstName} {adminUser?.lastName}
               </p>
-              <p className="text-xs text-gray-500">{adminUser?.role}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{adminUser?.role}</p>
             </div>
           </div>
         </div>
@@ -136,12 +133,12 @@ export default function AdminSidebar() {
               const Icon = item.icon;
               const active = isActive(item.href);
               return (
-                <Link key={item.href} href={item.href}>
+                <Link key={item.href} href={item.href} onClick={onClose}>
                   <div
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                       active
-                        ? "bg-blue-50 text-blue-600 font-semibold"
-                        : "text-gray-700 hover:bg-gray-50"
+                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold"
+                        : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
                     }`}
                   >
                     <Icon size={20} />
@@ -154,10 +151,10 @@ export default function AdminSidebar() {
         </nav>
 
         {/* Logout Button */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
           >
             <FiLogOut size={20} />
             <span className="text-sm font-semibold">Logout</span>
