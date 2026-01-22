@@ -12,7 +12,7 @@ import {
   FiCheckCircle,
   FiX,
   FiEye,
-  FiBlock,
+  FiSlash,
   FiFlag,
   FiRefreshCw,
   FiSearch,
@@ -524,7 +524,7 @@ export default function UserManagementPage() {
               {selectedUser.status !== "suspended" && (
                 <section className="border-t border-gray-200 dark:border-gray-800 pt-4">
                   <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                    <FiBlock className="w-4 h-4" />
+                    <FiSlash className="w-4 h-4" />
                     Suspend Account
                   </h3>
                   <div className="space-y-3">
