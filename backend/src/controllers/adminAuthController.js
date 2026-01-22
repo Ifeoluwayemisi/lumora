@@ -122,8 +122,12 @@ export async function adminLoginStep1Controller(req, res) {
 export async function adminLoginStep2Controller(req, res) {
   try {
     const { tempToken, twoFactorCode } = req.body;
+    
+    console.log("[ADMIN_LOGIN_STEP2] Received body:", req.body);
+    console.log("[ADMIN_LOGIN_STEP2] tempToken:", tempToken, "twoFactorCode:", twoFactorCode);
 
     if (!tempToken || !twoFactorCode) {
+      console.error("[ADMIN_LOGIN_STEP2] Missing fields - tempToken:", !!tempToken, "twoFactorCode:", !!twoFactorCode);
       return res.status(400).json({
         success: false,
         error: "Missing required fields",
