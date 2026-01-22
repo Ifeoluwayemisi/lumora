@@ -19,19 +19,23 @@ import {
 
 export default function ManufacturersPage() {
   const { adminUser, isHydrated } = useAdmin();
-  
+
   // UI State
   const [activeTab, setActiveTab] = useState("pending");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
+
   // Data
   const [reviewQueue, setReviewQueue] = useState([]);
   const [stats, setStats] = useState(null);
   const [selectedMfg, setSelectedMfg] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+  });
 
   // Fetch review queue
   const fetchReviewQueue = async (page = 1) => {
@@ -64,7 +68,7 @@ export default function ManufacturersPage() {
   useEffect(() => {
     if (isHydrated && adminUser) {
       Promise.all([fetchReviewQueue(), fetchStats()]).then(() =>
-        setIsLoading(false)
+        setIsLoading(false),
       );
     }
   }, [isHydrated, adminUser]);
@@ -78,9 +82,7 @@ export default function ManufacturersPage() {
       setSelectedMfg(null);
       await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to approve manufacturer"
-      );
+      setError(err.response?.data?.message || "Failed to approve manufacturer");
     } finally {
       setIsProcessing(false);
     }
@@ -113,9 +115,7 @@ export default function ManufacturersPage() {
       setSelectedMfg(null);
       await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to suspend manufacturer"
-      );
+      setError(err.response?.data?.message || "Failed to suspend manufacturer");
     } finally {
       setIsProcessing(false);
     }
@@ -331,7 +331,9 @@ export default function ManufacturersPage() {
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => fetchReviewQueue(Math.max(1, pagination.page - 1))}
+                    onClick={() =>
+                      fetchReviewQueue(Math.max(1, pagination.page - 1))
+                    }
                     disabled={pagination.page === 1}
                     className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                   >
@@ -339,7 +341,9 @@ export default function ManufacturersPage() {
                   </button>
                   <button
                     onClick={() =>
-                      fetchReviewQueue(Math.min(totalPages, pagination.page + 1))
+                      fetchReviewQueue(
+                        Math.min(totalPages, pagination.page + 1),
+                      )
                     }
                     disabled={pagination.page === totalPages}
                     className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg disabled:opacity-50 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
@@ -454,7 +458,9 @@ export default function ManufacturersPage() {
                   Approve
                 </button>
                 <button
-                  onClick={() => handleReject(selectedMfg.id, "Document verification failed")}
+                  onClick={() =>
+                    handleReject(selectedMfg.id, "Document verification failed")
+                  }
                   disabled={isProcessing}
                   className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
