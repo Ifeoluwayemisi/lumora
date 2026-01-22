@@ -37,6 +37,14 @@ import {
   exportProductCSV,
   exportHotspotCSV,
   getAllExportData,
+  getRealTimeAnalyticsController,
+  getProductPerformanceController,
+  generateReportController,
+  getReportsController,
+  createScheduledReportController,
+  getSchedulesController,
+  updateScheduleController,
+  deleteScheduleController,
 } from "../controllers/analyticsController.js";
 import {
   initiatePayment,
@@ -57,6 +65,25 @@ import {
   cancelTeamInvite,
   acceptTeamInvite,
 } from "../controllers/teamController.js";
+import {
+  createApiKeyController,
+  getApiKeysController,
+  updateApiKeyScopeController,
+  updateApiKeyRateLimitController,
+  revokeApiKeyController,
+  deleteApiKeyController,
+  getAuditLogsController,
+} from "../controllers/apiKeyController.js";
+import {
+  createBatchRecallController,
+  getBatchRecallsController,
+  updateBatchRecallStatusController,
+  getBatchExpirationMetricsController,
+  getExpiringBatchesController,
+  sendBatchExpirationAlertsController,
+  getBatchPerformanceController,
+  getAllBatchPerformanceController,
+} from "../controllers/batchManagementController.js";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -390,6 +417,182 @@ router.get(
   authMiddleware,
   roleMiddleware("manufacturer"),
   getFlaggedCodes,
+);
+
+// ========== NEW ADVANCED ANALYTICS ROUTES ==========
+
+// Real-time analytics
+router.get(
+  "/analytics/real-time",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getRealTimeAnalyticsController,
+);
+
+// Product performance
+router.get(
+  "/analytics/products",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getProductPerformanceController,
+);
+
+// Reporting
+router.post(
+  "/reports/generate",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  generateReportController,
+);
+
+router.get(
+  "/reports",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getReportsController,
+);
+
+// Report schedules
+router.post(
+  "/reports/schedule",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  createScheduledReportController,
+);
+
+router.get(
+  "/reports/schedules",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getSchedulesController,
+);
+
+router.put(
+  "/reports/schedules/:scheduleId",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  updateScheduleController,
+);
+
+router.delete(
+  "/reports/schedules/:scheduleId",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  deleteScheduleController,
+);
+
+// ========== API KEY MANAGEMENT ROUTES ==========
+
+router.post(
+  "/api-keys",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  createApiKeyController,
+);
+
+router.get(
+  "/api-keys",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getApiKeysController,
+);
+
+router.put(
+  "/api-keys/:keyId/scope",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  updateApiKeyScopeController,
+);
+
+router.put(
+  "/api-keys/:keyId/rate-limit",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  updateApiKeyRateLimitController,
+);
+
+router.delete(
+  "/api-keys/:keyId",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  revokeApiKeyController,
+);
+
+router.delete(
+  "/api-keys/:keyId/delete",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  deleteApiKeyController,
+);
+
+// ========== BATCH MANAGEMENT ROUTES ==========
+
+// Batch recalls
+router.post(
+  "/batches/:batchId/recall",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  createBatchRecallController,
+);
+
+router.get(
+  "/batches/recalls",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getBatchRecallsController,
+);
+
+router.put(
+  "/batches/recalls/:recallId",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  updateBatchRecallStatusController,
+);
+
+// Batch expiration
+router.get(
+  "/batches/expiration-metrics",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getBatchExpirationMetricsController,
+);
+
+router.get(
+  "/batches/expiring",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getExpiringBatchesController,
+);
+
+router.post(
+  "/batches/send-expiration-alerts",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  sendBatchExpirationAlertsController,
+);
+
+// Batch performance
+router.get(
+  "/batches/:batchId/performance",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getBatchPerformanceController,
+);
+
+router.get(
+  "/batches/performance/all",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getAllBatchPerformanceController,
+);
+
+// ========== AUDIT LOGS ==========
+
+router.get(
+  "/audit-logs",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getAuditLogsController,
 );
 
 export default router;

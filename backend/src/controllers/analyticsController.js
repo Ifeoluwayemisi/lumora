@@ -435,3 +435,371 @@ export async function getAllExportData(req, res) {
     res.status(500).json({ error: "Failed to fetch export data" });
   }
 }
+
+// ============================================
+// NEW ADVANCED ANALYTICS ENDPOINTS
+// ============================================
+
+import {
+  getRealTimeAnalytics,
+  getProductPerformanceMetrics,
+} from "../services/analyticsService.js";
+import {
+  generateAnalyticsReport,
+  getManufacturerReports,
+  exportReportToCSV,
+  exportReportToJSON,
+  createReportSchedule,
+  getReportSchedules,
+  updateReportSchedule,
+  deleteReportSchedule,
+} from "../services/reportingService.js";
+
+/**
+ * GET /manufacturer/analytics/real-time
+ * Get real-time analytics with code authenticity and geo distribution
+ */
+export async function getRealTimeAnalyticsController(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const analytics = await getRealTimeAnalytics(manufacturer.id);
+
+    res.json({
+      success: true,
+      data: analytics,
+    });
+  } catch (error) {
+    console.error("[GET_REAL_TIME_ANALYTICS] Error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * GET /manufacturer/analytics/products
+ * Get product performance metrics
+ */
+export async function getProductPerformanceController(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const metrics = await getProductPerformanceMetrics(manufacturer.id);
+
+    res.json({
+      success: true,
+      data: metrics,
+      total: metrics.length,
+    });
+  } catch (error) {
+    console.error("[PRODUCT_PERFORMANCE] Error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * POST /manufacturer/reports/generate
+ * Generate analytics report
+ */
+export async function generateReportController(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const { title, period, startDate, endDate, format = "pdf" } = req.body;
+
+    if (!title || !period || !startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields: title, period, startDate, endDate",
+      });
+    }
+
+    const report = await generateAnalyticsReport(
+      manufacturer.id,
+      title,
+      period,
+      new Date(startDate),
+      new Date(endDate),
+      [],
+    );
+
+    // Generate export if requested
+    let exportFile = null;
+    if (format === "csv") {
+      exportFile = await exportReportToCSV(report.id, manufacturer.id);
+    } else if (format === "json") {
+      exportFile = await exportReportToJSON(report.id, manufacturer.id);
+    }
+
+    res.json({
+      success: true,
+      data: report,
+      export: exportFile,
+    });
+  } catch (error) {
+    console.error("[GENERATE_REPORT] Error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * GET /manufacturer/reports
+ * Get all reports for manufacturer
+ */
+export async function getReportsController(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const { limit = 10 } = req.query;
+
+    const reports = await getManufacturerReports(
+      manufacturer.id,
+      parseInt(limit),
+    );
+
+    res.json({
+      success: true,
+      data: reports,
+      total: reports.length,
+    });
+  } catch (error) {
+    console.error("[GET_REPORTS] Error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * POST /manufacturer/reports/schedule
+ * Create scheduled report
+ */
+export async function createScheduledReportController(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const {
+      name,
+      frequency,
+      format,
+      recipients,
+      metrics,
+      dayOfWeek,
+      dayOfMonth,
+      hour,
+    } = req.body;
+
+    if (!name || !frequency || !format || !recipients || !metrics) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required fields",
+      });
+    }
+
+    const schedule = await createReportSchedule(manufacturer.id, {
+      name,
+      frequency,
+      format,
+      recipients,
+      metrics,
+      dayOfWeek,
+      dayOfMonth,
+      hour,
+    });
+
+    res.status(201).json({
+      success: true,
+      data: schedule,
+    });
+  } catch (error) {
+    console.error("[CREATE_SCHEDULE] Error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * GET /manufacturer/reports/schedules
+ * Get all report schedules
+ */
+export async function getSchedulesController(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const schedules = await getReportSchedules(manufacturer.id);
+
+    res.json({
+      success: true,
+      data: schedules,
+      total: schedules.length,
+    });
+  } catch (error) {
+    console.error("[GET_SCHEDULES] Error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * PUT /manufacturer/reports/schedules/:scheduleId
+ * Update report schedule
+ */
+export async function updateScheduleController(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const { scheduleId } = req.params;
+    const updates = req.body;
+
+    const updated = await updateReportSchedule(
+      scheduleId,
+      manufacturer.id,
+      updates,
+    );
+
+    res.json({
+      success: true,
+      data: updated,
+    });
+  } catch (error) {
+    console.error("[UPDATE_SCHEDULE] Error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}
+
+/**
+ * DELETE /manufacturer/reports/schedules/:scheduleId
+ * Delete report schedule
+ */
+export async function deleteScheduleController(req, res) {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const { scheduleId } = req.params;
+
+    await deleteReportSchedule(scheduleId, manufacturer.id);
+
+    res.json({
+      success: true,
+      message: "Schedule deleted",
+    });
+  } catch (error) {
+    console.error("[DELETE_SCHEDULE] Error:", error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+}

@@ -64,6 +64,11 @@ model Manufacturer {
   websiteChecks                WebsiteLegitimacyCheck[]
   documentChecks               DocumentForgerCheck[]
   trustHistory                 TrustScoreHistory[]
+  apiKeys                      ApiKey[]
+  batchRecalls                 BatchRecall[]
+  analyticsReports             AnalyticsReport[]
+  reportSchedules              ReportSchedule[]
+  analyticsAudits              AnalyticsAudit[]
 
   @@index([userId])
   @@index([email])
@@ -404,4 +409,95 @@ model TrustScoreHistory {
 
   @@index([manufacturerId])
   @@index([recordedAt])
+}
+
+model ApiKey {
+  id               String       @id @default(cuid())
+  manufacturerId   String
+  keyHash          String       @unique
+  name             String
+  scope            String       // read,generate,revoke (comma-separated)
+  rateLimit        Int          @default(1000) // requests per day
+  usageCount       Int          @default(0)
+  isActive         Boolean      @default(true)
+  lastUsedAt       DateTime?
+  expiresAt        DateTime?
+  createdAt        DateTime     @default(now())
+  manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturerId])
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model BatchRecall {
+  id               String       @id @default(cuid())
+  batchId          String
+  manufacturerId   String
+  reason           String       // quality_issue, safety_concern, counterfeit_detected, other
+  description      String       @db.Text
+  recalledUnits    Int?
+  status           String       @default("active") // active, closed, appealed
+  initiatedAt      DateTime     @default(now())
+  closedAt         DateTime?
+  manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturerId])
+  @@index([status])
+  @@index([initiatedAt])
+}
+
+model AnalyticsReport {
+  id               String       @id @default(cuid())
+  manufacturerId   String
+  title            String
+  period           String       // week, month, quarter, custom
+  startDate        DateTime
+  endDate          DateTime
+  metrics          Json         // JSON with all metrics
+  authenticity     Int?         // % genuine codes
+  geoDistribution  Json?        // Geographic data
+  expiredBatches   Int?
+  suspiciousActivity Int?
+  exportFormat     String       @default("pdf") // pdf, csv, json
+  exportPath       String?
+  generatedAt      DateTime     @default(now())
+  manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturerId])
+  @@index([generatedAt])
+}
+
+model ReportSchedule {
+  id               String       @id @default(cuid())
+  manufacturerId   String
+  name             String
+  frequency        String       // daily, weekly, monthly
+  format           String       // pdf, csv, json
+  recipients       Json         // array of emails
+  metrics          Json         // selected metrics
+  dayOfWeek        Int?         // 0-6 for weekly
+  dayOfMonth       Int?         // 1-31 for monthly
+  hour             Int          @default(9) // hour to send
+  isActive         Boolean      @default(true)
+  lastSentAt       DateTime?
+  createdAt        DateTime     @default(now())
+  manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturerId])
+  @@index([isActive])
+}
+
+// Add to Manufacturer model relations
+model AnalyticsAudit {
+  id               String       @id @default(cuid())
+  manufacturerId   String
+  actionType       String       // api_call, report_access, export, recall_initiated
+  details          Json
+  ipAddress        String?
+  timestamp        DateTime     @default(now())
+  manufacturer     Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturerId])
+  @@index([timestamp])
 }

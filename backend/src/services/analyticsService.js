@@ -252,3 +252,184 @@ export async function getExportData(manufacturerId, format = "csv") {
     throw err;
   }
 }
+
+/**
+ * Get real-time analytics with code authenticity rate
+ */
+export async function getRealTimeAnalytics(manufacturerId) {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    // Get all verifications in period
+    const verifications = await prisma.verificationLog.findMany({
+      where: {
+        manufacturerId,
+        createdAt: { gte: thirtyDaysAgo },
+      },
+    });
+
+    // Calculate authenticity metrics
+    const genuine = verifications.filter(
+      (v) => v.verificationState === "GENUINE",
+    ).length;
+    const suspicious = verifications.filter(
+      (v) => v.verificationState === "SUSPICIOUS_PATTERN",
+    ).length;
+    const invalid = verifications.filter(
+      (v) => v.verificationState === "INVALID",
+    ).length;
+    const alreadyUsed = verifications.filter(
+      (v) => v.verificationState === "CODE_ALREADY_USED",
+    ).length;
+
+    const total = verifications.length;
+    const authenticityRate = total > 0 ? (genuine / total) * 100 : 0;
+
+    // Geographic distribution
+    const geoData = {};
+    verifications.forEach((v) => {
+      const location = v.location || "Unknown";
+      geoData[location] = (geoData[location] || 0) + 1;
+    });
+
+    // Convert to array and sort by count
+    const geoDistribution = Object.entries(geoData)
+      .map(([location, count]) => ({
+        location,
+        count,
+        percentage: ((count / total) * 100).toFixed(2),
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    // Batch expiration tracking
+    const now = new Date();
+    const [expiredCount, expiringThis30DaysCount, activeCount] =
+      await Promise.all([
+        prisma.batch.count({
+          where: {
+            manufacturerId,
+            expirationDate: { lt: now },
+          },
+        }),
+        prisma.batch.count({
+          where: {
+            manufacturerId,
+            expirationDate: {
+              gte: now,
+              lte: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+            },
+          },
+        }),
+        prisma.batch.count({
+          where: {
+            manufacturerId,
+            expirationDate: {
+              gt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+            },
+          },
+        }),
+      ]);
+
+    return {
+      codeAuthenticity: {
+        total,
+        genuine,
+        suspicious,
+        invalid,
+        alreadyUsed,
+        authenticityRate: Math.round(authenticityRate * 100) / 100,
+        riskScore: calculateRiskScore(
+          genuine,
+          suspicious,
+          invalid,
+          alreadyUsed,
+        ),
+      },
+      geoDistribution: {
+        total: geoDistribution.length,
+        topLocations: geoDistribution.slice(0, 10),
+        allLocations: geoDistribution,
+      },
+      batchExpiration: {
+        expired: expiredCount,
+        expiringIn30Days: expiringThis30DaysCount,
+        active: activeCount,
+        totalBatches: expiredCount + expiringThis30DaysCount + activeCount,
+      },
+      timestamp: new Date(),
+    };
+  } catch (err) {
+    console.error("[REAL_TIME_ANALYTICS] Error:", err);
+    throw err;
+  }
+}
+
+/**
+ * Get product performance metrics
+ */
+export async function getProductPerformanceMetrics(manufacturerId) {
+  try {
+    const products = await prisma.product.findMany({
+      where: { manufacturerId: manufacturerId },
+      include: {
+        batches: {
+          include: {
+            verificationLogs: true,
+          },
+        },
+      },
+    });
+
+    const metrics = products.map((product) => {
+      let totalVerifications = 0;
+      let genuineCount = 0;
+      let suspiciousCount = 0;
+
+      product.batches.forEach((batch) => {
+        batch.verificationLogs.forEach((log) => {
+          totalVerifications++;
+          if (log.verificationState === "GENUINE") genuineCount++;
+          if (log.verificationState === "SUSPICIOUS_PATTERN") suspiciousCount++;
+        });
+      });
+
+      const authenticityRate =
+        totalVerifications > 0 ? (genuineCount / totalVerifications) * 100 : 0;
+
+      return {
+        productId: product.id,
+        productName: product.name,
+        category: product.category,
+        batchCount: product.batches.length,
+        totalVerifications,
+        genuineVerifications: genuineCount,
+        suspiciousVerifications: suspiciousCount,
+        authenticityRate: Math.round(authenticityRate * 100) / 100,
+        riskScore: calculateRiskScore(genuineCount, suspiciousCount, 0, 0),
+      };
+    });
+
+    return metrics.sort((a, b) => b.totalVerifications - a.totalVerifications);
+  } catch (err) {
+    console.error("[PRODUCT_PERFORMANCE] Error:", err);
+    throw err;
+  }
+}
+
+/**
+ * Helper function to calculate risk score
+ */
+function calculateRiskScore(genuine, suspicious, invalid, alreadyUsed) {
+  const total = genuine + suspicious + invalid + alreadyUsed;
+  if (total === 0) return 0;
+
+  const suspiciousRatio = (suspicious / total) * 100;
+  const invalidRatio = (invalid / total) * 100;
+  const reuseRatio = (alreadyUsed / total) * 100;
+
+  // Risk score 0-100
+  let score = suspiciousRatio * 0.5 + invalidRatio * 0.3 + reuseRatio * 0.2;
+
+  return Math.min(100, Math.round(score));
+}
