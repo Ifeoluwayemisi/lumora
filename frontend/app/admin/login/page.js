@@ -55,10 +55,23 @@ export default function AdminLoginPage() {
     try {
       console.log("Sending 2FA verification:", { tempToken, twoFactorCode });
       const response = await adminAuthApi.loginStep2(tempToken, twoFactorCode);
-      console.log("2FA response:", response);
-      // response is the entire object: { success: true, data: { token, admin, ... } }
+      console.log("2FA full response:", response);
+      console.log("2FA response.data:", response.data);
+      console.log("2FA response.data.admin:", response.data?.admin);
+      console.log("2FA response.data.token:", response.data?.token);
+      
+      if (!response.data?.admin || !response.data?.token) {
+        throw new Error("Invalid response structure: missing admin or token");
+      }
+
+      // Save to localStorage
       localStorage.setItem("admin_user", JSON.stringify(response.data.admin));
       localStorage.setItem("admin_token", response.data.token);
+      
+      console.log("Saved to localStorage:", {
+        admin_user: localStorage.getItem("admin_user"),
+        admin_token: localStorage.getItem("admin_token")?.substring(0, 20) + "..."
+      });
 
       router.push("/admin/dashboard");
     } catch (err) {
@@ -66,6 +79,7 @@ export default function AdminLoginPage() {
       setError(
         err.response?.data?.message ||
           err.response?.data?.data?.message ||
+          err.message ||
           "2FA verification failed. Please try again.",
       );
     } finally {
