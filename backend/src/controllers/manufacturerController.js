@@ -848,6 +848,8 @@ export async function addBatch(req, res) {
     // Check if quota is running low and create warning notification
     const { createQuotaWarning } =
       await import("../services/notificationService.js");
+    const { sendQuotaWarningEmail } =
+      await import("../services/notificationService.js");
     const newCodesCount = await prisma.code.count({
       where: {
         manufacturerId,
@@ -859,6 +861,12 @@ export async function addBatch(req, res) {
     // Create warning if less than 25% of daily quota remains
     if (quotaRemaining <= Math.ceil(dailyLimit * 0.25)) {
       await createQuotaWarning(manufacturerId, quotaRemaining, dailyLimit);
+      // Also send email asynchronously (don't block response)
+      sendQuotaWarningEmail(manufacturerId, quotaRemaining, dailyLimit).catch(
+        (err) => {
+          console.error("[QUOTA_EMAIL] Failed to send email:", err.message);
+        },
+      );
     }
 
     return res.status(201).json({

@@ -93,7 +93,7 @@ export async function verifyManual(req, res, next) {
           result.verificationState === "SUSPICIOUS_PATTERN" ||
           result.verificationState === "CODE_ALREADY_USED"
         ) {
-          const { createSuspiciousActivityAlert } =
+          const { createSuspiciousActivityAlert, sendSuspiciousActivityEmail } =
             await import("../services/notificationService.js");
           const alertDetails =
             result.verificationState === "SUSPICIOUS_PATTERN"
@@ -105,6 +105,22 @@ export async function verifyManual(req, res, next) {
             alertDetails,
             result.verificationState,
           );
+
+          // Send email asynchronously (don't block response)
+          const location =
+            latitude && longitude ? `${latitude}, ${longitude}` : null;
+          sendSuspiciousActivityEmail(
+            result.code.manufacturerId,
+            codeValue,
+            result.verificationState,
+            alertDetails,
+            location,
+          ).catch((err) => {
+            console.error(
+              "[SUSPICIOUS_EMAIL] Failed to send email:",
+              err.message,
+            );
+          });
         }
       } catch (notifError) {
         console.warn("[VERIFY_MANUAL] Notification error:", notifError.message);
@@ -185,7 +201,7 @@ export async function verifyQR(req, res, next) {
           result.verificationState === "SUSPICIOUS_PATTERN" ||
           result.verificationState === "CODE_ALREADY_USED"
         ) {
-          const { createSuspiciousActivityAlert } =
+          const { createSuspiciousActivityAlert, sendSuspiciousActivityEmail } =
             await import("../services/notificationService.js");
           const alertDetails =
             result.verificationState === "SUSPICIOUS_PATTERN"
@@ -197,6 +213,22 @@ export async function verifyQR(req, res, next) {
             alertDetails,
             result.verificationState,
           );
+
+          // Send email asynchronously (don't block response)
+          const location =
+            latitude && longitude ? `${latitude}, ${longitude}` : null;
+          sendSuspiciousActivityEmail(
+            result.code.manufacturerId,
+            codeValue,
+            result.verificationState,
+            alertDetails,
+            location,
+          ).catch((err) => {
+            console.error(
+              "[SUSPICIOUS_EMAIL] Failed to send email:",
+              err.message,
+            );
+          });
         }
       } catch (notifError) {
         console.warn("[VERIFY_QR] Notification error:", notifError.message);

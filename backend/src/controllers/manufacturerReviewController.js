@@ -92,6 +92,8 @@ export async function approveManufacturer(req, res) {
       await import("../services/dynamicTrustScoreService.js");
     const { recalculateManufacturerRiskScore } =
       await import("../services/aiRiskService.js");
+    const { sendAccountApprovalEmail } =
+      await import("../services/notificationService.js");
 
     // Calculate dynamic trust score on approval (based on documents verified)
     const trustData = await calculateDynamicTrustScore(manufacturerId);
@@ -107,7 +109,10 @@ export async function approveManufacturer(req, res) {
       },
     });
 
-    // TODO: Send approval email to manufacturer
+    // Send approval email asynchronously (don't block response)
+    sendAccountApprovalEmail(manufacturerId).catch((err) => {
+      console.error("[APPROVAL] Failed to send email:", err.message);
+    });
 
     res.status(200).json({
       message: "Manufacturer approved successfully",
@@ -157,6 +162,8 @@ export async function rejectManufacturer(req, res) {
   try {
     const { manufacturerId } = req.params;
     const { reason } = req.body;
+    const { sendAccountRejectionEmail } =
+      await import("../services/notificationService.js");
 
     if (!reason) {
       return res.status(400).json({ error: "Rejection reason is required" });
@@ -168,6 +175,11 @@ export async function rejectManufacturer(req, res) {
         accountStatus: "rejected",
         verified: false,
       },
+    });
+
+    // Send rejection email asynchronously (don't block response)
+    sendAccountRejectionEmail(manufacturerId, reason).catch((err) => {
+      console.error("[REJECTION] Failed to send email:", err.message);
     });
 
     // TODO: Send rejection email with reason

@@ -12,6 +12,288 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const FRONTEND_URL =
+  process.env.FRONTEND_URL || "https://lumora-gold.vercel.app";
+const APP_NAME = "Lumora";
+
+/**
+ * Email Templates - HTML templates for various notification types
+ */
+const emailTemplates = {
+  /**
+   * Account Approval Email
+   */
+  accountApproval: (manufacturerName, trustScore, riskLevel) => ({
+    subject: "✅ Your Lumora Account Has Been Approved!",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px;">🎉 Account Approved!</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f9fafb; border: 1px solid #e5e7eb;">
+          <p style="font-size: 16px; color: #374151; margin-top: 0;">
+            Hi ${manufacturerName},
+          </p>
+          
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            Great news! Your ${APP_NAME} manufacturer account has been verified and approved by our NAFDAC team. You can now start generating verification codes and protecting your products.
+          </p>
+          
+          <div style="background: white; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0 0 10px 0; font-weight: bold; color: #1f2937;">Your Account Status:</p>
+            <p style="margin: 5px 0; color: #374151;"><strong>Trust Score:</strong> ${trustScore}/100</p>
+            <p style="margin: 5px 0; color: #374151;"><strong>Risk Level:</strong> ${riskLevel}</p>
+          </div>
+          
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            You can now:
+          </p>
+          <ul style="font-size: 16px; color: #374151; line-height: 1.8;">
+            <li>✅ Create products and batches</li>
+            <li>✅ Generate verification codes</li>
+            <li>✅ View detailed analytics</li>
+            <li>✅ Manage your team (Premium feature)</li>
+            <li>✅ Export verification data</li>
+          </ul>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${FRONTEND_URL}/dashboard/manufacturer" style="display: inline-block; background: #10b981; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px;">
+              Go to Dashboard
+            </a>
+          </div>
+          
+          <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+            If you have any questions, please contact our support team.
+          </p>
+        </div>
+        
+        <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0;">© 2026 ${APP_NAME}. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  /**
+   * Account Rejection Email
+   */
+  accountRejection: (manufacturerName, reason) => ({
+    subject: "❌ Lumora Account - Verification Not Approved",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px;">⚠️ Verification Status Update</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f9fafb; border: 1px solid #e5e7eb;">
+          <p style="font-size: 16px; color: #374151; margin-top: 0;">
+            Hi ${manufacturerName},
+          </p>
+          
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            Thank you for submitting your verification documents to ${APP_NAME}. After careful review by our NAFDAC team, we were unable to approve your account at this time.
+          </p>
+          
+          <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0 0 10px 0; font-weight: bold; color: #7f1d1d;">Rejection Reason:</p>
+            <p style="margin: 0; color: #374151;">${reason}</p>
+          </div>
+          
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            <strong>What can you do?</strong>
+          </p>
+          <ul style="font-size: 16px; color: #374151; line-height: 1.8;">
+            <li>📤 Re-submit corrected documents</li>
+            <li>💬 Contact our support team for clarification</li>
+            <li>📋 Review our document requirements</li>
+          </ul>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${FRONTEND_URL}/dashboard/manufacturer/profile" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px;">
+              Re-submit Documents
+            </a>
+          </div>
+          
+          <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+            Our team is here to help. Reply to this email or contact support@lumora.app for assistance.
+          </p>
+        </div>
+        
+        <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0;">© 2026 ${APP_NAME}. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  /**
+   * Quota Warning Email
+   */
+  quotaWarning: (manufacturerName, remaining, limit, percentageRemaining) => ({
+    subject: `⚠️ Daily Code Quota Running Low (${percentageRemaining}% remaining)`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px;">⚠️ Quota Alert</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f9fafb; border: 1px solid #e5e7eb;">
+          <p style="font-size: 16px; color: #374151; margin-top: 0;">
+            Hi ${manufacturerName},
+          </p>
+          
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            Your daily code generation quota is running low today.
+          </p>
+          
+          <div style="background: white; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0 0 10px 0; font-weight: bold; color: #92400e;">Quota Status:</p>
+            <div style="margin: 10px 0;">
+              <div style="background: #e5e7eb; border-radius: 4px; height: 20px; overflow: hidden;">
+                <div style="background: #f59e0b; height: 100%; width: ${100 - percentageRemaining}%; transition: width 0.3s;"></div>
+              </div>
+            </div>
+            <p style="margin: 5px 0; color: #374151;"><strong>${remaining} / ${limit}</strong> codes remaining (${percentageRemaining}%)</p>
+          </div>
+          
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            ${percentageRemaining <= 10 ? "🔴 <strong>CRITICAL:</strong> You only have a few codes left today. Your quota will reset at midnight." : "Once you reach your daily limit, you won't be able to generate more codes until tomorrow (midnight UTC)."}
+          </p>
+          
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            <strong>Want unlimited codes?</strong> Upgrade to our Premium plan for unlimited daily code generation.
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${FRONTEND_URL}/dashboard/manufacturer/billing" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px;">
+              Upgrade to Premium
+            </a>
+          </div>
+          
+          <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+            <strong>Current Plan:</strong> Basic (${limit} codes/day)<br/>
+            <strong>Premium Plan:</strong> Unlimited codes/day + advanced features
+          </p>
+        </div>
+        
+        <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0;">© 2026 ${APP_NAME}. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  /**
+   * Suspicious Activity Alert Email
+   */
+  suspiciousActivityAlert: (
+    manufacturerName,
+    codeValue,
+    alertType,
+    details,
+    location,
+  ) => ({
+    subject: `🚨 Security Alert: Suspicious Activity Detected`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px;">🚨 Security Alert</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f9fafb; border: 1px solid #e5e7eb;">
+          <p style="font-size: 16px; color: #374151; margin-top: 0;">
+            Hi ${manufacturerName},
+          </p>
+          
+          <p style="font-size: 16px; color: #ef4444; font-weight: bold; line-height: 1.6;">
+            We detected suspicious activity on your account. Please review immediately.
+          </p>
+          
+          <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0 0 10px 0; font-weight: bold; color: #7f1d1d;">Alert Type:</p>
+            <p style="margin: 5px 0; color: #374151;"><strong>${alertType}</strong></p>
+            <p style="margin: 5px 0; color: #374151;"><strong>Code:</strong> ${codeValue.substring(0, 8)}...</p>
+            <p style="margin: 5px 0; color: #374151;"><strong>Details:</strong> ${details}</p>
+            ${location ? `<p style="margin: 5px 0; color: #374151;"><strong>Location:</strong> ${location}</p>` : ""}
+          </div>
+          
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            <strong>What this means:</strong>
+          </p>
+          <ul style="font-size: 16px; color: #374151; line-height: 1.8;">
+            <li>🔍 Unusual verification pattern detected</li>
+            <li>⚠️ Possible counterfeit product detected</li>
+            <li>📍 Multiple locations in short timeframe</li>
+          </ul>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${FRONTEND_URL}/dashboard/manufacturer/codes" style="display: inline-block; background: #ef4444; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px;">
+              Review Code Activity
+            </a>
+          </div>
+          
+          <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+            Our security team is monitoring this. You can flag this code as counterfeit or suspicious in your dashboard.
+          </p>
+        </div>
+        
+        <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0;">© 2026 ${APP_NAME}. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  }),
+
+  /**
+   * Document Upload Confirmation Email
+   */
+  documentUploadConfirmation: (manufacturerName, documentType) => ({
+    subject: `📄 Document Received: ${documentType}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 28px;">📄 Document Received</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f9fafb; border: 1px solid #e5e7eb;">
+          <p style="font-size: 16px; color: #374151; margin-top: 0;">
+            Hi ${manufacturerName},
+          </p>
+          
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            Your ${documentType} document has been received and is now under review by our NAFDAC team.
+          </p>
+          
+          <div style="background: white; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="margin: 0 0 10px 0; font-weight: bold; color: #1e40af;">Status:</p>
+            <p style="margin: 5px 0; color: #374151;"><strong>📋 Pending Review</strong></p>
+            <p style="margin: 5px 0; font-size: 14px; color: #6b7280;">Usually reviewed within 1-3 business days</p>
+          </div>
+          
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            You'll receive an email once the review is complete. In the meantime, you can upload additional documents to expedite the process.
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${FRONTEND_URL}/dashboard/manufacturer/profile" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px;">
+              View Document Status
+            </a>
+          </div>
+          
+          <p style="font-size: 14px; color: #6b7280; margin-top: 20px;">
+            Questions? Check our <a href="${FRONTEND_URL}/dashboard/manufacturer/help" style="color: #3b82f6;">Help Center</a> or contact support.
+          </p>
+        </div>
+        
+        <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0;">© 2026 ${APP_NAME}. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  }),
+};
+
 /**
  * Send code verification notification
  * Notifies manufacturer when their code is verified
@@ -449,5 +731,199 @@ export async function createQuotaWarning(manufacturerId, remaining, limit) {
   } catch (error) {
     console.error("[QUOTA_WARNING] Error:", error.message);
     return null;
+  }
+}
+
+/**
+ * Send account approval email to manufacturer
+ */
+export async function sendAccountApprovalEmail(manufacturerId) {
+  try {
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      include: { userId: false },
+    });
+
+    if (!manufacturer || !manufacturer.email) {
+      console.warn("[EMAIL] Manufacturer email not found:", manufacturerId);
+      return false;
+    }
+
+    const { subject, html } = emailTemplates.accountApproval(
+      manufacturer.name,
+      manufacturer.trustScore || 75,
+      manufacturer.riskLevel || "MEDIUM",
+    );
+
+    await transporter.sendMail({
+      from: `"${APP_NAME} Team" <${process.env.EMAIL_USER}>`,
+      to: manufacturer.email,
+      subject,
+      html,
+    });
+
+    console.log(`[EMAIL] Account approval email sent to ${manufacturer.email}`);
+    return true;
+  } catch (error) {
+    console.error("[EMAIL] Account approval email error:", error.message);
+    return false;
+  }
+}
+
+/**
+ * Send account rejection email to manufacturer
+ */
+export async function sendAccountRejectionEmail(manufacturerId, reason) {
+  try {
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      include: { userId: false },
+    });
+
+    if (!manufacturer || !manufacturer.email) {
+      console.warn("[EMAIL] Manufacturer email not found:", manufacturerId);
+      return false;
+    }
+
+    const { subject, html } = emailTemplates.accountRejection(
+      manufacturer.name,
+      reason || "Your documents did not meet our verification requirements.",
+    );
+
+    await transporter.sendMail({
+      from: `"${APP_NAME} Team" <${process.env.EMAIL_USER}>`,
+      to: manufacturer.email,
+      subject,
+      html,
+    });
+
+    console.log(
+      `[EMAIL] Account rejection email sent to ${manufacturer.email}`,
+    );
+    return true;
+  } catch (error) {
+    console.error("[EMAIL] Account rejection email error:", error.message);
+    return false;
+  }
+}
+
+/**
+ * Send quota warning email to manufacturer
+ */
+export async function sendQuotaWarningEmail(manufacturerId, remaining, limit) {
+  try {
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      include: { userId: false },
+    });
+
+    if (!manufacturer || !manufacturer.email) {
+      console.warn("[EMAIL] Manufacturer email not found:", manufacturerId);
+      return false;
+    }
+
+    const percentageRemaining = ((remaining / limit) * 100).toFixed(0);
+    const { subject, html } = emailTemplates.quotaWarning(
+      manufacturer.name,
+      remaining,
+      limit,
+      percentageRemaining,
+    );
+
+    await transporter.sendMail({
+      from: `"${APP_NAME} Team" <${process.env.EMAIL_USER}>`,
+      to: manufacturer.email,
+      subject,
+      html,
+    });
+
+    console.log(`[EMAIL] Quota warning email sent to ${manufacturer.email}`);
+    return true;
+  } catch (error) {
+    console.error("[EMAIL] Quota warning email error:", error.message);
+    return false;
+  }
+}
+
+/**
+ * Send suspicious activity alert email to manufacturer
+ */
+export async function sendSuspiciousActivityEmail(
+  manufacturerId,
+  codeValue,
+  alertType,
+  details,
+  location,
+) {
+  try {
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      include: { userId: false },
+    });
+
+    if (!manufacturer || !manufacturer.email) {
+      console.warn("[EMAIL] Manufacturer email not found:", manufacturerId);
+      return false;
+    }
+
+    const { subject, html } = emailTemplates.suspiciousActivityAlert(
+      manufacturer.name,
+      codeValue,
+      alertType,
+      details,
+      location,
+    );
+
+    await transporter.sendMail({
+      from: `"${APP_NAME} Team" <${process.env.EMAIL_USER}>`,
+      to: manufacturer.email,
+      subject,
+      html,
+    });
+
+    console.log(
+      `[EMAIL] Suspicious activity email sent to ${manufacturer.email}`,
+    );
+    return true;
+  } catch (error) {
+    console.error("[EMAIL] Suspicious activity email error:", error.message);
+    return false;
+  }
+}
+
+/**
+ * Send document upload confirmation email
+ */
+export async function sendDocumentUploadEmail(manufacturerId, documentType) {
+  try {
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      include: { userId: false },
+    });
+
+    if (!manufacturer || !manufacturer.email) {
+      console.warn("[EMAIL] Manufacturer email not found:", manufacturerId);
+      return false;
+    }
+
+    const { subject, html } = emailTemplates.documentUploadConfirmation(
+      manufacturer.name,
+      documentType,
+    );
+
+    await transporter.sendMail({
+      from: `"${APP_NAME} Team" <${process.env.EMAIL_USER}>`,
+      to: manufacturer.email,
+      subject,
+      html,
+    });
+
+    console.log(
+      `[EMAIL] Document upload confirmation sent to ${manufacturer.email}`,
+    );
+    return true;
+  } catch (error) {
+    console.error("[EMAIL] Document upload email error:", error.message);
+    return false;
   }
 }
