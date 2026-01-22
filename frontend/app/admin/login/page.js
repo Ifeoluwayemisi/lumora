@@ -16,7 +16,6 @@ export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [tempToken, setTempToken] = useState("");
-  const [adminId, setAdminId] = useState("");
 
   // Step 2: 2FA
   const [twoFactorCode, setTwoFactorCode] = useState("");
@@ -33,8 +32,7 @@ export default function AdminLoginPage() {
 
     try {
       const response = await adminAuthApi.loginStep1(email, password);
-      setTempToken(response.data.tempToken);
-      setAdminId(response.data.adminId);
+      setTempToken(response.tempToken);
       setStep(2);
     } catch (err) {
       setError(
@@ -53,11 +51,11 @@ export default function AdminLoginPage() {
     setError("");
 
     try {
-      const response = await adminAuthApi.loginStep2(tempToken, twoFactorCode, adminId);
+      const response = await adminAuthApi.loginStep2(tempToken, twoFactorCode);
 
-      // Save to localStorage
-      localStorage.setItem("admin_user", JSON.stringify(response.data.user));
-      localStorage.setItem("admin_token", response.data.authToken);
+      // Save to localStorage - response has data.admin and data.token
+      localStorage.setItem("admin_user", JSON.stringify(response.data.admin));
+      localStorage.setItem("admin_token", response.data.token);
 
       router.push("/admin/dashboard");
     } catch (err) {
