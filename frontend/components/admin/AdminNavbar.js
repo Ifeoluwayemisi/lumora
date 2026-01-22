@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function AdminNavbar({ onMenuToggle }) {
-  const { adminUser, logout } = useAdmin();
+  const { adminUser, logout, isHydrated } = useAdmin();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -15,6 +15,11 @@ export default function AdminNavbar({ onMenuToggle }) {
     await logout();
     router.push("/admin/login");
   };
+
+  // Placeholder for non-hydrated state - matches what will render after hydration
+  const userInitials = adminUser ? `${adminUser?.firstName?.[0] || ""}${adminUser?.lastName?.[0] || ""}`.toUpperCase() : "••";
+  const userFirstName = adminUser?.firstName || "Loading";
+  const userRole = adminUser?.role || "admin";
 
   return (
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 h-16 flex items-center justify-between px-6 sticky top-0 z-40">
@@ -49,19 +54,19 @@ export default function AdminNavbar({ onMenuToggle }) {
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            disabled={!isHydrated}
           >
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
               <span className="text-white text-xs font-bold">
-                {adminUser?.firstName?.[0]}
-                {adminUser?.lastName?.[0]}
+                {userInitials}
               </span>
             </div>
             <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {adminUser?.firstName}
+                {userFirstName}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {adminUser?.role}
+                {userRole}
               </p>
             </div>
           </button>

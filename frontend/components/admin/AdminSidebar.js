@@ -108,7 +108,9 @@ export default function AdminSidebar({ isOpen = false, onClose = () => {} }) {
             className="font-bold text-xl text-blue-600 dark:text-blue-400 text-center"
           >
             LUMORA
-            <span className="text-xs block text-gray-500 dark:text-gray-400">Admin</span>
+            <span className="text-xs block text-gray-500 dark:text-gray-400">
+              Admin
+            </span>
           </Link>
         </div>
 
@@ -120,9 +122,11 @@ export default function AdminSidebar({ isOpen = false, onClose = () => {} }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                {adminUser?.firstName} {adminUser?.lastName}
+                {adminUser ? `${adminUser?.firstName || ""} ${adminUser?.lastName || ""}`.trim() : "Loading..."}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{adminUser?.role}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {adminUser?.role || "admin"}
+              </p>
             </div>
           </div>
         </div>
