@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 export default function RoleGuard({ children, requiredRoles = [] }) {
   const { adminUser, isHydrated } = useAdmin();
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(null);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -33,13 +33,7 @@ export default function RoleGuard({ children, requiredRoles = [] }) {
     }
   }, [adminUser, isHydrated, requiredRoles, router]);
 
-  if (!isHydrated || !isAuthorized) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
+  // Always render children - let redirects happen via useEffect
+  // This prevents hydration mismatches from conditional rendering
   return children;
 }
