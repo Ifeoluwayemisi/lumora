@@ -3,23 +3,18 @@
 // Mark this page as dynamic to prevent static prerendering
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AdminProvider } from "@/context/AdminContext";
-import { useAdmin } from "@/hooks/useAdmin";
-import { adminAuthApi } from "@/services/adminApi";
 import {
   AdminInput,
   AdminButton,
   AdminErrorMessage,
-  AdminLoadingSpinner,
 } from "@/components/admin/AdminComponents";
 import { FiMail, FiLock, FiShield } from "react-icons/fi";
+import { adminAuthApi } from "@/services/adminApi";
 
-// Inner component that uses the hook
-function AdminLoginContent() {
+export default function AdminLoginPage() {
   const router = useRouter();
-  const { login, isHydrated, adminUser } = useAdmin();
 
   // Step 1: Email/Password
   const [step, setStep] = useState(1);
@@ -33,13 +28,6 @@ function AdminLoginContent() {
   // State
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (isHydrated && adminUser) {
-      router.push("/admin/dashboard");
-    }
-  }, [adminUser, isHydrated, router]);
 
   // Handle Step 1: Email/Password
   const handleStep1 = async (e) => {
@@ -69,7 +57,11 @@ function AdminLoginContent() {
 
     try {
       const response = await adminAuthApi.loginStep2(tempToken, twoFactorCode);
-      login(response.user, response.authToken);
+
+      // Save to localStorage
+      localStorage.setItem("admin_user", JSON.stringify(response.user));
+      localStorage.setItem("admin_token", response.authToken);
+
       router.push("/admin/dashboard");
     } catch (err) {
       setError(
@@ -82,152 +74,102 @@ function AdminLoginContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center p-4">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
+        {/* Logo/Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">LUMORA</h1>
-          <p className="text-blue-100">Admin Control Panel</p>
-        </div>
-
-        {/* Login Card */}
-        <div className="bg-white rounded-lg shadow-2xl p-8">
-          {error && <AdminErrorMessage message={error} />}
-
-          {step === 1 ? (
-            // Step 1: Email/Password
-            <>
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Sign In</h2>
-                <p className="text-gray-600 text-sm mt-1">
-                  Enter your credentials to continue
-                </p>
-              </div>
-
-              <form onSubmit={handleStep1} className="space-y-4">
-                <AdminInput
-                  label="Email Address"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@lumora.io"
-                  required
-                  disabled={isLoading || !isHydrated}
-                  icon={FiMail}
-                />
-
-                <AdminInput
-                  label="Password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  disabled={isLoading || !isHydrated}
-                  icon={FiLock}
-                />
-
-                <AdminButton
-                  variant="primary"
-                  size="md"
-                  isLoading={isLoading || !isHydrated}
-                  className="w-full"
-                  type="submit"
-                  disabled={!isHydrated}
-                >
-                  {!isHydrated ? "Loading..." : "Continue"}
-                </AdminButton>
-              </form>
-
-              <p className="text-center text-gray-600 text-sm mt-6">
-                Don't have an account?{" "}
-                <button
-                  onClick={() => router.push("/admin/register")}
-                  className="text-blue-600 hover:text-blue-700 font-semibold"
-                >
-                  Register here
-                </button>
-              </p>
-            </>
-          ) : (
-            // Step 2: 2FA
-            <>
-              <div className="mb-6">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mx-auto mb-4">
-                  <FiShield className="text-blue-600" size={24} />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 text-center">
-                  Two-Factor Authentication
-                </h2>
-                <p className="text-gray-600 text-sm mt-2 text-center">
-                  Enter the 6-digit code from your authenticator app
-                </p>
-              </div>
-
-              <form onSubmit={handleStep2} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Authentication Code
-                  </label>
-                  <input
-                    type="text"
-                    value={twoFactorCode}
-                    onChange={(e) => {
-                      const val = e.target.value.replace(/\D/g, "").slice(0, 6);
-                      setTwoFactorCode(val);
-                    }}
-                    placeholder="000000"
-                    maxLength="6"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest font-mono"
-                    required
-                    disabled={isLoading || !isHydrated}
-                    autoComplete="off"
-                  />
-                </div>
-
-                <AdminButton
-                  variant="primary"
-                  size="md"
-                  isLoading={isLoading || !isHydrated}
-                  className="w-full"
-                  type="submit"
-                  disabled={!isHydrated}
-                >
-                  {!isHydrated ? "Loading..." : "Verify"}
-                </AdminButton>
-              </form>
-
-              <button
-                onClick={() => {
-                  setStep(1);
-                  setTempToken("");
-                  setTwoFactorCode("");
-                  setError("");
-                }}
-                className="w-full mt-6 text-center text-blue-600 hover:text-blue-700 font-semibold text-sm"
-              >
-                Back to Sign In
-              </button>
-            </>
-          )}
-
-          {/* Footer */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-center text-gray-600 text-xs">
-              For security reasons, please ensure you're on a secure device.
-            </p>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4">
+            <FiShield className="w-8 h-8 text-white" />
           </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Lumora Admin</h1>
+          <p className="text-slate-400">Secure Access Portal</p>
         </div>
+
+        {/* Error Message */}
+        {error && <AdminErrorMessage message={error} className="mb-6" />}
+
+        {/* Step 1: Email/Password */}
+        {step === 1 && (
+          <form onSubmit={handleStep1} className="space-y-4">
+            <AdminInput
+              icon={FiMail}
+              placeholder="Admin Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+              className="mb-4"
+            />
+
+            <AdminInput
+              icon={FiLock}
+              placeholder="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+              className="mb-6"
+            />
+
+            <AdminButton
+              type="submit"
+              isLoading={isLoading}
+              className="w-full"
+            >
+              {isLoading ? "Verifying..." : "Continue"}
+            </AdminButton>
+          </form>
+        )}
+
+        {/* Step 2: 2FA */}
+        {step === 2 && (
+          <form onSubmit={handleStep2} className="space-y-4">
+            <p className="text-slate-300 text-center mb-4">
+              Enter the 6-digit code from your authenticator app
+            </p>
+
+            <AdminInput
+              icon={FiShield}
+              placeholder="000000"
+              type="text"
+              value={twoFactorCode}
+              onChange={(e) => setTwoFactorCode(e.target.value.slice(0, 6))}
+              maxLength="6"
+              required
+              disabled={isLoading}
+              className="mb-6 text-center text-2xl tracking-widest"
+            />
+
+            <AdminButton
+              type="submit"
+              isLoading={isLoading}
+              className="w-full"
+            >
+              {isLoading ? "Verifying..." : "Verify Code"}
+            </AdminButton>
+
+            <button
+              type="button"
+              onClick={() => {
+                setStep(1);
+                setTwoFactorCode("");
+                setError("");
+              }}
+              disabled={isLoading}
+              className="w-full text-sm text-slate-400 hover:text-slate-300 disabled:opacity-50 py-2 transition"
+            >
+              Back to Email/Password
+            </button>
+          </form>
+        )}
+
+        {/* Security Notice */}
+        <p className="text-xs text-slate-500 text-center mt-6">
+          This is a secure admin portal. All access is logged and monitored.
+        </p>
       </div>
     </div>
-  );
-}
-
-// Outer component that wraps with AdminProvider
-export default function AdminLoginPage() {
-  return (
-    <AdminProvider>
-      <AdminLoginContent />
-    </AdminProvider>
   );
 }
