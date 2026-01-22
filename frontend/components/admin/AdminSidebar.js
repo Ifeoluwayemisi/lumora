@@ -17,12 +17,10 @@ import {
   FiShoppingBag,
   FiBarChart2,
 } from "react-icons/fi";
-import { useState } from "react";
-import { useRouter as useNavRouter } from "next/navigation";
 
 export default function AdminSidebar({ isOpen = false, onClose = () => {} }) {
   const pathname = usePathname();
-  const router = useNavRouter();
+  const router = useRouter();
   const { adminUser, logout, hasRole } = useAdmin();
 
   const handleLogout = async () => {
@@ -122,7 +120,9 @@ export default function AdminSidebar({ isOpen = false, onClose = () => {} }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                {adminUser ? `${adminUser?.firstName || ""} ${adminUser?.lastName || ""}`.trim() : "Loading..."}
+                {adminUser
+                  ? `${adminUser?.firstName || ""} ${adminUser?.lastName || ""}`.trim()
+                  : "Loading..."}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {adminUser?.role || "admin"}
@@ -171,7 +171,7 @@ export default function AdminSidebar({ isOpen = false, onClose = () => {} }) {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={onClose}
         />
       )}
     </>
