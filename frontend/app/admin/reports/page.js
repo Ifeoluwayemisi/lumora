@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
-import { adminReportsApi } from "@/services/adminApi";
+import { adminReportApi } from "@/services/adminApi";
 import { useAdmin } from "@/hooks/useAdmin";
 import {
   FiFilter,
@@ -54,7 +54,7 @@ export default function ReportsPage() {
         closed: "CLOSED",
       };
 
-      const res = await adminReportsApi.getReports(page, 10, statusMap[status]);
+      const res = await adminReportApi.getReports(page, 10, statusMap[status]);
 
       setReports(res.data.items || []);
       setPagination({
@@ -71,7 +71,7 @@ export default function ReportsPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      const res = await adminReportsApi.getReportsStats();
+      const res = await adminReportApi.getReportsStats();
       setStats(res.data);
     } catch (err) {
       console.error("[STATS] Error:", err);
@@ -95,7 +95,7 @@ export default function ReportsPage() {
     }
     try {
       setIsProcessing(true);
-      await adminReportsApi.reviewReport(reportId, {
+      await adminReportApi.reviewReport(reportId, {
         status,
         notes: actionNotes,
       });
@@ -117,7 +117,7 @@ export default function ReportsPage() {
     if (!window.confirm("Escalate this report to NAFDAC?")) return;
     try {
       setIsProcessing(true);
-      await adminReportsApi.escalateToNAFDAC(reportId, {
+      await adminReportApi.escalateToNAFDAC(reportId, {
         notes: actionNotes,
       });
       setSelectedReport(null);

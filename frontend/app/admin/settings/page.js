@@ -9,7 +9,7 @@ import {
   FiSettings,
   FiBell,
   FiLock,
-  FiPalette,
+  FiSwatch,
   FiZap,
   FiToggleLeft,
   FiToggleRight,
@@ -416,7 +416,7 @@ export default function SettingsPage() {
             <section>
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                 <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                  <FiPalette className="w-5 h-5 text-purple-600" />
+                  <FiSwatch className="w-5 h-5 text-purple-600" />
                 </div>
                 Appearance
               </h2>
