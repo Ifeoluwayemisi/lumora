@@ -111,21 +111,21 @@ router.get(
 router.get(
   "/manufacturers/review-queue",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN"),
+  roleMiddleware("ADMIN", "NAFDAC"),
   manufacturerReviewController.getReviewQueueController,
 );
 
 router.get(
   "/manufacturers/review-queue/stats",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN"),
+  roleMiddleware("ADMIN", "NAFDAC"),
   manufacturerReviewController.getReviewQueueStatsController,
 );
 
 router.get(
   "/manufacturers/:manufacturerId/review",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN"),
+  roleMiddleware("ADMIN", "NAFDAC"),
   manufacturerReviewController.getManufacturerApplication,
 );
 
@@ -139,21 +139,21 @@ router.get(
 router.post(
   "/manufacturers/:manufacturerId/approve",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN"),
+  roleMiddleware("ADMIN", "NAFDAC"),
   manufacturerReviewController.approveManufacturer,
 );
 
 router.post(
   "/manufacturers/:manufacturerId/reject",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN"),
+  roleMiddleware("ADMIN", "NAFDAC"),
   manufacturerReviewController.rejectManufacturer,
 );
 
 router.post(
   "/manufacturers/:manufacturerId/request-docs",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN"),
+  roleMiddleware("ADMIN", "NAFDAC"),
   manufacturerReviewController.requestMoreInfo,
 );
 
