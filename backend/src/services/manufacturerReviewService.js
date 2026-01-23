@@ -207,7 +207,6 @@ export async function setRiskAssessment(
   });
 }
 
-
 /**
  * Suspend manufacturer account
  */
