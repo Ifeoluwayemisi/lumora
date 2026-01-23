@@ -111,21 +111,21 @@ router.get(
 router.get(
   "/manufacturers/review-queue",
   adminAuthMiddleware,
-  roleMiddleware("MODERATOR", "SUPER_ADMIN"),
+  roleMiddleware("ADMIN"),
   manufacturerReviewController.getReviewQueueController,
 );
 
 router.get(
   "/manufacturers/review-queue/stats",
   adminAuthMiddleware,
-  roleMiddleware("MODERATOR", "SUPER_ADMIN"),
+  roleMiddleware("ADMIN"),
   manufacturerReviewController.getReviewQueueStatsController,
 );
 
 router.get(
   "/manufacturers/:manufacturerId/review",
   adminAuthMiddleware,
-  roleMiddleware("MODERATOR", "SUPER_ADMIN"),
+  roleMiddleware("ADMIN"),
   manufacturerReviewController.getManufacturerApplication,
 );
 
@@ -139,21 +139,21 @@ router.get(
 router.post(
   "/manufacturers/:manufacturerId/approve",
   adminAuthMiddleware,
-  roleMiddleware("MODERATOR", "SUPER_ADMIN"),
+  roleMiddleware("ADMIN"),
   manufacturerReviewController.approveManufacturer,
 );
 
 router.post(
   "/manufacturers/:manufacturerId/reject",
   adminAuthMiddleware,
-  roleMiddleware("MODERATOR", "SUPER_ADMIN"),
+  roleMiddleware("ADMIN"),
   manufacturerReviewController.rejectManufacturer,
 );
 
 router.post(
   "/manufacturers/:manufacturerId/request-docs",
   adminAuthMiddleware,
-  roleMiddleware("MODERATOR", "SUPER_ADMIN"),
+  roleMiddleware("ADMIN"),
   manufacturerReviewController.requestMoreInfo,
 );
 
