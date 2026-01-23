@@ -115,12 +115,12 @@ router.get(
   manufacturerReviewController.getReviewQueueController,
 );
 
-// router.get(
-//   "/manufacturers/review-queue/stats",
-//   adminAuthMiddleware,
-//   roleMiddleware("MODERATOR", "SUPER_ADMIN"),
-//   manufacturerReviewController.getReviewQueueStatsController,
-// );
+router.get(
+  "/manufacturers/review-queue/stats",
+  adminAuthMiddleware,
+  roleMiddleware("MODERATOR", "SUPER_ADMIN"),
+  manufacturerReviewController.getReviewQueueStatsController,
+);
 
 router.get(
   "/manufacturers/:manufacturerId/review",

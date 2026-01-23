@@ -3,7 +3,11 @@ import prisma from "../models/prismaClient.js";
 /**
  * Get manufacturer review queue (pending)
  */
-export async function getManufacturerReviewQueue(status = "pending", skip = 0, take = 10) {
+export async function getManufacturerReviewQueue(
+  status = "pending",
+  skip = 0,
+  take = 10,
+) {
   return prisma.manufacturerReview.findMany({
     where: { status },
     include: {
@@ -60,6 +64,27 @@ export async function createManufacturerReview(manufacturerId) {
       status: "pending",
     },
   });
+}
+
+/**
+ * Get review queue stats
+ */
+export async function getReviewQueueStats() {
+  const [pendingCount, approvedCount, rejectedCount, needsDocsCount] =
+    await Promise.all([
+      prisma.manufacturerReview.count({ where: { status: "pending" } }),
+      prisma.manufacturerReview.count({ where: { status: "approved" } }),
+      prisma.manufacturerReview.count({ where: { status: "rejected" } }),
+      prisma.manufacturerReview.count({ where: { status: "needs_docs" } }),
+    ]);
+
+  return {
+    pendingCount,
+    approvedCount,
+    rejectedCount,
+    needsDocsCount,
+    totalCount: pendingCount + approvedCount + rejectedCount + needsDocsCount,
+  };
 }
 
 /**

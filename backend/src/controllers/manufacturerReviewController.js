@@ -41,6 +41,23 @@ export async function getReviewQueueController(req, res) {
 }
 
 /**
+ * Get review queue stats
+ */
+export async function getReviewQueueStatsController(req, res) {
+  try {
+    const stats = await manufacturerReviewService.getReviewQueueStats();
+
+    return res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (err) {
+    console.error("[GET_STATS] Error:", err);
+    res.status(500).json({ error: "Failed to fetch stats" });
+  }
+}
+
+/**
  * Get detailed manufacturer application
  */
 export async function getManufacturerApplication(req, res) {
