@@ -116,7 +116,7 @@ export const signup = async (req, res) => {
 
       try {
         // Create manufacturer with all fields
-        await prisma.manufacturer.create({
+        const manufacturer = await prisma.manufacturer.create({
           data: {
             id: user.id,
             userId: user.id,
@@ -133,7 +133,12 @@ export const signup = async (req, res) => {
         });
 
         // Create manufacturer review record for admin dashboard
-        await manufacturerReviewService.createManufacturerReview(user.id);
+        // Only create if manufacturer record exists
+        if (manufacturer && manufacturer.id) {
+          await manufacturerReviewService.createManufacturerReview(
+            manufacturer.id,
+          );
+        }
 
         console.log(
           "[SIGNUP] Manufacturer created successfully with all fields",
