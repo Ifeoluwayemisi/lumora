@@ -64,18 +64,45 @@ export async function getManufacturerApplication(req, res) {
   try {
     const { manufacturerId } = req.params;
 
-    const manufacturer = await prisma.manufacturer.findUnique({
-      where: { id: manufacturerId },
+    // Fetch the review record with related manufacturer and admin data
+    const review = await prisma.manufacturerReview.findUnique({
+      where: { manufacturerId },
       include: {
-        documents: true,
+        manufacturer: {
+          include: {
+            documents: true,
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        admin: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
       },
     });
 
-    if (!manufacturer) {
-      return res.status(404).json({ error: "Manufacturer not found" });
+    if (!review) {
+      return res.status(404).json({ error: "Manufacturer application not found" });
     }
 
-    res.status(200).json(manufacturer);
+    // Combine review data with manufacturer data for response
+    const data = {
+      ...review.manufacturer,
+      ...review,
+    };
+
+    res.status(200).json(data);
   } catch (err) {
     console.error("[GET_MANUFACTURER_APPLICATION] Error:", err);
     res.status(500).json({ error: "Failed to fetch application" });
