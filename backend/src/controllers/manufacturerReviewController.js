@@ -1,5 +1,6 @@
 import * as manufacturerReviewService from "../services/manufacturerReviewService.js";
 import * as auditLogService from "../services/auditLogService.js";
+import prisma from "../models/prismaClient.js";
 
 /**
  * Get manufacturer review queue
@@ -7,12 +8,30 @@ import * as auditLogService from "../services/auditLogService.js";
 export async function getReviewQueueController(req, res) {
   try {
     const status = req.query.status || "pending";
-    const queue =
-      await manufacturerReviewService.getManufacturerReviewQueue(status);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get total count for pagination
+    const total = await prisma.manufacturerReview.count({
+      where: { status },
+    });
+
+    // Get paginated queue
+    const queue = await manufacturerReviewService.getManufacturerReviewQueue(
+      status,
+      skip,
+      limit,
+    );
 
     return res.status(200).json({
       success: true,
-      data: queue,
+      data: {
+        items: queue,
+        currentPage: page,
+        pageSize: limit,
+        total: total,
+      },
       count: queue.length,
     });
   } catch (err) {

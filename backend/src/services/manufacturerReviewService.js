@@ -3,7 +3,7 @@ import prisma from "../models/prismaClient.js";
 /**
  * Get manufacturer review queue (pending)
  */
-export async function getManufacturerReviewQueue(status = "pending") {
+export async function getManufacturerReviewQueue(status = "pending", skip = 0, take = 10) {
   return prisma.manufacturerReview.findMany({
     where: { status },
     include: {
@@ -15,8 +15,19 @@ export async function getManufacturerReviewQueue(status = "pending") {
           lastName: true,
         },
       },
+      manufacturer: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          country: true,
+          accountStatus: true,
+        },
+      },
     },
     orderBy: { createdAt: "asc" },
+    skip,
+    take,
   });
 }
 

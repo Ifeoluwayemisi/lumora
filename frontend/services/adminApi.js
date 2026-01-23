@@ -181,9 +181,9 @@ export const adminDashboardApi = {
  */
 export const adminManufacturerApi = {
   // Get review queue
-  getReviewQueue: async (status = "pending", skip = 0, take = 50) => {
+  getReviewQueue: async (page = 1, limit = 10, status = "pending") => {
     const response = await adminApi.get("/manufacturers/review-queue", {
-      params: { status, skip, take },
+      params: { page, limit, status },
     });
     return response.data;
   },
