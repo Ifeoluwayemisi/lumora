@@ -411,7 +411,9 @@ export default function AdminDashboardPage() {
                     {/* Last Updated */}
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Last updated:{" "}
-                      {new Date(aiHealth.lastUpdated).toLocaleString()}
+                      {aiHealth.lastUpdated
+                        ? new Date(aiHealth.lastUpdated).toLocaleDateString()
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
@@ -536,7 +538,9 @@ export default function AdminDashboardPage() {
                     {alert.message}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-                    {new Date(alert.createdAt).toLocaleString()}
+                    {alert.createdAt
+                      ? new Date(alert.createdAt).toLocaleDateString()
+                      : ""}
                   </p>
                 </div>
               ))}
