@@ -83,11 +83,10 @@ export const adminAuthApi = {
   },
 
   // Step 2: 2FA token verification
-  loginStep2: async (tempToken, twoFactorCode, adminId) => {
+  loginStep2: async (tempToken, twoFactorCode) => {
     const response = await adminApi.post("/auth/login/step2", {
-      adminId,
       tempToken,
-      twoFactorToken: twoFactorCode,
+      twoFactorCode,
     });
     return response.data;
   },
@@ -197,6 +196,14 @@ export const adminManufacturerApi = {
 
   // Get single review
   getReview: async (manufacturerId) => {
+    const response = await adminApi.get(
+      `/manufacturers/${manufacturerId}/review`,
+    );
+    return response.data;
+  },
+
+  // Get manufacturer detail (alias for getReview)
+  getManufacturerDetail: async (manufacturerId) => {
     const response = await adminApi.get(
       `/manufacturers/${manufacturerId}/review`,
     );

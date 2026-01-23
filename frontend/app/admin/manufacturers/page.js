@@ -3,6 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { adminManufacturerApi } from "@/services/adminApi";
 import { useAdmin } from "@/hooks/useAdmin";
 import {
@@ -18,6 +19,7 @@ import {
 } from "react-icons/fi";
 
 export default function ManufacturersPage() {
+  const router = useRouter();
   const { adminUser, isHydrated } = useAdmin();
 
   // UI State
@@ -29,7 +31,6 @@ export default function ManufacturersPage() {
   // Data
   const [reviewQueue, setReviewQueue] = useState([]);
   const [stats, setStats] = useState(null);
-  const [selectedMfg, setSelectedMfg] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
@@ -79,7 +80,6 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.approveManufacturer(mfgId);
-      setSelectedMfg(null);
       await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to approve manufacturer");
@@ -97,7 +97,6 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.rejectManufacturer(mfgId, reason);
-      setSelectedMfg(null);
       await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to reject manufacturer");
@@ -112,7 +111,6 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.suspendManufacturer(mfgId);
-      setSelectedMfg(null);
       await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to suspend manufacturer");
@@ -126,7 +124,6 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.forceAudit(mfgId);
-      setSelectedMfg(null);
       await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to trigger audit");
@@ -278,7 +275,9 @@ export default function ManufacturersPage() {
                       <tr
                         key={mfg.id}
                         className="hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer"
-                        onClick={() => setSelectedMfg(mfg)}
+                        onClick={() =>
+                          router.push(`/admin/manufacturers/${mfg.id}`)
+                        }
                       >
                         <td className="py-3 px-4 font-medium text-gray-900 dark:text-white">
                           {mfg.companyName}
@@ -356,137 +355,6 @@ export default function ManufacturersPage() {
           </>
         )}
       </div>
-
-      {/* Detail Modal */}
-      {selectedMfg && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto border border-gray-200 dark:border-gray-800">
-            <div className="sticky top-0 bg-gray-50 dark:bg-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {selectedMfg.companyName}
-              </h2>
-              <button
-                onClick={() => setSelectedMfg(null)}
-                className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              >
-                <FiX className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="px-6 py-6 space-y-4">
-              {/* Company Details */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Email
-                  </label>
-                  <p className="text-gray-900 dark:text-white">
-                    {selectedMfg.email}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Phone
-                  </label>
-                  <p className="text-gray-900 dark:text-white">
-                    {selectedMfg.phoneNumber || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Location
-                  </label>
-                  <p className="text-gray-900 dark:text-white">
-                    {selectedMfg.state || "N/A"}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Submitted
-                  </label>
-                  <p className="text-gray-900 dark:text-white">
-                    {new Date(selectedMfg.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-
-              {/* Documents */}
-              {selectedMfg.documents && selectedMfg.documents.length > 0 && (
-                <div>
-                  <label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                    Submitted Documents
-                  </label>
-                  <div className="space-y-2 mt-2">
-                    {selectedMfg.documents.map((doc, idx) => (
-                      <a
-                        key={idx}
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition"
-                      >
-                        <FiDownload className="w-4 h-4 text-blue-600" />
-                        <span className="text-blue-600 dark:text-blue-400 text-sm">
-                          {doc.name}
-                        </span>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* AI Risk Analysis */}
-              {selectedMfg.riskScore && (
-                <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
-                  <p className="text-sm font-medium text-orange-900 dark:text-orange-200">
-                    AI Risk Assessment: {selectedMfg.riskScore}%
-                  </p>
-                  <p className="text-xs text-orange-700 dark:text-orange-300 mt-1">
-                    {selectedMfg.riskAnalysis || "No analysis available"}
-                  </p>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="border-t border-gray-200 dark:border-gray-800 pt-6 flex gap-3">
-                <button
-                  onClick={() => handleApprove(selectedMfg.id)}
-                  disabled={isProcessing}
-                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <FiCheck className="w-4 h-4" />
-                  Approve
-                </button>
-                <button
-                  onClick={() =>
-                    handleReject(selectedMfg.id, "Document verification failed")
-                  }
-                  disabled={isProcessing}
-                  className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <FiX className="w-4 h-4" />
-                  Reject
-                </button>
-                <button
-                  onClick={() => handleAudit(selectedMfg.id)}
-                  disabled={isProcessing}
-                  className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <FiTrendingDown className="w-4 h-4" />
-                  Audit
-                </button>
-                <button
-                  onClick={() => handleSuspend(selectedMfg.id)}
-                  disabled={isProcessing}
-                  className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium transition disabled:opacity-50"
-                >
-                  Suspend
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
