@@ -194,6 +194,12 @@ export const adminManufacturerApi = {
     return response.data;
   },
 
+  // Get review queue stats (alias)
+  getReviewQueueStats: async () => {
+    const response = await adminApi.get("/manufacturers/review-queue/stats");
+    return response.data;
+  },
+
   // Get single review
   getReview: async (manufacturerId) => {
     const response = await adminApi.get(
