@@ -17,22 +17,36 @@ export async function getReviewQueueController(req, res) {
       where: { status },
     });
 
-    // Get paginated queue
-    const queue = await manufacturerReviewService.getManufacturerReviewQueue(
+    // Get paginated queue with full manufacturer and review data
+    const reviews = await manufacturerReviewService.getManufacturerReviewQueue(
       status,
       skip,
       limit,
     );
 
+    // Flatten the response to include manufacturer details at top level
+    const items = reviews.map((review) => ({
+      id: review.id,
+      manufacturerId: review.manufacturerId,
+      companyName: review.manufacturer.name,
+      email: review.manufacturer.email,
+      country: review.manufacturer.country,
+      status: review.status,
+      createdAt: review.createdAt,
+      trustScore: review.trustScore,
+      riskAssessment: review.riskAssessment,
+      adminId: review.adminId,
+    }));
+
     return res.status(200).json({
       success: true,
       data: {
-        items: queue,
+        items,
         currentPage: page,
         pageSize: limit,
         total: total,
       },
-      count: queue.length,
+      count: items.length,
     });
   } catch (err) {
     console.error("[GET_PENDING_MANUFACTURERS] Error:", err);
@@ -64,23 +78,22 @@ export async function getManufacturerApplication(req, res) {
   try {
     const { manufacturerId } = req.params;
 
-    // Fetch the review record with related manufacturer and admin data
+    // Get manufacturer with all details
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      include: {
+        documents: true,
+      },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    // Get review details
     const review = await prisma.manufacturerReview.findUnique({
       where: { manufacturerId },
       include: {
-        manufacturer: {
-          include: {
-            documents: true,
-            user: {
-              select: {
-                id: true,
-                email: true,
-                firstName: true,
-                lastName: true,
-              },
-            },
-          },
-        },
         admin: {
           select: {
             id: true,
@@ -92,17 +105,13 @@ export async function getManufacturerApplication(req, res) {
       },
     });
 
-    if (!review) {
-      return res.status(404).json({ error: "Manufacturer application not found" });
-    }
-
-    // Combine review data with manufacturer data for response
-    const data = {
-      ...review.manufacturer,
+    // Combine manufacturer and review data
+    const combined = {
+      ...manufacturer,
       ...review,
     };
 
-    res.status(200).json(data);
+    res.status(200).json(combined);
   } catch (err) {
     console.error("[GET_MANUFACTURER_APPLICATION] Error:", err);
     res.status(500).json({ error: "Failed to fetch application" });
