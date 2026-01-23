@@ -207,25 +207,6 @@ export async function setRiskAssessment(
   });
 }
 
-/**
- * Get count of reviews by status
- */
-export async function getReviewQueueStats() {
-  const [pending, approved, rejected, needsDocs] = await Promise.all([
-    prisma.manufacturerReview.count({ where: { status: "pending" } }),
-    prisma.manufacturerReview.count({ where: { status: "approved" } }),
-    prisma.manufacturerReview.count({ where: { status: "rejected" } }),
-    prisma.manufacturerReview.count({ where: { status: "needs_docs" } }),
-  ]);
-
-  return {
-    pending,
-    approved,
-    rejected,
-    needsDocs,
-    total: pending + approved + rejected + needsDocs,
-  };
-}
 
 /**
  * Suspend manufacturer account
