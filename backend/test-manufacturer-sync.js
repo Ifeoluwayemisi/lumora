@@ -32,7 +32,9 @@ async function testSync() {
       `\n✓ Pending reviews (first 5): ${pendingReviews.length} found`,
     );
     pendingReviews.forEach((review, i) => {
-      console.log(`  [${i + 1}] ${review.manufacturer?.name || "NO NAME"} (${review.manufacturer?.email})`);
+      console.log(
+        `  [${i + 1}] ${review.manufacturer?.name || "NO NAME"} (${review.manufacturer?.email})`,
+      );
       console.log(`      Status: ${review.status}`);
       console.log(`      Mfg ID: ${review.manufacturerId}`);
       console.log(`      Review ID: ${review.id}\n`);
@@ -57,7 +59,9 @@ async function testSync() {
         `⚠️  Found ${manufacturersWithoutReview.length} manufacturers WITHOUT review entries:`,
       );
       manufacturersWithoutReview.forEach((mfg) => {
-        console.log(`   - ${mfg.name} (${mfg.email}) - Created: ${mfg.createdAt}`);
+        console.log(
+          `   - ${mfg.name} (${mfg.email}) - Created: ${mfg.createdAt}`,
+        );
       });
     } else {
       console.log("✓ All manufacturers have review entries");

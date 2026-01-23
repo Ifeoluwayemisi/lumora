@@ -11,7 +11,9 @@ async function fixMissingReview() {
       },
     });
 
-    console.log(`Found ${manufacturersWithoutReview.length} manufacturers without reviews\n`);
+    console.log(
+      `Found ${manufacturersWithoutReview.length} manufacturers without reviews\n`,
+    );
 
     for (const mfg of manufacturersWithoutReview) {
       try {
@@ -38,7 +40,9 @@ async function fixMissingReview() {
         manufacturerReview: null,
       },
     });
-    console.log(`✓ Manufacturers still missing reviews: ${stillMissing.length}`);
+    console.log(
+      `✓ Manufacturers still missing reviews: ${stillMissing.length}`,
+    );
   } catch (error) {
     console.error("Error:", error.message);
     console.error(error.stack);
