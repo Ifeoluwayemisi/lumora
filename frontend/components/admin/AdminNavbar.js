@@ -17,7 +17,9 @@ export default function AdminNavbar({ onMenuToggle }) {
   };
 
   // Placeholder for non-hydrated state - matches what will render after hydration
-  const userInitials = adminUser ? `${adminUser?.firstName?.[0] || ""}${adminUser?.lastName?.[0] || ""}`.toUpperCase() : "••";
+  const userInitials = adminUser
+    ? `${adminUser?.firstName?.[0] || ""}${adminUser?.lastName?.[0] || ""}`.toUpperCase()
+    : "••";
   const userFirstName = adminUser?.firstName || "Loading";
   const userRole = adminUser?.role || "admin";
 

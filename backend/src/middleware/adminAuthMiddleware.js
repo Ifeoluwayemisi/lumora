@@ -19,7 +19,7 @@ export async function adminAuthMiddleware(req, res, next) {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
+
       // Check if this is an admin token
       if (decoded.type !== "admin" || !decoded.adminId) {
         return res.status(401).json({ error: "Invalid admin token" });

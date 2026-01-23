@@ -9,7 +9,7 @@ export function roleMiddleware(...allowedRoles) {
   return (req, res, next) => {
     // Check if user or admin is authenticated
     const user = req.user || req.admin;
-    
+
     if (!user) {
       return res.status(401).json({
         error: "Unauthorized",
