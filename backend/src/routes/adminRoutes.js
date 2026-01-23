@@ -111,21 +111,21 @@ router.get(
 router.get(
   "/manufacturers/review-queue",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN", "NAFDAC"),
+  roleMiddleware("ADMIN", "NAFDAC", "SUPER_ADMIN"),
   manufacturerReviewController.getReviewQueueController,
 );
 
 router.get(
   "/manufacturers/review-queue/stats",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN", "NAFDAC"),
+  roleMiddleware("ADMIN", "NAFDAC", "SUPER_ADMIN"),
   manufacturerReviewController.getReviewQueueStatsController,
 );
 
 router.get(
   "/manufacturers/:manufacturerId/review",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN", "NAFDAC"),
+  roleMiddleware("ADMIN", "NAFDAC", "SUPER_ADMIN"),
   manufacturerReviewController.getManufacturerApplication,
 );
 
@@ -139,21 +139,21 @@ router.get(
 router.post(
   "/manufacturers/:manufacturerId/approve",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN", "NAFDAC"),
+  roleMiddleware("ADMIN", "NAFDAC", "SUPER_ADMIN"),
   manufacturerReviewController.approveManufacturer,
 );
 
 router.post(
   "/manufacturers/:manufacturerId/reject",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN", "NAFDAC"),
+  roleMiddleware("ADMIN", "NAFDAC", "SUPER_ADMIN"),
   manufacturerReviewController.rejectManufacturer,
 );
 
 router.post(
   "/manufacturers/:manufacturerId/request-docs",
   adminAuthMiddleware,
-  roleMiddleware("ADMIN", "NAFDAC"),
+  roleMiddleware("ADMIN", "NAFDAC", "SUPER_ADMIN"),
   manufacturerReviewController.requestMoreInfo,
 );
 
