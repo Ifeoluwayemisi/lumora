@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import * as manufacturerReviewService from "../services/manufacturerReviewService.js";
 
 // Validate email configuration
 if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
@@ -130,6 +131,9 @@ export const signup = async (req, res) => {
             plan: "BASIC",
           },
         });
+
+        // Create manufacturer review record for admin dashboard
+        await manufacturerReviewService.createManufacturerReview(user.id);
 
         console.log(
           "[SIGNUP] Manufacturer created successfully with all fields",
