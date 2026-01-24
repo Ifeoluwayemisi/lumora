@@ -26,7 +26,7 @@ export async function getReviewQueueController(req, res) {
 
     // Flatten the response to include manufacturer details at top level
     const items = reviews.map((review) => ({
-      id: review.id,
+      id: review.manufacturerId,
       manufacturerId: review.manufacturerId,
       companyName: review.manufacturer.name,
       email: review.manufacturer.email,
