@@ -93,9 +93,16 @@ export default function ManufacturerDetailPage() {
       const result = await adminManufacturerApi.forceAudit(manufacturerId);
       console.log("[AUDIT_RESULT]", result);
 
+      // Extract data from response (handle both wrapped and unwrapped responses)
+      const auditData = result.data || result;
+      const riskScore = auditData.riskScore ?? result.riskScore ?? "N/A";
+      const trustScore = auditData.trustScore ?? result.trustScore ?? "N/A";
+      const summary =
+        auditData.summary ?? result.summary ?? "Audit completed successfully";
+
       // Show success message
       alert(
-        `✅ Audit Complete!\n\nRisk Score: ${result.data.riskScore}\nTrust Score: ${result.data.trustScore}\n\n${result.data.summary}`,
+        `✅ Audit Complete!\n\nRisk Score: ${riskScore}\nTrust Score: ${trustScore}\n\n${summary}`,
       );
 
       // Refresh manufacturer details to show updated scores

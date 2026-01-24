@@ -354,9 +354,9 @@ export async function forceAuditController(req, res) {
       data: {
         manufacturerId: updated.id,
         auditTriggeredAt: updated.lastRiskAssessment,
-        riskScore: updated.riskScore,
-        trustScore: updated.trustScore,
-        summary: auditResult.summary,
+        riskScore: auditResult.riskScore || updated.riskScore || 50,
+        trustScore: auditResult.trustScore || updated.trustScore || 50,
+        summary: auditResult.summary || "Audit completed",
       },
     });
   } catch (err) {
