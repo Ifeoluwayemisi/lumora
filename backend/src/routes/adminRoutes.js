@@ -106,6 +106,20 @@ router.get(
   adminDashboardController.exportDashboardDataController,
 );
 
+router.get(
+  "/dashboard/false-positives",
+  adminAuthMiddleware,
+  roleMiddleware("ADMIN", "MODERATOR", "SUPER_ADMIN"),
+  adminDashboardController.getFalsePositivesController,
+);
+
+router.get(
+  "/dashboard/flagged-results",
+  adminAuthMiddleware,
+  roleMiddleware("ADMIN", "MODERATOR", "SUPER_ADMIN"),
+  adminDashboardController.getFlaggedResultsController,
+);
+
 // ========== MANUFACTURER REVIEW ROUTES ==========
 
 router.get(

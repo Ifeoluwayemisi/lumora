@@ -181,3 +181,87 @@ export async function exportDashboardDataController(req, res) {
     });
   }
 }
+
+/**
+ * Get false positives data
+ */
+export async function getFalsePositivesController(req, res) {
+  try {
+    // For now, return mock data for false positives
+    // This would be calculated from verification logs in a real implementation
+    const falsePositives = [
+      {
+        id: "fp-1",
+        codeValue: "PROD-123456",
+        manufacturer: "Sample Pharma",
+        flaggedAs: "suspicious",
+        actualResult: "genuine",
+        confidence: 0.65,
+        timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
+      {
+        id: "fp-2",
+        codeValue: "MED-789012",
+        manufacturer: "Health Labs",
+        flaggedAs: "invalid",
+        actualResult: "genuine",
+        confidence: 0.58,
+        timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      },
+    ];
+
+    return res.status(200).json({
+      success: true,
+      data: falsePositives,
+      total: falsePositives.length,
+    });
+  } catch (err) {
+    console.error("[GET_FALSE_POSITIVES] Error:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch false positives data",
+    });
+  }
+}
+
+/**
+ * Get flagged results
+ */
+export async function getFlaggedResultsController(req, res) {
+  try {
+    // For now, return mock data for flagged results
+    // This would be from suspicious verification logs in a real implementation
+    const flaggedResults = [
+      {
+        id: "flag-1",
+        codeValue: "DRUG-456789",
+        location: "Lagos, Nigeria",
+        riskScore: 0.85,
+        reason: "Suspicious pattern detected",
+        timestamp: new Date(),
+        status: "pending_review",
+      },
+      {
+        id: "flag-2",
+        codeValue: "CHEM-321654",
+        location: "Abuja, Nigeria",
+        riskScore: 0.72,
+        reason: "Multiple attempts from same location",
+        timestamp: new Date(Date.now() - 60 * 60 * 1000),
+        status: "reviewed",
+      },
+    ];
+
+    return res.status(200).json({
+      success: true,
+      data: flaggedResults,
+      total: flaggedResults.length,
+    });
+  } catch (err) {
+    console.error("[GET_FLAGGED_RESULTS] Error:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch flagged results",
+    });
+  }
+}

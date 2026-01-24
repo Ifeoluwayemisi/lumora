@@ -163,6 +163,26 @@ export const adminDashboardApi = {
     return response.data;
   },
 
+  // Get AI trend (confidence over time)
+  getAITrend: async (days = 30) => {
+    const response = await adminApi.get("/dashboard/trend", {
+      params: { days },
+    });
+    return response.data;
+  },
+
+  // Get false positives data
+  getAIFalsePositives: async () => {
+    const response = await adminApi.get("/dashboard/false-positives");
+    return response.data;
+  },
+
+  // Get flagged results
+  getAIFlaggedResults: async () => {
+    const response = await adminApi.get("/dashboard/flagged-results");
+    return response.data;
+  },
+
   // Get critical alerts
   getAlerts: async () => {
     const response = await adminApi.get("/dashboard/alerts");
