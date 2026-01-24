@@ -108,7 +108,8 @@ export async function getAuthenticityBreakdown() {
 
   verifications.forEach((v) => {
     if (v.verificationState === "GENUINE") breakdown.genuine++;
-    else if (v.verificationState === "SUSPICIOUS_PATTERN") breakdown.suspicious++;
+    else if (v.verificationState === "SUSPICIOUS_PATTERN")
+      breakdown.suspicious++;
     else if (v.verificationState === "INVALID") breakdown.invalid++;
     else breakdown.unverified++;
   });

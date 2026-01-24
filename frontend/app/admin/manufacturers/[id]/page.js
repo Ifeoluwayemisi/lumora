@@ -89,11 +89,25 @@ export default function ManufacturerDetailPage() {
   const handleAudit = async () => {
     try {
       setIsProcessing(true);
-      await adminManufacturerApi.forceAudit(manufacturerId);
       setError("");
+      const result = await adminManufacturerApi.forceAudit(manufacturerId);
+      console.log("[AUDIT_RESULT]", result);
+
+      // Show success message
+      alert(
+        `✅ Audit Complete!\n\nRisk Score: ${result.data.riskScore}\nTrust Score: ${result.data.trustScore}\n\n${result.data.summary}`,
+      );
+
+      // Refresh manufacturer details to show updated scores
       await fetchManufacturerDetails();
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to trigger audit");
+      console.error("[AUDIT_ERROR]", err);
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Failed to trigger audit";
+      setError(errorMsg);
+      alert(`❌ Audit Failed: ${errorMsg}`);
     } finally {
       setIsProcessing(false);
     }
@@ -317,28 +331,48 @@ export default function ManufacturerDetailPage() {
               Submitted Documents ({manufacturer.documents.length})
             </h2>
             <div className="space-y-3">
-              {manufacturer.documents.map((doc, idx) => (
-                <a
-                  key={idx}
-                  href={doc.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition border border-blue-200 dark:border-blue-800"
-                >
-                  <div className="flex items-center gap-3">
-                    <FiDownload className="w-5 h-5 text-blue-600" />
-                    <div>
-                      <p className="font-medium text-blue-900 dark:text-blue-200">
-                        {doc.name || `Document ${idx + 1}`}
-                      </p>
-                      <p className="text-xs text-blue-700 dark:text-blue-300">
-                        {doc.type || "Uploaded document"}
-                      </p>
+              {manufacturer.documents.map((doc, idx) => {
+                const docUrl = doc.url || doc.fileUrl || doc.path;
+                const docName =
+                  doc.name || doc.fileName || doc.type || `Document ${idx + 1}`;
+                const docType =
+                  doc.type || doc.documentType || "Uploaded document";
+
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FiDownload className="w-5 h-5 text-blue-600" />
+                      <div>
+                        <p className="font-medium text-blue-900 dark:text-blue-200">
+                          {docName}
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          {docType}
+                        </p>
+                      </div>
                     </div>
+                    {docUrl ? (
+                      <a
+                        href={docUrl}
+                        download={docName}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition flex items-center gap-2"
+                      >
+                        <FiDownload className="w-4 h-4" />
+                        Download
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        No URL
+                      </span>
+                    )}
                   </div>
-                  <FiChevronLeft className="w-4 h-4 text-blue-600 rotate-180" />
-                </a>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

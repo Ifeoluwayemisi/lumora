@@ -16,7 +16,8 @@ export default function LayoutContent({ children }) {
   const isDashboardPage = pathname?.startsWith("/dashboard");
   const isVerifyPage = pathname?.startsWith("/verify");
   const isAdminPage = pathname?.startsWith("/admin");
-  const shouldHideNavFooter = isAuthPage || isDashboardPage || isVerifyPage || isAdminPage;
+  const shouldHideNavFooter =
+    isAuthPage || isDashboardPage || isVerifyPage || isAdminPage;
 
   return (
     <>

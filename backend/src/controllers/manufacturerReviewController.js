@@ -321,23 +321,42 @@ export async function forceAuditController(req, res) {
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
-    // Update last audit timestamp to trigger a new audit
+    // Import AI risk service to recalculate risk score
+    const { recalculateManufacturerRiskScore } =
+      await import("../services/aiRiskService.js");
+
+    // Run actual audit calculation
+    const auditResult = await recalculateManufacturerRiskScore(manufacturerId);
+
+    // Update manufacturer with new scores
     const updated = await prisma.manufacturer.update({
       where: { id: manufacturerId },
       data: {
+        riskScore: auditResult.riskScore,
+        trustScore: auditResult.trustScore,
         lastRiskAssessment: new Date(),
       },
     });
 
     // Log the audit action
-    console.log(`[FORCE_AUDIT] Audit triggered for manufacturer: ${manufacturerId}`);
+    console.log(
+      `[FORCE_AUDIT] Audit completed for manufacturer: ${manufacturerId}`,
+      {
+        riskScore: auditResult.riskScore,
+        trustScore: auditResult.trustScore,
+        summary: auditResult.summary,
+      },
+    );
 
     res.status(200).json({
       success: true,
-      message: "Audit triggered successfully",
+      message: "Audit completed successfully",
       data: {
         manufacturerId: updated.id,
         auditTriggeredAt: updated.lastRiskAssessment,
+        riskScore: updated.riskScore,
+        trustScore: updated.trustScore,
+        summary: auditResult.summary,
       },
     });
   } catch (err) {
