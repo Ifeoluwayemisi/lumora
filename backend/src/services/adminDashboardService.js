@@ -27,7 +27,7 @@ export async function getGlobalMetrics() {
 
   // Verification breakdown
   const verificationBreakdown = await prisma.verificationLog.groupBy({
-    by: ["status"],
+    by: ["verificationState"],
     _count: {
       id: true,
     },
@@ -82,7 +82,7 @@ export async function getGlobalMetrics() {
  */
 export async function getVerificationBreakdown() {
   return prisma.verificationLog.groupBy({
-    by: ["status"],
+    by: ["verificationState"],
     _count: {
       id: true,
     },
@@ -95,7 +95,7 @@ export async function getVerificationBreakdown() {
 export async function getAuthenticityBreakdown() {
   const verifications = await prisma.verificationLog.findMany({
     select: {
-      status: true,
+      verificationState: true,
     },
   });
 
@@ -107,9 +107,9 @@ export async function getAuthenticityBreakdown() {
   };
 
   verifications.forEach((v) => {
-    if (v.status === "genuine") breakdown.genuine++;
-    else if (v.status === "suspicious") breakdown.suspicious++;
-    else if (v.status === "invalid") breakdown.invalid++;
+    if (v.verificationState === "GENUINE") breakdown.genuine++;
+    else if (v.verificationState === "SUSPICIOUS_PATTERN") breakdown.suspicious++;
+    else if (v.verificationState === "INVALID") breakdown.invalid++;
     else breakdown.unverified++;
   });
 
@@ -151,7 +151,7 @@ export async function getVerificationTrend() {
     },
     select: {
       createdAt: true,
-      status: true,
+      verificationState: true,
     },
   });
 
@@ -168,7 +168,13 @@ export async function getVerificationTrend() {
         total: 0,
       };
     }
-    trendByDay[day][v.status === "genuine" ? "genuine" : v.status]++;
+    if (v.verificationState === "GENUINE") {
+      trendByDay[day].genuine++;
+    } else if (v.verificationState === "SUSPICIOUS_PATTERN") {
+      trendByDay[day].suspicious++;
+    } else if (v.verificationState === "INVALID") {
+      trendByDay[day].invalid++;
+    }
     trendByDay[day].total++;
   });
 
@@ -183,7 +189,7 @@ export async function getVerificationTrend() {
 export async function getHotspotClusters(minSuspicious = 5) {
   const verifications = await prisma.verificationLog.findMany({
     where: {
-      status: "suspicious",
+      verificationState: "SUSPICIOUS_PATTERN",
     },
     select: {
       location: true,
@@ -238,11 +244,11 @@ export async function getHighRiskManufacturers(limit = 10) {
 export async function getAIHealthScore() {
   // Calculate based on verified results
   const genuineVerifications = await prisma.verificationLog.count({
-    where: { status: "genuine" },
+    where: { verificationState: "GENUINE" },
   });
 
   const suspiciousVerifications = await prisma.verificationLog.count({
-    where: { status: "suspicious" },
+    where: { verificationState: "SUSPICIOUS_PATTERN" },
   });
 
   const totalVerifications = await prisma.verificationLog.count();
