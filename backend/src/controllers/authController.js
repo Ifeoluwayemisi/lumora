@@ -139,7 +139,9 @@ export const signup = async (req, res) => {
 
         // Create manufacturer review record for admin dashboard
         const reviewRecord =
-          await manufacturerReviewService.createManufacturerReview(user.id);
+          await manufacturerReviewService.createManufacturerReview(
+            manufacturerRecord.id,
+          );
 
         console.log("[SIGNUP] Manufacturer review created:", reviewRecord.id);
         console.log(

@@ -90,8 +90,8 @@ export async function getManufacturerApplication(req, res) {
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
-    // Get review details
-    const review = await prisma.manufacturerReview.findUnique({
+    // Get or create review details
+    let review = await prisma.manufacturerReview.findUnique({
       where: { manufacturerId },
       include: {
         admin: {
@@ -104,6 +104,16 @@ export async function getManufacturerApplication(req, res) {
         },
       },
     });
+
+    // If review doesn't exist, create it (for legacy manufacturers)
+    if (!review) {
+      review = await prisma.manufacturerReview.create({
+        data: {
+          manufacturerId,
+          status: "pending",
+        },
+      });
+    }
 
     // Combine manufacturer and review data
     const combined = {
