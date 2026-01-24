@@ -121,6 +121,9 @@ export async function getManufacturerApplication(req, res) {
       ...review,
     };
 
+    console.log("[GET_MANUFACTURER_APPLICATION] Returning data for:", manufacturerId);
+    console.log("[GET_MANUFACTURER_APPLICATION] Data keys:", Object.keys(combined));
+
     res.status(200).json(combined);
   } catch (err) {
     console.error("[GET_MANUFACTURER_APPLICATION] Error:", err);

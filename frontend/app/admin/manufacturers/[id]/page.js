@@ -40,7 +40,8 @@ export default function ManufacturerDetailPage() {
       setIsLoading(true);
       const res =
         await adminManufacturerApi.getManufacturerDetail(manufacturerId);
-      setManufacturer(res.data);
+      console.log("[DETAIL] API Response:", res);
+      setManufacturer(res);
     } catch (err) {
       setError(
         err.response?.data?.error || "Failed to load manufacturer details",
