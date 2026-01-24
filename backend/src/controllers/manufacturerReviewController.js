@@ -121,8 +121,14 @@ export async function getManufacturerApplication(req, res) {
       ...review,
     };
 
-    console.log("[GET_MANUFACTURER_APPLICATION] Returning data for:", manufacturerId);
-    console.log("[GET_MANUFACTURER_APPLICATION] Data keys:", Object.keys(combined));
+    console.log(
+      "[GET_MANUFACTURER_APPLICATION] Returning data for:",
+      manufacturerId,
+    );
+    console.log(
+      "[GET_MANUFACTURER_APPLICATION] Data keys:",
+      Object.keys(combined),
+    );
 
     res.status(200).json(combined);
   } catch (err) {
@@ -295,5 +301,47 @@ export async function getAllManufacturers(req, res) {
   } catch (err) {
     console.error("[GET_ALL_MANUFACTURERS] Error:", err);
     res.status(500).json({ error: "Failed to fetch manufacturers" });
+  }
+}
+
+/**
+ * Force audit on a manufacturer
+ */
+export async function forceAuditController(req, res) {
+  try {
+    const { manufacturerId } = req.params;
+    const adminId = req.admin?.id;
+
+    // Get manufacturer
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    // Update last audit timestamp to trigger a new audit
+    const updated = await prisma.manufacturer.update({
+      where: { id: manufacturerId },
+      data: {
+        lastRiskAssessment: new Date(),
+      },
+    });
+
+    // Log the audit action
+    console.log(`[FORCE_AUDIT] Audit triggered for manufacturer: ${manufacturerId}`);
+
+    res.status(200).json({
+      success: true,
+      message: "Audit triggered successfully",
+      data: {
+        manufacturerId: updated.id,
+        auditTriggeredAt: updated.lastRiskAssessment,
+      },
+    });
+  } catch (err) {
+    console.error("[FORCE_AUDIT] Error:", err);
+    res.status(500).json({ error: "Failed to trigger audit" });
   }
 }

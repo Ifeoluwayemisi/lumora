@@ -279,6 +279,15 @@ export const adminManufacturerApi = {
     );
     return response.data;
   },
+
+  // Force audit on manufacturer
+  forceAudit: async (manufacturerId) => {
+    const response = await adminApi.post(
+      `/manufacturers/${manufacturerId}/audit`,
+      {},
+    );
+    return response.data;
+  },
 };
 
 /**

@@ -171,6 +171,13 @@ router.post(
   manufacturerReviewController.requestMoreInfo,
 );
 
+router.post(
+  "/manufacturers/:manufacturerId/audit",
+  adminAuthMiddleware,
+  roleMiddleware("ADMIN", "MODERATOR", "SUPER_ADMIN"),
+  manufacturerReviewController.forceAuditController,
+);
+
 // router.post(
 //   "/manufacturers/:manufacturerId/suspend",
 //   adminAuthMiddleware,
