@@ -203,6 +203,19 @@ export async function approveManufacturer(req, res) {
       },
     });
 
+    // Log the action
+    await auditLogService.logAction({
+      adminId: req.user.id,
+      action: "approve_manufacturer",
+      manufacturerId,
+      details: {
+        previousStatus: "pending",
+        newStatus: "active",
+        trustScore: manufacturer.trustScore,
+        riskLevel: manufacturer.riskLevel,
+      },
+    });
+
     // Send approval email asynchronously (don't block response)
     sendAccountApprovalEmail(manufacturerId).catch((err) => {
       console.error("[APPROVAL] Failed to send email:", err.message);
@@ -305,6 +318,18 @@ export async function rejectManufacturer(req, res) {
         riskAssessment: manufacturer.riskLevel,
         rejectionReason: reason,
         adminId: req.user?.id,
+      },
+    });
+
+    // Log the action
+    await auditLogService.logAction({
+      adminId: req.user.id,
+      action: "reject_manufacturer",
+      manufacturerId,
+      details: {
+        previousStatus: "pending",
+        newStatus: "rejected",
+        reason,
       },
     });
 

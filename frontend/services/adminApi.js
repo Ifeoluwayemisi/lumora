@@ -484,10 +484,21 @@ export const adminCaseApi = {
  */
 export const adminAuditApi = {
   // Get all audit logs
-  getLogs: async (skip = 0, take = 50, filters = {}) => {
-    const response = await adminApi.get("/audit-logs", {
-      params: { skip, take, ...filters },
-    });
+  getLogs: async (
+    page = 1,
+    limit = 20,
+    filterAction,
+    filterAdmin,
+    startDate,
+    endDate,
+  ) => {
+    const params = { page, limit };
+    if (filterAction) params.action = filterAction;
+    if (filterAdmin) params.adminId = filterAdmin;
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+
+    const response = await adminApi.get("/audit-logs", { params });
     return response.data;
   },
 
@@ -541,10 +552,7 @@ export const adminUsersApi = {
 
   // Suspend user account
   suspendUser: async (userId, data) => {
-    const response = await adminApi.post(
-      `/users/${userId}/suspend`,
-      data,
-    );
+    const response = await adminApi.post(`/users/${userId}/suspend`, data);
     return response.data;
   },
 
