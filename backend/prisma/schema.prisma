@@ -524,11 +524,32 @@ model AdminUser {
   userReports           UserReport[]
   caseFiles             CaseFile[]
   caseNotes             CaseNote[]
+  settings              AdminSettings?
 
   @@index([email])
   @@index([role])
   @@index([isActive])
   @@index([lastLogin])
+}
+
+model AdminSettings {
+  id                      String    @id @default(uuid())
+  adminId                 String    @unique
+  admin                   AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  emailNotifications      Boolean   @default(true)
+  pushNotifications       Boolean   @default(false)
+  digestFrequency         String    @default("weekly") // daily, weekly, monthly
+  sessionTimeout          Int       @default(30) // minutes
+  twoFactorRequired       Boolean   @default(true)
+  ipWhitelist             Boolean   @default(false)
+  theme                   String    @default("auto") // auto, light, dark
+  alertsCritical          Boolean   @default(true)
+  alertsHigh              Boolean   @default(true)
+  alertsModerate          Boolean   @default(false)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  @@index([adminId])
 }
 
 model AdminAuditLog {

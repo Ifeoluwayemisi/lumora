@@ -613,19 +613,19 @@ export const adminUsersApi = {
 export const adminSettingsApi = {
   // Get admin settings
   getSettings: async () => {
-    const response = await adminApi.get("/admin/settings");
+    const response = await adminApi.get("/settings");
     return response.data;
   },
 
   // Update admin settings
   updateSettings: async (settings) => {
-    const response = await adminApi.put("/admin/settings", settings);
+    const response = await adminApi.put("/settings", settings);
     return response.data;
   },
 
   // Reset settings to defaults
   resetSettings: async () => {
-    const response = await adminApi.post("/admin/settings/reset");
+    const response = await adminApi.post("/settings/reset");
     return response.data;
   },
 };

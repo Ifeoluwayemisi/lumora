@@ -10,6 +10,7 @@ import * as userReportController from "../controllers/userReportController.js";
 import * as caseManagementController from "../controllers/caseManagementController.js";
 import * as auditLogController from "../controllers/auditLogController.js";
 import * as adminUserManagementController from "../controllers/adminUserManagementController.js";
+import * as adminSettingsController from "../controllers/adminSettingsController.js";
 
 const router = express.Router();
 
@@ -388,6 +389,29 @@ router.post(
   adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR"),
   adminUserManagementController.unflagUserController,
+);
+
+// ========== SETTINGS ROUTES ==========
+
+router.get(
+  "/settings",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST", "SUPPORT"),
+  adminSettingsController.getSettingsController,
+);
+
+router.put(
+  "/settings",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST", "SUPPORT"),
+  adminSettingsController.updateSettingsController,
+);
+
+router.post(
+  "/settings/reset",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR"),
+  adminSettingsController.resetSettingsController,
 );
 
 export default router;
