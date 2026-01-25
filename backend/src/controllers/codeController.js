@@ -273,7 +273,13 @@ export async function getFlaggedCodes(req, res) {
 export async function getManufacturerCodes(req, res) {
   try {
     const userId = req.user.id;
-    const { page = 1, limit = 50, status = "ALL", productId, batchId } = req.query;
+    const {
+      page = 1,
+      limit = 50,
+      status = "ALL",
+      productId,
+      batchId,
+    } = req.query;
 
     // Get manufacturer
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -352,7 +358,8 @@ export async function getManufacturerCodes(req, res) {
       usedCount: code.usedCount,
       isFlagged: code.isFlagged,
       createdAt: code.createdAt,
-      verificationState: code.verificationLogs[0]?.verificationState || "UNUSED",
+      verificationState:
+        code.verificationLogs[0]?.verificationState || "UNUSED",
       lastVerifiedAt: code.verificationLogs[0]?.verifiedAt,
     }));
 
