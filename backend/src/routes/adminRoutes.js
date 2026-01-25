@@ -2,13 +2,8 @@ import express from "express";
 import { adminAuthMiddleware } from "../middleware/adminAuthMiddleware.js";
 import { roleMiddleware } from "../middleware/roleMiddleware.js";
 
-// Import admin controllers
-import * as adminAuthController from "../controllers/adminAuthController.js";
-import * as adminDashboardController from "../controllers/adminDashboardController.js";
-import * as manufacturerReviewController from "../controllers/manufacturerReviewController.js";
-import * as userReportController from "../controllers/userReportController.js";
-import * as caseManagementController from "../controllers/caseManagementController.js";
-import * as auditLogController from "../controllers/auditLogController.js";
+// Import admin user management controller
+import * as adminUserManagementController from "../controllers/adminUserManagementController.js";
 
 const router = express.Router();
 
@@ -336,6 +331,57 @@ router.get(
   adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN"),
   auditLogController.exportAuditLogsController,
+);
+
+// ========== USER MANAGEMENT ROUTES ==========
+
+router.get(
+  "/users",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR"),
+  adminUserManagementController.getUsersController,
+);
+
+router.get(
+  "/users/stats",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR"),
+  adminUserManagementController.getUserStatsController,
+);
+
+router.get(
+  "/users/:userId",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR"),
+  adminUserManagementController.getUserDetailController,
+);
+
+router.post(
+  "/users/:userId/suspend",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR"),
+  adminUserManagementController.suspendUserController,
+);
+
+router.post(
+  "/users/:userId/unsuspend",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR"),
+  adminUserManagementController.unsuspendUserController,
+);
+
+router.post(
+  "/users/:userId/flag",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR"),
+  adminUserManagementController.flagUserController,
+);
+
+router.post(
+  "/users/:userId/unflag",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR"),
+  adminUserManagementController.unflagUserController,
 );
 
 export default router;
