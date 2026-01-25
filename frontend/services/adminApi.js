@@ -523,26 +523,26 @@ export const adminAuditApi = {
 export const adminUsersApi = {
   // Get all users with filtering
   getUsers: async (filters = {}) => {
-    const response = await adminApi.get("/admin/users", { params: filters });
+    const response = await adminApi.get("/users", { params: filters });
     return response.data;
   },
 
   // Get user statistics
   getUserStats: async () => {
-    const response = await adminApi.get("/admin/users/stats");
+    const response = await adminApi.get("/users/stats");
     return response.data;
   },
 
   // Get single user details
   getUser: async (userId) => {
-    const response = await adminApi.get(`/admin/users/${userId}`);
+    const response = await adminApi.get(`/users/${userId}`);
     return response.data;
   },
 
   // Suspend user account
   suspendUser: async (userId, data) => {
     const response = await adminApi.post(
-      `/admin/users/${userId}/suspend`,
+      `/users/${userId}/suspend`,
       data,
     );
     return response.data;
@@ -550,19 +550,19 @@ export const adminUsersApi = {
 
   // Unsuspend/restore user account
   unsuspendUser: async (userId) => {
-    const response = await adminApi.post(`/admin/users/${userId}/unsuspend`);
+    const response = await adminApi.post(`/users/${userId}/unsuspend`);
     return response.data;
   },
 
   // Flag user for review
   flagUser: async (userId, data) => {
-    const response = await adminApi.post(`/admin/users/${userId}/flag`, data);
+    const response = await adminApi.post(`/users/${userId}/flag`, data);
     return response.data;
   },
 
   // Unflag user
   unflagUser: async (userId) => {
-    const response = await adminApi.post(`/admin/users/${userId}/unflag`);
+    const response = await adminApi.post(`/users/${userId}/unflag`);
     return response.data;
   },
 };
