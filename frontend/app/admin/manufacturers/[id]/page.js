@@ -57,9 +57,17 @@ export default function ManufacturerDetailPage() {
     if (!window.confirm("Approve this manufacturer application?")) return;
     try {
       setIsProcessing(true);
-      await adminManufacturerApi.approveManufacturer(manufacturerId);
+      console.log(
+        "[FRONTEND_APPROVE] Starting approval for manufacturerId:",
+        manufacturerId,
+      );
+      const result =
+        await adminManufacturerApi.approveManufacturer(manufacturerId);
+      console.log("[FRONTEND_APPROVE] Success response:", result);
       router.push("/admin/manufacturers?status=approved");
     } catch (err) {
+      console.error("[FRONTEND_APPROVE] Error:", err);
+      console.error("[FRONTEND_APPROVE] Response data:", err.response?.data);
       setError(err.response?.data?.message || "Failed to approve manufacturer");
       setIsProcessing(false);
     }
@@ -74,12 +82,21 @@ export default function ManufacturerDetailPage() {
     if (!window.confirm("Reject this manufacturer application?")) return;
     try {
       setIsProcessing(true);
-      await adminManufacturerApi.rejectManufacturer(
+      console.log(
+        "[FRONTEND_REJECT] Starting rejection for manufacturerId:",
+        manufacturerId,
+        "reason:",
+        rejectionReason,
+      );
+      const result = await adminManufacturerApi.rejectManufacturer(
         manufacturerId,
         rejectionReason,
       );
+      console.log("[FRONTEND_REJECT] Success response:", result);
       router.push("/admin/manufacturers?status=rejected");
     } catch (err) {
+      console.error("[FRONTEND_REJECT] Error:", err);
+      console.error("[FRONTEND_REJECT] Response data:", err.response?.data);
       setError(err.response?.data?.message || "Failed to reject manufacturer");
       setIsProcessing(false);
     }
@@ -125,9 +142,17 @@ export default function ManufacturerDetailPage() {
     if (!window.confirm("Suspend this manufacturer account?")) return;
     try {
       setIsProcessing(true);
-      await adminManufacturerApi.suspendManufacturer(manufacturerId);
+      console.log(
+        "[FRONTEND_SUSPEND] Starting suspension for manufacturerId:",
+        manufacturerId,
+      );
+      const result =
+        await adminManufacturerApi.suspendManufacturer(manufacturerId);
+      console.log("[FRONTEND_SUSPEND] Success response:", result);
       router.push("/admin/manufacturers?status=suspended");
     } catch (err) {
+      console.error("[FRONTEND_SUSPEND] Error:", err);
+      console.error("[FRONTEND_SUSPEND] Response data:", err.response?.data);
       setError(err.response?.data?.message || "Failed to suspend manufacturer");
       setIsProcessing(false);
     }

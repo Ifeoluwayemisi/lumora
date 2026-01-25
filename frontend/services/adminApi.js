@@ -246,19 +246,54 @@ export const adminManufacturerApi = {
 
   // Approve manufacturer
   approve: async (manufacturerId, trustScore, reason) => {
+    console.log("[API_APPROVE] POST /manufacturers/" + manufacturerId + "/approve", { trustScore, reason });
     const response = await adminApi.post(
       `/manufacturers/${manufacturerId}/approve`,
       { trustScore, reason },
+    );
+    console.log("[API_APPROVE] Response:", response.data);
+    return response.data;
+  },
+
+  approveManufacturer: async (manufacturerId) => {
+    console.log("[API_APPROVE] POST /manufacturers/" + manufacturerId + "/approve");
+    const response = await adminApi.post(
+      `/manufacturers/${manufacturerId}/approve`,
+      {},
+    );
+    console.log("[API_APPROVE] Response:", response.data);
     );
     return response.data;
   },
 
   // Reject manufacturer
   reject: async (manufacturerId, reason) => {
+    console.log(
+      "[API_REJECT] Calling POST /manufacturers/" +
+        manufacturerId +
+        "/reject with reason:",
+      reason,
+    );
     const response = await adminApi.post(
       `/manufacturers/${manufacturerId}/reject`,
       { reason },
     );
+    console.log("[API_REJECT] Response:", response.data);
+    return response.data;
+  },
+
+  rejectManufacturer: async (manufacturerId, reason) => {
+    console.log(
+      "[API_REJECT] Calling POST /manufacturers/" +
+        manufacturerId +
+        "/reject with reason:",
+      reason,
+    );
+    const response = await adminApi.post(
+      `/manufacturers/${manufacturerId}/reject`,
+      { reason },
+    );
+    console.log("[API_REJECT] Response:", response.data);
     return response.data;
   },
 
@@ -273,10 +308,32 @@ export const adminManufacturerApi = {
 
   // Suspend manufacturer
   suspend: async (manufacturerId, reason) => {
+    console.log(
+      "[API_SUSPEND] Calling POST /manufacturers/" +
+        manufacturerId +
+        "/suspend with reason:",
+      reason,
+    );
     const response = await adminApi.post(
       `/manufacturers/${manufacturerId}/suspend`,
       { reason },
     );
+    console.log("[API_SUSPEND] Response:", response.data);
+    return response.data;
+  },
+
+  suspendManufacturer: async (manufacturerId, reason) => {
+    console.log(
+      "[API_SUSPEND] Calling POST /manufacturers/" +
+        manufacturerId +
+        "/suspend with reason:",
+      reason,
+    );
+    const response = await adminApi.post(
+      `/manufacturers/${manufacturerId}/suspend`,
+      { reason },
+    );
+    console.log("[API_SUSPEND] Response:", response.data);
     return response.data;
   },
 
