@@ -27,6 +27,7 @@ export async function verifyCode({
       batch: {
         include: {
           manufacturer: true,
+          product: true,
         },
       },
       manufacturer: true,
@@ -173,10 +174,11 @@ export async function verifyCode({
   return {
     codeValue: normalizedCode,
     product: {
-      name: "Unregistered Product",
-      description: null,
-      category: null,
+      name: code?.batch?.product?.name || "Unregistered Product",
+      description: code?.batch?.product?.description || null,
+      category: code?.batch?.product?.category || null,
       manufacturer:
+        code?.batch?.manufacturer?.companyName ||
         code?.batch?.manufacturer?.name ||
         code?.batch?.manufacturer?.company ||
         "Unknown",
