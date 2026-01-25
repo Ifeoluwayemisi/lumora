@@ -262,7 +262,6 @@ export const adminManufacturerApi = {
       {},
     );
     console.log("[API_APPROVE] Response:", response.data);
-    );
     return response.data;
   },
 
