@@ -233,13 +233,9 @@ export async function recalculateManufacturerRiskScore(manufacturerId) {
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       include: {
-        products: {
+        batches: {
           include: {
-            batches: {
-              include: {
-                codes: true,
-              },
-            },
+            codes: true,
           },
         },
       },
@@ -247,7 +243,7 @@ export async function recalculateManufacturerRiskScore(manufacturerId) {
 
     if (!manufacturer) throw new Error("Manufacturer not found");
 
-    // Get verification logs for all products
+    // Get verification logs for all batches
     const verificationLogs = await prisma.verificationLog.findMany({
       where: {
         code: {
@@ -324,19 +320,17 @@ export async function recalculateManufacturerRiskScore(manufacturerId) {
     }
 
     // Geographic clustering (codes from same batch in too many regions)
-    const products = manufacturer.products;
+    const batches = manufacturer.batches;
     let geographicSpread = 0;
-    for (const product of products) {
-      for (const batch of product.batches) {
-        const batchVerifications = verificationLogs.filter(
-          (l) => l.code.batchId === batch.id,
-        );
-        const states = new Set(
-          batchVerifications.map((l) => l.state).filter(Boolean),
-        );
-        if (states.size > 5) {
-          geographicSpread++;
-        }
+    for (const batch of batches) {
+      const batchVerifications = verificationLogs.filter(
+        (l) => l.code?.batchId === batch.id,
+      );
+      const states = new Set(
+        batchVerifications.map((l) => l.state).filter(Boolean),
+      );
+      if (states.size > 5) {
+        geographicSpread++;
       }
     }
 
