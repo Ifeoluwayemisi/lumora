@@ -399,7 +399,7 @@ export default function ManufacturerProfilePage() {
                       Verification Status
                     </p>
                     <div className="flex items-center gap-2">
-                      {manufacturer?.accountStatus === "verified" ? (
+                      {manufacturer?.accountStatus === "active" || manufacturer?.accountStatus === "verified" ? (
                         <>
                           <div className="w-3 h-3 rounded-full bg-green-500"></div>
                           <span className="font-semibold text-green-700 dark:text-green-400">

@@ -192,6 +192,15 @@ export async function approveManufacturer(req, res) {
       },
     });
 
+    // Also update the review record to "approved"
+    await prisma.manufacturerReview.updateMany({
+      where: { manufacturerId },
+      data: {
+        status: "approved",
+        adminId: req.user?.id,
+      },
+    });
+
     // Send approval email asynchronously (don't block response)
     sendAccountApprovalEmail(manufacturerId).catch((err) => {
       console.error("[APPROVAL] Failed to send email:", err.message);
@@ -285,6 +294,15 @@ export async function rejectManufacturer(req, res) {
       },
     });
 
+    // Also update the review record to "rejected"
+    await prisma.manufacturerReview.updateMany({
+      where: { manufacturerId },
+      data: {
+        status: "rejected",
+        adminId: req.user?.id,
+      },
+    });
+
     // Send rejection email asynchronously (don't block response)
     sendAccountRejectionEmail(manufacturerId, reason).catch((err) => {
       console.error("[REJECTION] Failed to send email:", err.message);
@@ -351,6 +369,15 @@ export async function suspendManufacturerController(req, res) {
       manufacturerId,
       reason,
     );
+
+    // Also update the review record to "suspended"
+    await prisma.manufacturerReview.updateMany({
+      where: { manufacturerId },
+      data: {
+        status: "suspended",
+        adminId: req.user?.id,
+      },
+    });
 
     // Log the action
     await auditLogService.logAction({
