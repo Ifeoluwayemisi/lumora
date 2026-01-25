@@ -192,11 +192,13 @@ export async function approveManufacturer(req, res) {
       },
     });
 
-    // Also update the review record to "approved"
+    // Also update the review record to "approved" with the same scores
     await prisma.manufacturerReview.updateMany({
       where: { manufacturerId },
       data: {
         status: "approved",
+        trustScore: manufacturer.trustScore,
+        riskAssessment: manufacturer.riskLevel,
         adminId: req.user?.id,
       },
     });
@@ -294,11 +296,14 @@ export async function rejectManufacturer(req, res) {
       },
     });
 
-    // Also update the review record to "rejected"
+    // Also update the review record to "rejected" with the same scores
     await prisma.manufacturerReview.updateMany({
       where: { manufacturerId },
       data: {
         status: "rejected",
+        trustScore: manufacturer.trustScore,
+        riskAssessment: manufacturer.riskLevel,
+        rejectionReason: reason,
         adminId: req.user?.id,
       },
     });
@@ -370,11 +375,13 @@ export async function suspendManufacturerController(req, res) {
       reason,
     );
 
-    // Also update the review record to "suspended"
+    // Also update the review record to "suspended" with the same scores
     await prisma.manufacturerReview.updateMany({
       where: { manufacturerId },
       data: {
         status: "suspended",
+        trustScore: suspended.trustScore,
+        riskAssessment: suspended.riskLevel,
         adminId: req.user?.id,
       },
     });
