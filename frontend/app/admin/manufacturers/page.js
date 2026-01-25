@@ -38,11 +38,11 @@ export default function ManufacturersPage() {
     total: 0,
   });
 
-  // Fetch review queue
-  const fetchReviewQueue = async (page = 1) => {
+  // Fetch review queue with status parameter
+  const fetchReviewQueue = async (page = 1, status = "pending") => {
     try {
       setError("");
-      const res = await adminManufacturerApi.getReviewQueue(page, 10);
+      const res = await adminManufacturerApi.getReviewQueue(page, 10, status);
       setReviewQueue(res.data.items || []);
       setPagination({
         page: res.data.currentPage,
@@ -68,11 +68,11 @@ export default function ManufacturersPage() {
   // Initial load
   useEffect(() => {
     if (isHydrated && adminUser) {
-      Promise.all([fetchReviewQueue(), fetchStats()]).then(() =>
+      Promise.all([fetchReviewQueue(1, activeTab), fetchStats()]).then(() =>
         setIsLoading(false),
       );
     }
-  }, [isHydrated, adminUser]);
+  }, [isHydrated, adminUser, activeTab]);
 
   // Approval handler
   const handleApprove = async (mfgId) => {
@@ -80,7 +80,7 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.approveManufacturer(mfgId);
-      await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
+      await Promise.all([fetchReviewQueue(1, activeTab), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to approve manufacturer");
     } finally {
@@ -97,7 +97,7 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.rejectManufacturer(mfgId, reason);
-      await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
+      await Promise.all([fetchReviewQueue(1, activeTab), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to reject manufacturer");
     } finally {
@@ -111,7 +111,7 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.suspendManufacturer(mfgId);
-      await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
+      await Promise.all([fetchReviewQueue(1, activeTab), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to suspend manufacturer");
     } finally {
@@ -124,7 +124,7 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.forceAudit(mfgId);
-      await Promise.all([fetchReviewQueue(pagination.page), fetchStats()]);
+      await Promise.all([fetchReviewQueue(1, activeTab), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to trigger audit");
     } finally {
@@ -160,7 +160,7 @@ export default function ManufacturersPage() {
               onClick={async () => {
                 setIsRefreshing(true);
                 await Promise.all([
-                  fetchReviewQueue(pagination.page),
+                  fetchReviewQueue(pagination.page, activeTab),
                   fetchStats(),
                 ]);
                 setIsRefreshing(false);
