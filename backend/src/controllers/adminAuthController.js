@@ -300,16 +300,17 @@ export async function updateAdminProfileController(req, res) {
 
     // Log the action
     if (auditLogService) {
-      await auditLogService.logAction({
+      await auditLogService.logAdminAction(
         adminId,
-        action: "update_profile",
-        resourceType: "admin_profile",
-        resourceId: adminId,
-        details: {
+        "update_profile",
+        "admin_profile",
+        adminId,
+        null,
+        {
           firstName: updatedAdmin.firstName,
           lastName: updatedAdmin.lastName,
         },
-      });
+      );
     }
 
     return res.status(200).json({

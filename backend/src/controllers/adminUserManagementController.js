@@ -157,16 +157,14 @@ export async function suspendUserController(req, res) {
     });
 
     // Log the action
-    await auditLogService.logAction({
-      adminId: req.user?.id,
-      action: "suspend_user",
+    await auditLogService.logAdminAction(
+      req.admin.id,
+      "suspend_user",
+      "user",
       userId,
-      details: {
-        reason: reason || "No reason provided",
-        previousStatus: user.accountStatus,
-        newStatus: "suspended",
-      },
-    });
+      null,
+      { newStatus: "suspended", reason: reason || "No reason provided" },
+    );
 
     console.log("[SUSPEND_USER] ✅ Successfully suspended userId:", userId);
 
@@ -206,15 +204,14 @@ export async function unsuspendUserController(req, res) {
     });
 
     // Log the action
-    await auditLogService.logAction({
-      adminId: req.user?.id,
-      action: "unsuspend_user",
+    await auditLogService.logAdminAction(
+      req.admin.id,
+      "unsuspend_user",
+      "user",
       userId,
-      details: {
-        previousStatus: user.accountStatus,
-        newStatus: "active",
-      },
-    });
+      null,
+      { newStatus: "active" },
+    );
 
     console.log("[UNSUSPEND_USER] ✅ Successfully unsuspended userId:", userId);
 
@@ -260,14 +257,14 @@ export async function flagUserController(req, res) {
     });
 
     // Log the action
-    await auditLogService.logAction({
-      adminId: req.user?.id,
-      action: "flag_user",
+    await auditLogService.logAdminAction(
+      req.admin.id,
+      "flag_user",
+      "user",
       userId,
-      details: {
-        reason: reason || "No reason provided",
-      },
-    });
+      null,
+      { reason: reason || "No reason provided" },
+    );
 
     console.log("[FLAG_USER] ✅ Successfully flagged userId:", userId);
 
@@ -307,14 +304,14 @@ export async function unflagUserController(req, res) {
     });
 
     // Log the action
-    await auditLogService.logAction({
-      adminId: req.user?.id,
-      action: "unflag_user",
+    await auditLogService.logAdminAction(
+      req.admin.id,
+      "unflag_user",
+      "user",
       userId,
-      details: {
-        message: "User unflagged",
-      },
-    });
+      null,
+      { message: "User unflagged" },
+    );
 
     console.log("[UNFLAG_USER] ✅ Successfully unflagged userId:", userId);
 

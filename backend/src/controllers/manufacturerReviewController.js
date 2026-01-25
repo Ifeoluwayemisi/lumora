@@ -204,17 +204,18 @@ export async function approveManufacturer(req, res) {
     });
 
     // Log the action
-    await auditLogService.logAction({
-      adminId: req.admin.id,
-      action: "approve_manufacturer",
+    await auditLogService.logAdminAction(
+      req.admin.id,
+      "approve_manufacturer",
+      "manufacturer",
       manufacturerId,
-      details: {
-        previousStatus: "pending",
+      null,
+      {
         newStatus: "active",
         trustScore: manufacturer.trustScore,
         riskLevel: manufacturer.riskLevel,
       },
-    });
+    );
 
     // Send approval email asynchronously (don't block response)
     sendAccountApprovalEmail(manufacturerId).catch((err) => {
@@ -322,16 +323,14 @@ export async function rejectManufacturer(req, res) {
     });
 
     // Log the action
-    await auditLogService.logAction({
-      adminId: req.admin.id,
-      action: "reject_manufacturer",
+    await auditLogService.logAdminAction(
+      req.admin.id,
+      "reject_manufacturer",
+      "manufacturer",
       manufacturerId,
-      details: {
-        previousStatus: "pending",
-        newStatus: "rejected",
-        reason,
-      },
-    });
+      null,
+      { newStatus: "rejected", reason },
+    );
 
     // Send rejection email asynchronously (don't block response)
     sendAccountRejectionEmail(manufacturerId, reason).catch((err) => {
@@ -412,16 +411,14 @@ export async function suspendManufacturerController(req, res) {
     });
 
     // Log the action
-    await auditLogService.logAction({
-      adminId: req.admin.id,
-      action: "suspend_manufacturer",
+    await auditLogService.logAdminAction(
+      req.admin.id,
+      "suspend_manufacturer",
+      "manufacturer",
       manufacturerId,
-      details: {
-        reason: reason || "No reason provided",
-        previousStatus: manufacturer.accountStatus,
-        newStatus: "suspended",
-      },
-    });
+      null,
+      { newStatus: "suspended", reason: reason || "No reason provided" },
+    );
 
     console.log(
       "[BACKEND_SUSPEND] ✅ Successfully suspended manufacturerId:",
