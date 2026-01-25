@@ -19,13 +19,11 @@ export async function getAuditLogsController(req, res) {
     const result = await auditLogService.getAllAuditLogs(page, limit, filters);
 
     return res.status(200).json({
-      success: true,
-      data: result.logs,
-      pagination: {
-        page: result.page,
-        limit: result.limit,
+      data: {
+        items: result.logs || [],
+        currentPage: result.page,
+        pageSize: result.limit,
         total: result.total,
-        pages: result.pages,
       },
     });
   } catch (err) {

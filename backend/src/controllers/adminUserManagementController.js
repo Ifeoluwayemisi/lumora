@@ -37,7 +37,7 @@ export async function getUsersController(req, res) {
           role: true,
           accountStatus: true,
           isFlagged: true,
-          emailVerified: true,
+          verified: true,
           createdAt: true,
           updatedAt: true,
         },
