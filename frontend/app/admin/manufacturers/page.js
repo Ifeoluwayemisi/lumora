@@ -203,38 +203,66 @@ export default function ManufacturersPage() {
       {/* Stats Cards */}
       {stats && (
         <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+          <button
+            onClick={() => setActiveTab("pending")}
+            className={`bg-white dark:bg-gray-900 rounded-lg border p-4 hover:shadow-lg transition cursor-pointer text-left ${
+              activeTab === "pending"
+                ? "border-blue-500 dark:border-blue-600 shadow-lg"
+                : "border-gray-200 dark:border-gray-800 hover:border-blue-300 dark:hover:border-blue-700"
+            }`}
+          >
             <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
               Pending Review
             </p>
             <p className="text-2xl font-bold text-blue-600">
               {stats.pendingCount || 0}
             </p>
-          </div>
-          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+          </button>
+          <button
+            onClick={() => setActiveTab("approved")}
+            className={`bg-white dark:bg-gray-900 rounded-lg border p-4 hover:shadow-lg transition cursor-pointer text-left ${
+              activeTab === "approved"
+                ? "border-green-500 dark:border-green-600 shadow-lg"
+                : "border-gray-200 dark:border-gray-800 hover:border-green-300 dark:hover:border-green-700"
+            }`}
+          >
             <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
               Approved
             </p>
             <p className="text-2xl font-bold text-green-600">
               {stats.approvedCount || 0}
             </p>
-          </div>
-          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+          </button>
+          <button
+            onClick={() => setActiveTab("rejected")}
+            className={`bg-white dark:bg-gray-900 rounded-lg border p-4 hover:shadow-lg transition cursor-pointer text-left ${
+              activeTab === "rejected"
+                ? "border-red-500 dark:border-red-600 shadow-lg"
+                : "border-gray-200 dark:border-gray-800 hover:border-red-300 dark:hover:border-red-700"
+            }`}
+          >
             <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
               Rejected
             </p>
             <p className="text-2xl font-bold text-red-600">
               {stats.rejectedCount || 0}
             </p>
-          </div>
-          <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+          </button>
+          <button
+            onClick={() => setActiveTab("suspended")}
+            className={`bg-white dark:bg-gray-900 rounded-lg border p-4 hover:shadow-lg transition cursor-pointer text-left ${
+              activeTab === "suspended"
+                ? "border-orange-500 dark:border-orange-600 shadow-lg"
+                : "border-gray-200 dark:border-gray-800 hover:border-orange-300 dark:hover:border-orange-700"
+            }`}
+          >
             <p className="text-gray-600 dark:text-gray-400 text-sm font-medium">
               Suspended
             </p>
             <p className="text-2xl font-bold text-orange-600">
               {stats.suspendedCount || 0}
             </p>
-          </div>
+          </button>
         </div>
       )}
 
