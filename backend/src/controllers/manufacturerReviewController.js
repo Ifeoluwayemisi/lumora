@@ -145,8 +145,13 @@ export async function approveManufacturer(req, res) {
   try {
     const { manufacturerId } = req.params;
     const { notes } = req.body;
-    
-    console.log("[BACKEND_APPROVE] Starting approval process for manufacturerId:", manufacturerId, "adminId:", req.user?.id);
+
+    console.log(
+      "[BACKEND_APPROVE] Starting approval process for manufacturerId:",
+      manufacturerId,
+      "adminId:",
+      req.user?.id,
+    );
 
     // Import dynamic score calculation functions
     const { calculateDynamicTrustScore } =
@@ -200,10 +205,20 @@ export async function approveManufacturer(req, res) {
         riskLevel: manufacturer.riskLevel,
       },
     });
-    
-    console.log("[BACKEND_APPROVE] ✅ Successfully approved manufacturerId:", manufacturerId, "New status:", manufacturer.accountStatus);
+
+    console.log(
+      "[BACKEND_APPROVE] ✅ Successfully approved manufacturerId:",
+      manufacturerId,
+      "New status:",
+      manufacturer.accountStatus,
+    );
   } catch (err) {
-    console.error("[BACKEND_APPROVE] ❌ Error:", err.message, "Stack:", err.stack);
+    console.error(
+      "[BACKEND_APPROVE] ❌ Error:",
+      err.message,
+      "Stack:",
+      err.stack,
+    );
     res
       .status(500)
       .json({ error: "Failed to approve manufacturer", details: err.message });
@@ -244,9 +259,16 @@ export async function rejectManufacturer(req, res) {
   try {
     const { manufacturerId } = req.params;
     const { reason } = req.body;
-    
-    console.log("[BACKEND_REJECT] Starting rejection for manufacturerId:", manufacturerId, "reason:", reason, "adminId:", req.user?.id);
-    
+
+    console.log(
+      "[BACKEND_REJECT] Starting rejection for manufacturerId:",
+      manufacturerId,
+      "reason:",
+      reason,
+      "adminId:",
+      req.user?.id,
+    );
+
     const { sendAccountRejectionEmail } =
       await import("../services/notificationService.js");
 
@@ -268,14 +290,22 @@ export async function rejectManufacturer(req, res) {
       console.error("[REJECTION] Failed to send email:", err.message);
     });
 
-    console.log("[BACKEND_REJECT] ✅ Successfully rejected manufacturerId:", manufacturerId);
+    console.log(
+      "[BACKEND_REJECT] ✅ Successfully rejected manufacturerId:",
+      manufacturerId,
+    );
 
     res.status(200).json({
       message: "Manufacturer rejected",
       manufacturer,
     });
   } catch (err) {
-    console.error("[BACKEND_REJECT] ❌ Error:", err.message, "Stack:", err.stack);
+    console.error(
+      "[BACKEND_REJECT] ❌ Error:",
+      err.message,
+      "Stack:",
+      err.stack,
+    );
     res.status(500).json({ error: "Failed to reject manufacturer" });
   }
 }
@@ -287,8 +317,15 @@ export async function suspendManufacturerController(req, res) {
   try {
     const { manufacturerId } = req.params;
     const { reason } = req.body;
-    
-    console.log("[BACKEND_SUSPEND] Starting suspension for manufacturerId:", manufacturerId, "reason:", reason, "adminId:", req.user?.id);
+
+    console.log(
+      "[BACKEND_SUSPEND] Starting suspension for manufacturerId:",
+      manufacturerId,
+      "reason:",
+      reason,
+      "adminId:",
+      req.user?.id,
+    );
 
     // Validate input
     if (!manufacturerId) {
@@ -302,7 +339,10 @@ export async function suspendManufacturerController(req, res) {
     });
 
     if (!manufacturer) {
-      console.log("[BACKEND_SUSPEND] ❌ Manufacturer not found:", manufacturerId);
+      console.log(
+        "[BACKEND_SUSPEND] ❌ Manufacturer not found:",
+        manufacturerId,
+      );
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
@@ -324,7 +364,12 @@ export async function suspendManufacturerController(req, res) {
       },
     });
 
-    console.log("[BACKEND_SUSPEND] ✅ Successfully suspended manufacturerId:", manufacturerId, "New status:", suspended.accountStatus);
+    console.log(
+      "[BACKEND_SUSPEND] ✅ Successfully suspended manufacturerId:",
+      manufacturerId,
+      "New status:",
+      suspended.accountStatus,
+    );
 
     res.json({
       success: true,
@@ -332,7 +377,12 @@ export async function suspendManufacturerController(req, res) {
       manufacturer: suspended,
     });
   } catch (err) {
-    console.error("[BACKEND_SUSPEND] ❌ Error:", err.message, "Stack:", err.stack);
+    console.error(
+      "[BACKEND_SUSPEND] ❌ Error:",
+      err.message,
+      "Stack:",
+      err.stack,
+    );
     res.status(500).json({ error: "Failed to suspend manufacturer" });
   }
 }
@@ -395,8 +445,13 @@ export async function forceAuditController(req, res) {
   try {
     const { manufacturerId } = req.params;
     const adminId = req.admin?.id;
-    
-    console.log("[BACKEND_AUDIT] Starting force audit for manufacturerId:", manufacturerId, "adminId:", adminId);
+
+    console.log(
+      "[BACKEND_AUDIT] Starting force audit for manufacturerId:",
+      manufacturerId,
+      "adminId:",
+      adminId,
+    );
 
     // Get manufacturer
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -408,7 +463,14 @@ export async function forceAuditController(req, res) {
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
-    console.log("[BACKEND_AUDIT] Manufacturer found:", manufacturer.name, "Current scores - Risk:", manufacturer.riskScore, "Trust:", manufacturer.trustScore);
+    console.log(
+      "[BACKEND_AUDIT] Manufacturer found:",
+      manufacturer.name,
+      "Current scores - Risk:",
+      manufacturer.riskScore,
+      "Trust:",
+      manufacturer.trustScore,
+    );
 
     // Import AI risk service to recalculate risk score
     const { recalculateManufacturerRiskScore } =
@@ -417,7 +479,7 @@ export async function forceAuditController(req, res) {
     // Run actual audit calculation
     console.log("[BACKEND_AUDIT] Running recalculate risk score...");
     const auditResult = await recalculateManufacturerRiskScore(manufacturerId);
-    
+
     console.log("[BACKEND_AUDIT] Audit result:", auditResult);
 
     // Update manufacturer with new scores
@@ -431,7 +493,12 @@ export async function forceAuditController(req, res) {
     });
 
     // Log the audit action
-    console.log("[BACKEND_AUDIT] ✅ Audit completed - New scores - Risk:", updated.riskScore, "Trust:", updated.trustScore);
+    console.log(
+      "[BACKEND_AUDIT] ✅ Audit completed - New scores - Risk:",
+      updated.riskScore,
+      "Trust:",
+      updated.trustScore,
+    );
 
     res.status(200).json({
       success: true,
@@ -444,8 +511,21 @@ export async function forceAuditController(req, res) {
         summary: auditResult.summary || "Audit completed",
       },
     });
+    
+    console.log("[BACKEND_AUDIT] Sending response:", {
+      riskScore: auditResult.riskScore || updated.riskScore || 50,
+      trustScore: auditResult.trustScore || updated.trustScore || 50,
+      summary: auditResult.summary || "Audit completed",
+    });
   } catch (err) {
-    console.error("[BACKEND_AUDIT] ❌ Error:", err.message, "Stack:", err.stack);
-    res.status(500).json({ error: "Failed to trigger audit", details: err.message });
+    console.error(
+      "[BACKEND_AUDIT] ❌ Error:",
+      err.message,
+      "Stack:",
+      err.stack,
+    );
+    res
+      .status(500)
+      .json({ error: "Failed to trigger audit", details: err.message });
   }
 }

@@ -230,6 +230,8 @@ Analyze for suspicious patterns. Return this JSON:
  */
 export async function recalculateManufacturerRiskScore(manufacturerId) {
   try {
+    console.log("[AI_RISK] Starting risk calculation for manufacturerId:", manufacturerId);
+    
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       include: {
@@ -242,26 +244,22 @@ export async function recalculateManufacturerRiskScore(manufacturerId) {
     });
 
     if (!manufacturer) throw new Error("Manufacturer not found");
+    
+    console.log("[AI_RISK] Manufacturer found:", manufacturer.name, "- Verified:", manufacturer.verified, "NAFDAC:", manufacturer.nafdacLicenseVerified, "Business Cert:", manufacturer.businessCertificateVerified);
 
     // Get verification logs for all batches
     const verificationLogs = await prisma.verificationLog.findMany({
       where: {
         code: {
           batch: {
-            product: {
-              manufacturerId,
-            },
+            manufacturerId, // ✅ Correct: manufacturerId is directly on batch
           },
         },
       },
       include: {
         code: {
           include: {
-            batch: {
-              include: {
-                product: true,
-              },
-            },
+            batch: true,
           },
         },
       },
@@ -270,11 +268,42 @@ export async function recalculateManufacturerRiskScore(manufacturerId) {
     });
 
     if (verificationLogs.length === 0) {
-      // No verification history - neutral risk
+      // No verification history - use manufacturer metadata for scoring
+      // New manufacturers without verification history get neutral but verifiable scores
+
+      console.log("[AI_RISK] No verification logs found - using document verification fallback");
+
+      // Check if manufacturer documents are verified
+      let documentScore = 50;
+      if (
+        manufacturer.nafdacLicenseVerified ||
+        manufacturer.businessCertificateVerified
+      ) {
+        documentScore = 35; // Lower risk if documents verified
+        console.log("[AI_RISK] Documents verified - using score 35");
+      }
+      if (
+        !manufacturer.nafdacLicenseVerified &&
+        !manufacturer.businessCertificateVerified
+      ) {
+        documentScore = 65; // Higher risk if no documents verified
+        console.log("[AI_RISK] No documents verified - using score 65");
+      }
+
+      // Check if manufacturer is verified
+      const verificationBonus = manufacturer.verified ? -10 : 0;
+
+      const calculatedScore = Math.min(
+        100,
+        Math.max(0, documentScore + verificationBonus),
+      );
+      
+      console.log("[AI_RISK] Fallback calculation: baseScore=" + documentScore + ", verificationBonus=" + verificationBonus + ", finalRiskScore=" + calculatedScore);
+
       return {
-        riskScore: 50,
-        trustScore: 50,
-        summary: "Insufficient verification history",
+        riskScore: calculatedScore,
+        trustScore: 100 - calculatedScore,
+        summary: `New manufacturer - Risk based on document verification: ${manufacturer.verified ? "Verified" : "Not verified"}. NAFDAC: ${manufacturer.nafdacLicenseVerified ? "✓" : "✗"}, Business Cert: ${manufacturer.businessCertificateVerified ? "✓" : "✗"}`,
       };
     }
 
@@ -373,9 +402,9 @@ export async function recalculateManufacturerRiskScore(manufacturerId) {
       },
     });
 
-    console.log(
-      `[RISK_RECALC] ${manufacturerId}: Risk=${riskScore}, Trust=${trustScore}, ${summary}`,
-    );
+    console.log("[AI_RISK] ✅ Calculation complete for manufacturerId:", manufacturerId);
+    console.log("[AI_RISK] Final Scores - Risk:", riskScore, "Trust:", trustScore);
+    console.log("[AI_RISK] Summary:", summary);
 
     return {
       riskScore,
