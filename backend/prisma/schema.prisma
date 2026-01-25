@@ -27,11 +27,13 @@ model User {
   favorites           UserFavorites[]
   notifications       UserNotifications[]
   reports             Report[]
+  manufacturer        Manufacturer?
 }
 
 model Manufacturer {
   id                           String                      @id @default(uuid())
   userId                       String                      @unique
+  user                         User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
   name                         String
   email                        String                      @default("")
   phone                        String?

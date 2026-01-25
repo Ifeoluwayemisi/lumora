@@ -504,10 +504,6 @@ export const adminCaseApi = {
     const response = await adminApi.post(`/cases/${caseId}/notes`, data);
     return response.data;
   },
-      isInternal,
-    });
-    return response.data;
-  },
 
   // Escalate to NAFDAC
   escalateNAFDAC: async (caseId, evidenceBundle) => {
