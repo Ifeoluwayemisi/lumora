@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function checkAllCodesWithMissingFiles() {
@@ -14,13 +14,13 @@ async function checkAllCodesWithMissingFiles() {
             batchNumber: true,
             manufacturer: {
               select: {
-                companyName: true
-              }
-            }
-          }
-        }
+                companyName: true,
+              },
+            },
+          },
+        },
       },
-      take: 100
+      take: 100,
     });
 
     console.log(`\n📊 Total codes checked: ${allCodes.length}\n`);
@@ -29,11 +29,11 @@ async function checkAllCodesWithMissingFiles() {
     let withEmptyPath = 0;
     let otherPath = 0;
 
-    allCodes.forEach(code => {
+    allCodes.forEach((code) => {
       if (!code.qrImagePath) {
         withNullPath++;
         console.log(`⚠️ NULL path: ${code.codeValue}`);
-      } else if (code.qrImagePath === '') {
+      } else if (code.qrImagePath === "") {
         withEmptyPath++;
         console.log(`⚠️ EMPTY path: ${code.codeValue}`);
       } else {
@@ -46,17 +46,19 @@ async function checkAllCodesWithMissingFiles() {
     console.log(`   NULL paths: ${withNullPath}`);
     console.log(`   EMPTY paths: ${withEmptyPath}`);
     console.log(`   Other paths: ${otherPath}`);
-    
+
     // Show a sample of codes with paths
     if (otherPath > 0) {
       console.log(`\n📋 Sample codes with paths:`);
-      allCodes.filter(c => c.qrImagePath && c.qrImagePath !== '').slice(0, 5).forEach(code => {
-        console.log(`   ${code.codeValue}: ${code.qrImagePath}`);
-      });
+      allCodes
+        .filter((c) => c.qrImagePath && c.qrImagePath !== "")
+        .slice(0, 5)
+        .forEach((code) => {
+          console.log(`   ${code.codeValue}: ${code.qrImagePath}`);
+        });
     }
-
   } catch (err) {
-    console.error('Error:', err.message);
+    console.error("Error:", err.message);
   } finally {
     await prisma.$disconnect();
   }

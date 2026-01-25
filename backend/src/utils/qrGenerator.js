@@ -47,7 +47,7 @@ export async function generateQRCode(codeValue) {
 
     const relativePath = `/uploads/qrcodes/${fileName}`;
     console.log("[QR_GENERATOR]   ✓ Returning path:", relativePath);
-    
+
     return relativePath;
   } catch (error) {
     console.error("[QR_GENERATOR] ❌ CRITICAL ERROR:", error.message);
