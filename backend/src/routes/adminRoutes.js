@@ -178,12 +178,12 @@ router.post(
   manufacturerReviewController.forceAuditController,
 );
 
-// router.post(
-//   "/manufacturers/:manufacturerId/suspend",
-//   adminAuthMiddleware,
-//   roleMiddleware("SUPER_ADMIN"),
-//   manufacturerReviewController.suspendManufacturerController,
-// );
+router.post(
+  "/manufacturers/:manufacturerId/suspend",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN"),
+  manufacturerReviewController.suspendManufacturerController,
+);
 
 // ========== USER REPORTS ROUTES ==========
 

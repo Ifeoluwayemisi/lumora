@@ -155,8 +155,24 @@ export async function approveManufacturer(req, res) {
       await import("../services/notificationService.js");
 
     // Calculate dynamic trust score on approval (based on documents verified)
-    const trustData = await calculateDynamicTrustScore(manufacturerId);
-    const riskData = await recalculateManufacturerRiskScore(manufacturerId);
+    let trustData;
+    try {
+      trustData = await calculateDynamicTrustScore(manufacturerId);
+    } catch (trustErr) {
+      console.error(
+        "[APPROVE] Trust score calculation failed:",
+        trustErr.message,
+      );
+      trustData = { trustScore: 70 }; // Fallback for new manufacturers
+    }
+
+    let riskData;
+    try {
+      riskData = await recalculateManufacturerRiskScore(manufacturerId);
+    } catch (riskErr) {
+      console.error("[APPROVE] Risk calculation failed:", riskErr.message);
+      riskData = { riskLevel: "MEDIUM", riskScore: 50, trustScore: 50 }; // Fallback
+    }
 
     const manufacturer = await prisma.manufacturer.update({
       where: { id: manufacturerId },
@@ -164,7 +180,8 @@ export async function approveManufacturer(req, res) {
         accountStatus: "active",
         verified: true,
         riskLevel: riskData.riskLevel || "MEDIUM",
-        trustScore: trustData.trustScore || 75, // Default 75 for newly approved
+        trustScore: trustData.trustScore || riskData.trustScore || 70,
+        riskScore: riskData.riskScore || 50,
       },
     });
 
@@ -183,7 +200,9 @@ export async function approveManufacturer(req, res) {
     });
   } catch (err) {
     console.error("[APPROVE_MANUFACTURER] Error:", err);
-    res.status(500).json({ error: "Failed to approve manufacturer" });
+    res
+      .status(500)
+      .json({ error: "Failed to approve manufacturer", details: err.message });
   }
 }
 
@@ -250,6 +269,59 @@ export async function rejectManufacturer(req, res) {
   } catch (err) {
     console.error("[REJECT_MANUFACTURER] Error:", err);
     res.status(500).json({ error: "Failed to reject manufacturer" });
+  }
+}
+
+/**
+ * Suspend manufacturer account
+ */
+export async function suspendManufacturerController(req, res) {
+  try {
+    const { manufacturerId } = req.params;
+    const { reason } = req.body;
+
+    // Validate input
+    if (!manufacturerId) {
+      return res.status(400).json({ error: "Manufacturer ID is required" });
+    }
+
+    // Check if manufacturer exists
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    // Suspend manufacturer
+    const suspended = await manufacturerReviewService.suspendManufacturer(
+      manufacturerId,
+      reason,
+    );
+
+    // Log the action
+    await auditLogService.logAction({
+      adminId: req.user.id,
+      action: "suspend_manufacturer",
+      manufacturerId,
+      details: {
+        reason: reason || "No reason provided",
+        previousStatus: manufacturer.accountStatus,
+        newStatus: "suspended",
+      },
+    });
+
+    console.log(`[SUSPEND_MANUFACTURER] Manufacturer ${manufacturerId} suspended by admin ${req.user.id}`);
+
+    res.json({
+      success: true,
+      message: "Manufacturer account suspended successfully",
+      manufacturer: suspended,
+    });
+  } catch (err) {
+    console.error("[SUSPEND_MANUFACTURER] Error:", err);
+    res.status(500).json({ error: "Failed to suspend manufacturer" });
   }
 }
 
