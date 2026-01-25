@@ -356,9 +356,9 @@ export const adminManufacturerApi = {
  */
 export const adminReportApi = {
   // Get reports queue
-  getReports: async (status = "NEW", skip = 0, take = 50) => {
+  getReports: async (page = 1, limit = 10, status = "NEW") => {
     const response = await adminApi.get("/reports", {
-      params: { status, skip, take },
+      params: { page, limit, status },
     });
     return response.data;
   },
@@ -371,6 +371,12 @@ export const adminReportApi = {
 
   // Get report stats
   getStats: async () => {
+    const response = await adminApi.get("/reports/stats");
+    return response.data;
+  },
+
+  // Get report stats (alias)
+  getReportsStats: async () => {
     const response = await adminApi.get("/reports/stats");
     return response.data;
   },
@@ -388,11 +394,10 @@ export const adminReportApi = {
   },
 
   // Review report and set risk level
-  reviewReport: async (reportId, status, riskLevel, adminNotes) => {
+  reviewReport: async (reportId, status, notes) => {
     const response = await adminApi.post(`/reports/${reportId}/review`, {
       status,
-      riskLevel,
-      adminNotes,
+      notes,
     });
     return response.data;
   },
@@ -412,6 +417,14 @@ export const adminReportApi = {
     });
     return response.data;
   },
+
+  // Escalate to NAFDAC
+  escalateToNAFDAC: async (reportId, notes) => {
+    const response = await adminApi.post(`/reports/${reportId}/escalate-nafdac`, {
+      notes,
+    });
+    return response.data;
+  },
 };
 
 /**
@@ -419,9 +432,9 @@ export const adminReportApi = {
  */
 export const adminCaseApi = {
   // Get cases
-  getCases: async (status = "open", skip = 0, take = 50) => {
+  getCases: async (page = 1, limit = 10, status = "open") => {
     const response = await adminApi.get("/cases", {
-      params: { status, skip, take },
+      params: { page, limit, status },
     });
     return response.data;
   },
@@ -444,6 +457,12 @@ export const adminCaseApi = {
     return response.data;
   },
 
+  // Get case stats (alias)
+  getCaseStats: async () => {
+    const response = await adminApi.get("/cases/stats");
+    return response.data;
+  },
+
   // Search cases
   searchCases: async (query) => {
     const response = await adminApi.get("/cases/search", {
@@ -461,10 +480,26 @@ export const adminCaseApi = {
     return response.data;
   },
 
+  // Update case status (alias)
+  updateCaseStatus: async (caseId, data) => {
+    const response = await adminApi.post(`/cases/${caseId}/status`, data);
+    return response.data;
+  },
+
   // Add note to case
   addNote: async (caseId, content, isInternal = true) => {
     const response = await adminApi.post(`/cases/${caseId}/notes`, {
       content,
+      isInternal,
+    });
+    return response.data;
+  },
+
+  // Add note to case (alias)
+  addCaseNote: async (caseId, data) => {
+    const response = await adminApi.post(`/cases/${caseId}/notes`, data);
+    return response.data;
+  },
       isInternal,
     });
     return response.data;
