@@ -159,7 +159,10 @@ export async function resetSettingsController(req, res) {
       },
     });
 
-    console.log("[RESET_SETTINGS] ✅ Settings reset to defaults for admin:", adminId);
+    console.log(
+      "[RESET_SETTINGS] ✅ Settings reset to defaults for admin:",
+      adminId,
+    );
 
     res.status(200).json({
       success: true,

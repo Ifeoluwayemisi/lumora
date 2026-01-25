@@ -72,7 +72,11 @@ export const adminAuthApi = {
     });
     return response.data;
   },
-
+  // Update admin profile
+  updateProfile: async (data) => {
+    const response = await adminApi.put("/auth/profile", data);
+    return response.data;
+  },
   // Step 1: Email and password verification
   loginStep1: async (email, password) => {
     const response = await adminApi.post("/auth/login/step1", {

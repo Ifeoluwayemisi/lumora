@@ -262,6 +262,70 @@ export async function getAdminProfileController(req, res) {
   }
 }
 
+export async function updateAdminProfileController(req, res) {
+  try {
+    const adminId = req.admin?.id;
+    const { firstName, lastName } = req.body;
+
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        error: "Not authenticated",
+      });
+    }
+
+    // Validate input
+    if (!firstName || !lastName) {
+      return res.status(400).json({
+        success: false,
+        error: "First name and last name are required",
+      });
+    }
+
+    const updatedAdmin = await prisma.adminUser.update({
+      where: { id: adminId },
+      data: {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        lastLogin: true,
+      },
+    });
+
+    // Log the action
+    if (auditLogService) {
+      await auditLogService.logAction({
+        adminId,
+        action: "update_profile",
+        resourceType: "admin_profile",
+        resourceId: adminId,
+        details: {
+          firstName: updatedAdmin.firstName,
+          lastName: updatedAdmin.lastName,
+        },
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedAdmin,
+    });
+  } catch (err) {
+    console.error("[UPDATE_ADMIN_PROFILE] Error:", err.message);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to update profile",
+    });
+  }
+}
+
 /**
  * Change admin password
  */

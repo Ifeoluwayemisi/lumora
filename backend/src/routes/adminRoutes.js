@@ -29,6 +29,13 @@ router.get(
   adminAuthController.getAdminProfileController,
 );
 
+router.put(
+  "/auth/profile",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST", "SUPPORT"),
+  adminAuthController.updateAdminProfileController,
+);
+
 router.post(
   "/auth/change-password",
   adminAuthMiddleware,
