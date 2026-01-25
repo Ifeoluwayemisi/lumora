@@ -150,7 +150,7 @@ export async function approveManufacturer(req, res) {
       "[BACKEND_APPROVE] Starting approval process for manufacturerId:",
       manufacturerId,
       "adminId:",
-      req.user?.id,
+      req.admin?.id,
     );
 
     // Import dynamic score calculation functions
@@ -199,13 +199,13 @@ export async function approveManufacturer(req, res) {
         status: "approved",
         trustScore: manufacturer.trustScore,
         riskAssessment: manufacturer.riskLevel,
-        adminId: req.user?.id,
+        adminId: req.admin?.id,
       },
     });
 
     // Log the action
     await auditLogService.logAction({
-      adminId: req.user.id,
+      adminId: req.admin.id,
       action: "approve_manufacturer",
       manufacturerId,
       details: {
@@ -290,7 +290,7 @@ export async function rejectManufacturer(req, res) {
       "reason:",
       reason,
       "adminId:",
-      req.user?.id,
+      req.admin?.id,
     );
 
     const { sendAccountRejectionEmail } =
@@ -317,13 +317,13 @@ export async function rejectManufacturer(req, res) {
         trustScore: manufacturer.trustScore,
         riskAssessment: manufacturer.riskLevel,
         rejectionReason: reason,
-        adminId: req.user?.id,
+        adminId: req.admin?.id,
       },
     });
 
     // Log the action
     await auditLogService.logAction({
-      adminId: req.user.id,
+      adminId: req.admin.id,
       action: "reject_manufacturer",
       manufacturerId,
       details: {
@@ -372,7 +372,7 @@ export async function suspendManufacturerController(req, res) {
       "reason:",
       reason,
       "adminId:",
-      req.user?.id,
+      req.admin?.id,
     );
 
     // Validate input
@@ -407,13 +407,13 @@ export async function suspendManufacturerController(req, res) {
         status: "suspended",
         trustScore: suspended.trustScore,
         riskAssessment: suspended.riskLevel,
-        adminId: req.user?.id,
+        adminId: req.admin?.id,
       },
     });
 
     // Log the action
     await auditLogService.logAction({
-      adminId: req.user.id,
+      adminId: req.admin.id,
       action: "suspend_manufacturer",
       manufacturerId,
       details: {
