@@ -47,7 +47,7 @@ export default function CodesPage() {
     setLoading(true);
     try {
       const [codesRes, productsRes, profileRes] = await Promise.all([
-        api.get(`/manufacturer/history?limit=${pageSize}&page=${page}`),
+        api.get(`/manufacturer/codes?limit=${pageSize}&page=${page}`),
         api.get("/manufacturer/products?limit=100"),
         api.get("/manufacturer/profile"),
       ]);

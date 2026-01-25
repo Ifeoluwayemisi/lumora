@@ -266,3 +266,114 @@ export async function getFlaggedCodes(req, res) {
     });
   }
 }
+
+/**
+ * Get all codes for manufacturer
+ */
+export async function getManufacturerCodes(req, res) {
+  try {
+    const userId = req.user.id;
+    const { page = 1, limit = 50, status = "ALL", productId, batchId } = req.query;
+
+    // Get manufacturer
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const pageNum = Math.max(Number(page), 1);
+    const limitNum = Math.min(Math.max(Number(limit), 1), 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    // Build where clause
+    const where = {
+      manufacturerId: manufacturer.id,
+    };
+
+    if (productId) where.batch = { productId };
+    if (batchId) where.batchId = batchId;
+
+    // Status filter
+    if (status === "unused") where.isUsed = false;
+    if (status === "used") where.isUsed = true;
+    if (status === "flagged") where.isFlagged = true;
+
+    const [codes, total] = await Promise.all([
+      prisma.code.findMany({
+        where,
+        include: {
+          batch: {
+            select: {
+              id: true,
+              batchNumber: true,
+              productionDate: true,
+              expirationDate: true,
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+          verificationLogs: {
+            select: {
+              id: true,
+              verificationState: true,
+              verifiedAt: true,
+            },
+            orderBy: { verifiedAt: "desc" },
+            take: 1,
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limitNum,
+      }),
+      prisma.code.count({ where }),
+    ]);
+
+    // Map codes to include latest verification state
+    const mappedCodes = codes.map((code) => ({
+      id: code.id,
+      code: code.codeValue,
+      productId: code.batch.product.id,
+      productName: code.batch.product.name,
+      batchId: code.batch.id,
+      batchNumber: code.batch.batchNumber,
+      productionDate: code.batch.productionDate,
+      expirationDate: code.batch.expirationDate,
+      isUsed: code.isUsed,
+      usedAt: code.usedAt,
+      usedCount: code.usedCount,
+      isFlagged: code.isFlagged,
+      createdAt: code.createdAt,
+      verificationState: code.verificationLogs[0]?.verificationState || "UNUSED",
+      lastVerifiedAt: code.verificationLogs[0]?.verifiedAt,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: mappedCodes,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
+  } catch (err) {
+    console.error("[GET_MANUFACTURER_CODES] Error:", err.message);
+    res.status(500).json({
+      error: "Failed to fetch codes",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
