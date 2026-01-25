@@ -30,7 +30,9 @@ export async function calculateDynamicTrustScore(manufacturerId) {
       where: {
         code: {
           batch: {
-            manufacturerId, // ✅ Correct: manufacturerId is directly on batch
+            product: {
+              manufacturerId,
+            },
           },
         },
       },

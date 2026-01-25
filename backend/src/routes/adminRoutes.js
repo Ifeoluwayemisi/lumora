@@ -342,17 +342,17 @@ router.get(
 // ========== USER MANAGEMENT ROUTES ==========
 
 router.get(
-  "/users",
-  adminAuthMiddleware,
-  roleMiddleware("SUPER_ADMIN", "MODERATOR"),
-  adminUserManagementController.getUsersController,
-);
-
-router.get(
   "/users/stats",
   adminAuthMiddleware,
   roleMiddleware("SUPER_ADMIN", "MODERATOR"),
   adminUserManagementController.getUserStatsController,
+);
+
+router.get(
+  "/users",
+  adminAuthMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR"),
+  adminUserManagementController.getUsersController,
 );
 
 router.get(

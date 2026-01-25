@@ -70,12 +70,13 @@ export async function getUsersController(req, res) {
  */
 export async function getUserStatsController(req, res) {
   try {
-    const [totalUsers, activeUsers, suspendedUsers, flaggedUsers] = await Promise.all([
-      prisma.user.count(),
-      prisma.user.count({ where: { accountStatus: "active" } }),
-      prisma.user.count({ where: { accountStatus: "suspended" } }),
-      prisma.user.count({ where: { isFlagged: true } }),
-    ]);
+    const [totalUsers, activeUsers, suspendedUsers, flaggedUsers] =
+      await Promise.all([
+        prisma.user.count(),
+        prisma.user.count({ where: { accountStatus: "active" } }),
+        prisma.user.count({ where: { accountStatus: "suspended" } }),
+        prisma.user.count({ where: { isFlagged: true } }),
+      ]);
 
     res.status(200).json({
       data: {
@@ -133,7 +134,12 @@ export async function suspendUserController(req, res) {
     const { userId } = req.params;
     const { reason } = req.body;
 
-    console.log("[SUSPEND_USER] Starting suspension for userId:", userId, "reason:", reason);
+    console.log(
+      "[SUSPEND_USER] Starting suspension for userId:",
+      userId,
+      "reason:",
+      reason,
+    );
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -231,7 +237,12 @@ export async function flagUserController(req, res) {
     const { userId } = req.params;
     const { reason } = req.body;
 
-    console.log("[FLAG_USER] Starting flag for userId:", userId, "reason:", reason);
+    console.log(
+      "[FLAG_USER] Starting flag for userId:",
+      userId,
+      "reason:",
+      reason,
+    );
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

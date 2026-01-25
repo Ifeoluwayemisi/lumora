@@ -80,7 +80,9 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.approveManufacturer(mfgId);
-      await Promise.all([fetchReviewQueue(1, activeTab), fetchStats()]);
+      // After approval, switch to approved tab and refresh
+      setActiveTab("approved");
+      await Promise.all([fetchReviewQueue(1, "approved"), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to approve manufacturer");
     } finally {
@@ -97,7 +99,9 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.rejectManufacturer(mfgId, reason);
-      await Promise.all([fetchReviewQueue(1, activeTab), fetchStats()]);
+      // After rejection, switch to rejected tab and refresh
+      setActiveTab("rejected");
+      await Promise.all([fetchReviewQueue(1, "rejected"), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to reject manufacturer");
     } finally {
@@ -111,7 +115,9 @@ export default function ManufacturersPage() {
     try {
       setIsProcessing(true);
       await adminManufacturerApi.suspendManufacturer(mfgId);
-      await Promise.all([fetchReviewQueue(1, activeTab), fetchStats()]);
+      // After suspension, switch to suspended tab and refresh
+      setActiveTab("suspended");
+      await Promise.all([fetchReviewQueue(1, "suspended"), fetchStats()]);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to suspend manufacturer");
     } finally {

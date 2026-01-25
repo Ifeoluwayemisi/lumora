@@ -246,7 +246,10 @@ export const adminManufacturerApi = {
 
   // Approve manufacturer
   approve: async (manufacturerId, trustScore, reason) => {
-    console.log("[API_APPROVE] POST /manufacturers/" + manufacturerId + "/approve", { trustScore, reason });
+    console.log(
+      "[API_APPROVE] POST /manufacturers/" + manufacturerId + "/approve",
+      { trustScore, reason },
+    );
     const response = await adminApi.post(
       `/manufacturers/${manufacturerId}/approve`,
       { trustScore, reason },
@@ -256,7 +259,9 @@ export const adminManufacturerApi = {
   },
 
   approveManufacturer: async (manufacturerId) => {
-    console.log("[API_APPROVE] POST /manufacturers/" + manufacturerId + "/approve");
+    console.log(
+      "[API_APPROVE] POST /manufacturers/" + manufacturerId + "/approve",
+    );
     const response = await adminApi.post(
       `/manufacturers/${manufacturerId}/approve`,
       {},

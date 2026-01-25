@@ -545,7 +545,7 @@ export async function forceAuditController(req, res) {
         summary: auditResult.summary || "Audit completed",
       },
     });
-    
+
     console.log("[BACKEND_AUDIT] Sending response:", {
       riskScore: auditResult.riskScore || updated.riskScore || 50,
       trustScore: auditResult.trustScore || updated.trustScore || 50,

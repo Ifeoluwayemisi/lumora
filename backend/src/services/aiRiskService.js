@@ -230,8 +230,11 @@ Analyze for suspicious patterns. Return this JSON:
  */
 export async function recalculateManufacturerRiskScore(manufacturerId) {
   try {
-    console.log("[AI_RISK] Starting risk calculation for manufacturerId:", manufacturerId);
-    
+    console.log(
+      "[AI_RISK] Starting risk calculation for manufacturerId:",
+      manufacturerId,
+    );
+
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { id: manufacturerId },
       include: {
@@ -244,8 +247,17 @@ export async function recalculateManufacturerRiskScore(manufacturerId) {
     });
 
     if (!manufacturer) throw new Error("Manufacturer not found");
-    
-    console.log("[AI_RISK] Manufacturer found:", manufacturer.name, "- Verified:", manufacturer.verified, "NAFDAC:", manufacturer.nafdacLicenseVerified, "Business Cert:", manufacturer.businessCertificateVerified);
+
+    console.log(
+      "[AI_RISK] Manufacturer found:",
+      manufacturer.name,
+      "- Verified:",
+      manufacturer.verified,
+      "NAFDAC:",
+      manufacturer.nafdacLicenseVerified,
+      "Business Cert:",
+      manufacturer.businessCertificateVerified,
+    );
 
     // Get verification logs for all batches
     const verificationLogs = await prisma.verificationLog.findMany({
@@ -271,7 +283,9 @@ export async function recalculateManufacturerRiskScore(manufacturerId) {
       // No verification history - use manufacturer metadata for scoring
       // New manufacturers without verification history get neutral but verifiable scores
 
-      console.log("[AI_RISK] No verification logs found - using document verification fallback");
+      console.log(
+        "[AI_RISK] No verification logs found - using document verification fallback",
+      );
 
       // Check if manufacturer documents are verified
       let documentScore = 50;
@@ -297,8 +311,15 @@ export async function recalculateManufacturerRiskScore(manufacturerId) {
         100,
         Math.max(0, documentScore + verificationBonus),
       );
-      
-      console.log("[AI_RISK] Fallback calculation: baseScore=" + documentScore + ", verificationBonus=" + verificationBonus + ", finalRiskScore=" + calculatedScore);
+
+      console.log(
+        "[AI_RISK] Fallback calculation: baseScore=" +
+          documentScore +
+          ", verificationBonus=" +
+          verificationBonus +
+          ", finalRiskScore=" +
+          calculatedScore,
+      );
 
       return {
         riskScore: calculatedScore,
@@ -402,8 +423,16 @@ export async function recalculateManufacturerRiskScore(manufacturerId) {
       },
     });
 
-    console.log("[AI_RISK] ✅ Calculation complete for manufacturerId:", manufacturerId);
-    console.log("[AI_RISK] Final Scores - Risk:", riskScore, "Trust:", trustScore);
+    console.log(
+      "[AI_RISK] ✅ Calculation complete for manufacturerId:",
+      manufacturerId,
+    );
+    console.log(
+      "[AI_RISK] Final Scores - Risk:",
+      riskScore,
+      "Trust:",
+      trustScore,
+    );
     console.log("[AI_RISK] Summary:", summary);
 
     return {
