@@ -111,12 +111,12 @@ export async function verifyCode({
       },
     });
 
-    console.log("[VERIFY] ✅ Verification log created successfully:", logRecord.id);
-  } catch (logError) {
-    console.error(
-      "[VERIFY] ❌ Failed to log verification:",
-      logError.message,
+    console.log(
+      "[VERIFY] ✅ Verification log created successfully:",
+      logRecord.id,
     );
+  } catch (logError) {
+    console.error("[VERIFY] ❌ Failed to log verification:", logError.message);
     console.error("[VERIFY] Error code:", logError.code);
     console.error("[VERIFY] Error meta:", logError.meta);
     // Don't fail the verification if logging fails

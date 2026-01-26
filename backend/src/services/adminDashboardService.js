@@ -33,7 +33,10 @@ export async function getGlobalMetrics() {
 
   // All time
   const totalVerifications = await prisma.verificationLog.count();
-  console.log("[DASHBOARD] Total verifications (all time):", totalVerifications);
+  console.log(
+    "[DASHBOARD] Total verifications (all time):",
+    totalVerifications,
+  );
 
   // Verification breakdown
   const verificationBreakdown = await prisma.verificationLog.groupBy({
