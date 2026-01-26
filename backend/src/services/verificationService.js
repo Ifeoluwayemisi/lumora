@@ -81,12 +81,15 @@ export async function verifyCode({
 
   // Log verification attempt
   try {
+    // Get manufacturerId from code (direct relation) or batch
+    const manufactureIdToLog = code?.manufacturerId || code?.batch?.manufacturerId;
+    
     await prisma.verificationLog.create({
       data: {
         codeValue: normalizedCode,
         ...(code ? { codeId: code.id } : {}),
         ...(code?.batch ? { batchId: code.batch.id } : {}),
-        ...(code?.manufacturer ? { manufacturerId: code.manufacturer.id } : {}),
+        ...(manufactureIdToLog ? { manufacturerId: manufactureIdToLog } : {}),
         userId,
         latitude,
         longitude,
@@ -116,7 +119,7 @@ export async function verifyCode({
     } catch (updateError) {
       console.error(
         "[VERIFY] Failed to mark code as used:",
-        updateError.message
+        updateError.message,
       );
       // Don't fail the verification if this fails
     }
@@ -134,7 +137,7 @@ export async function verifyCode({
     } catch (updateError) {
       console.error(
         "[VERIFY] Failed to increment code usage count:",
-        updateError.message
+        updateError.message,
       );
       // Don't fail the verification if this fails
     }
@@ -160,7 +163,7 @@ export async function verifyCode({
     } catch (incidentError) {
       console.error(
         "[VERIFY] Failed to create incident:",
-        incidentError.message
+        incidentError.message,
       );
       // Don't fail the verification if incident creation fails
     }
