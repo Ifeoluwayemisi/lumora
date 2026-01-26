@@ -8,7 +8,17 @@ export async function getGlobalMetrics() {
 
   // Today's verifications (UTC)
   const today = new Date();
-  const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0, 0));
+  const todayUTC = new Date(
+    Date.UTC(
+      today.getUTCFullYear(),
+      today.getUTCMonth(),
+      today.getUTCDate(),
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
 
   const todayVerifications = await prisma.verificationLog.count({
     where: {

@@ -140,8 +140,8 @@ export default function Invalid({ code, product, verification }) {
             {verification?.state === "PRODUCT_EXPIRED"
               ? "Product Has Expired"
               : verification?.state === "UNREGISTERED_PRODUCT"
-              ? "Unregistered Product"
-              : "Invalid Product Code"}
+                ? "Unregistered Product"
+                : "Invalid Product Code"}
           </p>
           <p className="text-sm text-red-700 dark:text-red-300">
             {verification?.state === "PRODUCT_EXPIRED" &&
@@ -168,10 +168,10 @@ export default function Invalid({ code, product, verification }) {
             onClick={() =>
               router.push(
                 `/report?code=${encodeURIComponent(
-                  code
+                  code,
                 )}&product=${encodeURIComponent(
-                  product?.name || "Unknown"
-                )}&type=invalid`
+                  product?.name || "Unknown",
+                )}&type=invalid`,
               )
             }
             className="w-full px-4 py-3 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 font-medium hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition"
