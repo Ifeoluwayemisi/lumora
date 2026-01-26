@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 
-export default function UnregisteredProduct({ code }) {
+export default function UnregisteredProduct({ code, product, verification }) {
   const router = useRouter();
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-8">
@@ -40,6 +40,21 @@ export default function UnregisteredProduct({ code }) {
           </p>
         </div>
 
+        {/* Risk Score */}
+        {verification?.riskScore !== undefined && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3 rounded-lg mb-6 text-center">
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-1">
+              AI Risk Assessment
+            </p>
+            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+              {verification.riskScore}/100
+            </p>
+            <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+              Risk Level: <strong>{verification.riskLevel}</strong>
+            </p>
+          </div>
+        )}
+
         {/* Code Display */}
         <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg mb-6">
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
@@ -49,6 +64,63 @@ export default function UnregisteredProduct({ code }) {
             {code}
           </p>
         </div>
+
+        {/* AI Product Guide */}
+        {product?.guide && (
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-4 rounded-lg mb-6 space-y-4">
+            <h3 className="font-semibold text-yellow-900 dark:text-yellow-300">
+              🤖 AI Safety Guide
+            </h3>
+
+            {product.guide.usageInstructions &&
+              product.guide.usageInstructions.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-yellow-800 dark:text-yellow-300 mb-2">
+                    Usage Instructions:
+                  </p>
+                  <ul className="text-sm text-gray-900 dark:text-gray-200 space-y-1 ml-4">
+                    {product.guide.usageInstructions.map((instruction, idx) => (
+                      <li key={idx} className="list-disc">
+                        {instruction}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+            {product.guide.safetyWarnings &&
+              product.guide.safetyWarnings.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-orange-800 dark:text-orange-300 mb-2">
+                    Safety Warnings:
+                  </p>
+                  <ul className="text-sm text-gray-900 dark:text-gray-200 space-y-1 ml-4">
+                    {product.guide.safetyWarnings.map((warning, idx) => (
+                      <li key={idx} className="list-disc">
+                        {warning}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+            {product.guide.storageHandling &&
+              product.guide.storageHandling.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-green-800 dark:text-green-300 mb-2">
+                    Storage & Handling:
+                  </p>
+                  <ul className="text-sm text-gray-900 dark:text-gray-200 space-y-1 ml-4">
+                    {product.guide.storageHandling.map((tip, idx) => (
+                      <li key={idx} className="list-disc">
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+          </div>
+        )}
 
         {/* Details */}
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-4 rounded-lg mb-6">
@@ -73,7 +145,7 @@ export default function UnregisteredProduct({ code }) {
           <button
             onClick={() =>
               router.push(
-                `/report?code=${encodeURIComponent(code)}&type=unregistered`
+                `/report?code=${encodeURIComponent(code)}&type=unregistered`,
               )
             }
             className="w-full px-4 py-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition"

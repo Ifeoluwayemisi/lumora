@@ -77,6 +77,63 @@ export default function Invalid({ code, product, verification }) {
           </div>
         )}
 
+        {/* AI Product Guide */}
+        {product?.guide && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg mb-6 space-y-4">
+            <h3 className="font-semibold text-red-900 dark:text-red-300">
+              🤖 AI Safety Guide
+            </h3>
+
+            {product.guide.usageInstructions &&
+              product.guide.usageInstructions.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-red-800 dark:text-red-300 mb-2">
+                    Usage Instructions:
+                  </p>
+                  <ul className="text-sm text-gray-900 dark:text-gray-200 space-y-1 ml-4">
+                    {product.guide.usageInstructions.map((instruction, idx) => (
+                      <li key={idx} className="list-disc">
+                        {instruction}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+            {product.guide.safetyWarnings &&
+              product.guide.safetyWarnings.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-orange-800 dark:text-orange-300 mb-2">
+                    Safety Warnings:
+                  </p>
+                  <ul className="text-sm text-gray-900 dark:text-gray-200 space-y-1 ml-4">
+                    {product.guide.safetyWarnings.map((warning, idx) => (
+                      <li key={idx} className="list-disc">
+                        {warning}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+            {product.guide.storageHandling &&
+              product.guide.storageHandling.length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-green-800 dark:text-green-300 mb-2">
+                    Storage & Handling:
+                  </p>
+                  <ul className="text-sm text-gray-900 dark:text-gray-200 space-y-1 ml-4">
+                    {product.guide.storageHandling.map((tip, idx) => (
+                      <li key={idx} className="list-disc">
+                        {tip}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+          </div>
+        )}
+
         {/* Details - Show Specific Reason */}
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg mb-6">
           <p className="text-sm text-red-800 dark:text-red-200 font-semibold mb-2">
