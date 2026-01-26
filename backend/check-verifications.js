@@ -1,9 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function checkVerificationLogs() {
   try {
-    console.log('\n[CHECK] Checking verification logs...\n');
+    console.log("\n[CHECK] Checking verification logs...\n");
 
     // Get all verification logs
     const allLogs = await prisma.verificationLog.findMany({
@@ -13,18 +13,18 @@ async function checkVerificationLogs() {
         verificationState: true,
         manufacturerId: true,
         batchId: true,
-        createdAt: true
+        createdAt: true,
       },
-      orderBy: { createdAt: 'desc' },
-      take: 10
+      orderBy: { createdAt: "desc" },
+      take: 10,
     });
 
     console.log(`📊 Found ${allLogs.length} recent verification logs:\n`);
-    allLogs.forEach(log => {
+    allLogs.forEach((log) => {
       console.log(`  Code: ${log.codeValue}`);
       console.log(`    State: ${log.verificationState}`);
-      console.log(`    Manufacturer ID: ${log.manufacturerId || '❌ NULL'}`);
-      console.log(`    Batch ID: ${log.batchId || 'NULL'}`);
+      console.log(`    Manufacturer ID: ${log.manufacturerId || "❌ NULL"}`);
+      console.log(`    Batch ID: ${log.batchId || "NULL"}`);
       console.log(`    Timestamp: ${log.createdAt}\n`);
     });
 
@@ -34,10 +34,10 @@ async function checkVerificationLogs() {
 
     // Check by manufacturer
     const byManufacturer = await prisma.verificationLog.groupBy({
-      by: ['manufacturerId'],
+      by: ["manufacturerId"],
       _count: {
-        id: true
-      }
+        id: true,
+      },
     });
 
     console.log(`\n👥 Verifications by manufacturer:`);
@@ -45,16 +45,17 @@ async function checkVerificationLogs() {
       if (group.manufacturerId) {
         const mfg = await prisma.manufacturer.findUnique({
           where: { id: group.manufacturerId },
-          select: { companyName: true }
+          select: { companyName: true },
         });
-        console.log(`  ${mfg?.companyName || group.manufacturerId}: ${group._count.id} verifications`);
+        console.log(
+          `  ${mfg?.companyName || group.manufacturerId}: ${group._count.id} verifications`,
+        );
       } else {
         console.log(`  ❌ NULL manufacturer: ${group._count.id} verifications`);
       }
     }
-
   } catch (err) {
-    console.error('Error:', err.message);
+    console.error("Error:", err.message);
   } finally {
     await prisma.$disconnect();
   }

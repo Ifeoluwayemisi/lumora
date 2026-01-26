@@ -82,9 +82,22 @@ export async function verifyCode({
   // Log verification attempt
   try {
     // Get manufacturerId from code (direct relation) or batch
-    const manufactureIdToLog = code?.manufacturerId || code?.batch?.manufacturerId;
-    
-    await prisma.verificationLog.create({
+    const manufactureIdToLog =
+      code?.manufacturerId || code?.batch?.manufacturerId;
+
+    console.log("[VERIFY] Creating verification log with:", {
+      codeValue: normalizedCode,
+      codeId: code?.id || null,
+      batchId: code?.batch?.id || null,
+      manufacturerId: manufactureIdToLog || null,
+      userId: userId || null,
+      latitude,
+      longitude,
+      verificationState,
+      riskScore,
+    });
+
+    const logRecord = await prisma.verificationLog.create({
       data: {
         codeValue: normalizedCode,
         ...(code ? { codeId: code.id } : {}),
@@ -97,8 +110,15 @@ export async function verifyCode({
         riskScore,
       },
     });
+
+    console.log("[VERIFY] ✅ Verification log created successfully:", logRecord.id);
   } catch (logError) {
-    console.error("[VERIFY] Failed to log verification:", logError.message);
+    console.error(
+      "[VERIFY] ❌ Failed to log verification:",
+      logError.message,
+    );
+    console.error("[VERIFY] Error code:", logError.code);
+    console.error("[VERIFY] Error meta:", logError.meta);
     // Don't fail the verification if logging fails
   }
 

@@ -4,6 +4,8 @@ import prisma from "../models/prismaClient.js";
  * Get global dashboard metrics
  */
 export async function getGlobalMetrics() {
+  console.log("[DASHBOARD] Fetching global metrics...");
+
   // Today's verifications
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -13,6 +15,12 @@ export async function getGlobalMetrics() {
       createdAt: { gte: today },
     },
   });
+  console.log(
+    "[DASHBOARD] Today verifications:",
+    todayVerifications,
+    "since",
+    today,
+  );
 
   // 7 days
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -21,9 +29,11 @@ export async function getGlobalMetrics() {
       createdAt: { gte: sevenDaysAgo },
     },
   });
+  console.log("[DASHBOARD] 7-day verifications:", sevenDayVerifications);
 
   // All time
   const totalVerifications = await prisma.verificationLog.count();
+  console.log("[DASHBOARD] Total verifications (all time):", totalVerifications);
 
   // Verification breakdown
   const verificationBreakdown = await prisma.verificationLog.groupBy({
@@ -32,6 +42,7 @@ export async function getGlobalMetrics() {
       id: true,
     },
   });
+  console.log("[DASHBOARD] Verification breakdown:", verificationBreakdown);
 
   // Manufacturer stats
   const [manufacturersPending, manufacturersApproved, manufacturersRejected] =
