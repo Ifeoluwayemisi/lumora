@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/services/api";
+import AIProductGuide from "@/components/AIProductGuide";
 
 export default function Genuine({
   code,
@@ -181,59 +182,11 @@ export default function Genuine({
 
         {/* AI Product Guide */}
         {product?.guide && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg mb-6 space-y-4">
-            <h3 className="font-semibold text-blue-900 dark:text-blue-300">
-              🤖 AI Safety Guide
-            </h3>
-
-            {product.guide.usageInstructions &&
-              product.guide.usageInstructions.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-2">
-                    Usage Instructions:
-                  </p>
-                  <ul className="text-sm text-gray-900 dark:text-gray-200 space-y-1 ml-4">
-                    {product.guide.usageInstructions.map((instruction, idx) => (
-                      <li key={idx} className="list-disc">
-                        {instruction}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-            {product.guide.safetyWarnings &&
-              product.guide.safetyWarnings.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-orange-800 dark:text-orange-300 mb-2">
-                    Safety Warnings:
-                  </p>
-                  <ul className="text-sm text-gray-900 dark:text-gray-200 space-y-1 ml-4">
-                    {product.guide.safetyWarnings.map((warning, idx) => (
-                      <li key={idx} className="list-disc">
-                        {warning}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-            {product.guide.storageHandling &&
-              product.guide.storageHandling.length > 0 && (
-                <div>
-                  <p className="text-xs font-medium text-green-800 dark:text-green-300 mb-2">
-                    Storage & Handling:
-                  </p>
-                  <ul className="text-sm text-gray-900 dark:text-gray-200 space-y-1 ml-4">
-                    {product.guide.storageHandling.map((tip, idx) => (
-                      <li key={idx} className="list-disc">
-                        {tip}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-          </div>
+          <AIProductGuide
+            guide={product.guide}
+            defaultExpanded={true}
+            tone="neutral"
+          />
         )}
 
         {/* Code Display */}
