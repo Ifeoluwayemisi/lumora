@@ -6,20 +6,20 @@ import prisma from "../models/prismaClient.js";
 export async function getGlobalMetrics() {
   console.log("[DASHBOARD] Fetching global metrics...");
 
-  // Today's verifications
+  // Today's verifications (UTC)
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate(), 0, 0, 0, 0));
 
   const todayVerifications = await prisma.verificationLog.count({
     where: {
-      createdAt: { gte: today },
+      createdAt: { gte: todayUTC },
     },
   });
   console.log(
     "[DASHBOARD] Today verifications:",
     todayVerifications,
     "since",
-    today,
+    todayUTC,
   );
 
   // 7 days
