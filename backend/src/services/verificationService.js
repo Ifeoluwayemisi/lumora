@@ -4,6 +4,63 @@ import { getTrustDecision } from "./trustDecisionService.js";
 import { maybeCreateIncident } from "./incidentService.js";
 
 /**
+ * Generate AI-driven safety tips based on verification state and risk score
+ * Makes AI features visible and actionable for users
+ */
+function generateSafetyTips(verificationState, riskScore) {
+  const tips = [];
+  
+  switch (verificationState) {
+    case "GENUINE":
+      if (riskScore <= 20) {
+        tips.push("✓ This product passed all authenticity checks.");
+        tips.push("✓ Safe to use. No suspicious activity detected.");
+      } else if (riskScore <= 50) {
+        tips.push("✓ Product is registered and verified.");
+        tips.push("⚠ Minor risk factors detected. Please verify with seller if uncertain.");
+      }
+      break;
+      
+    case "CODE_ALREADY_USED":
+      tips.push("⚠ HIGH RISK: This code has already been verified before.");
+      tips.push("⚠ Counterfeit products often reuse codes. Verify batch number with manufacturer.");
+      tips.push("💡 Contact the manufacturer directly to report suspicious activity.");
+      break;
+      
+    case "UNREGISTERED_PRODUCT":
+      if (riskScore >= 70) {
+        tips.push("⚠ VERY HIGH RISK: Product not registered with any manufacturer.");
+        tips.push("⚠ Unregistered products show suspicious patterns typical of counterfeits.");
+        tips.push("❌ DO NOT USE this product. Report to NAFDAC immediately.");
+      } else if (riskScore >= 50) {
+        tips.push("⚠ MEDIUM RISK: Product not registered. May be counterfeit.");
+        tips.push("💡 Verify directly with manufacturer or contact NAFDAC.");
+      } else {
+        tips.push("ℹ This product is not registered in our system.");
+        tips.push("💡 Ask the seller for the official manufacturer contact.");
+      }
+      break;
+      
+    case "SUSPICIOUS_PATTERN":
+      tips.push("⚠ ALERT: AI detected suspicious activity patterns.");
+      tips.push(`⚠ Risk Score: ${riskScore}/100 - Pattern suggests possible counterfeit activity.`);
+      tips.push("🚨 Report to NAFDAC with: Product name, code, location, and date.");
+      tips.push("📞 NAFDAC Report Line: 08037020131");
+      break;
+      
+    case "INVALID":
+      tips.push("❌ Invalid code format. This is not a Lumora verification code.");
+      tips.push("💡 Lumora codes start with 'LUM'. Check the code and try again.");
+      break;
+      
+    default:
+      tips.push("Verification completed. Please check the status above.");
+  }
+  
+  return tips;
+}
+
+/**
  * Core verification logic
  * Checks code validity and performs risk analysis
  */
@@ -232,6 +289,12 @@ export async function verifyCode({
       advisory,
       trustDecision,
       timestamp: new Date().toISOString(),
+      safetyTips: generateSafetyTips(verificationState, riskScore),
+      riskLevel: 
+        riskScore >= 70 ? "VERY HIGH" : 
+        riskScore >= 50 ? "HIGH" : 
+        riskScore >= 30 ? "MEDIUM" : 
+        "LOW",
     },
   };
 }
