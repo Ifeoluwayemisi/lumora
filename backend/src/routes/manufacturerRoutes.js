@@ -23,6 +23,7 @@ import {
   unflagCode,
   getFlaggedCodes,
   getManufacturerCodes,
+  getCodeVerificationDetails,
 } from "../controllers/codeController.js";
 import {
   uploadDocument,
@@ -47,6 +48,7 @@ import {
   updateScheduleController,
   deleteScheduleController,
   getTopVerificationsController,
+  getProductsWithRiskController,
 } from "../controllers/analyticsController.js";
 import {
   initiatePayment,
@@ -115,6 +117,7 @@ router.patch("/profile", updateProfile);
 // Analytics
 router.get("/analytics", getAnalytics);
 router.get("/analytics/top-verifications", getTopVerificationsController);
+router.get("/analytics/products-with-risk", getProductsWithRiskController);
 router.get("/analytics/hotspots", getHotspots);
 router.get(
   "/analytics/export",
@@ -420,6 +423,13 @@ router.get(
   authMiddleware,
   roleMiddleware("manufacturer"),
   getManufacturerCodes,
+);
+
+router.get(
+  "/codes/:codeId/details",
+  authMiddleware,
+  roleMiddleware("manufacturer"),
+  getCodeVerificationDetails,
 );
 
 router.get(

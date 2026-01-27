@@ -422,3 +422,115 @@ export async function getManufacturerCodes(req, res) {
     });
   }
 }
+
+/**
+ * Get code verification details with location information
+ * Shows manufacturer location and user verification location
+ */
+export async function getCodeVerificationDetails(req, res) {
+  try {
+    const { codeId } = req.params;
+    const userId = req.user.id;
+
+    console.log("[CODE_DETAILS] Request for codeId:", codeId);
+
+    // Verify user is the manufacturer
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    // Get code with verification details
+    const code = await prisma.code.findUnique({
+      where: { id: codeId },
+      include: {
+        batch: {
+          select: {
+            id: true,
+            batchNumber: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+                category: true,
+              },
+            },
+          },
+        },
+        verificationLogs: {
+          select: {
+            id: true,
+            verificationState: true,
+            latitude: true,
+            longitude: true,
+            location: true,
+            timestamp: true,
+            createdAt: true,
+            userId: true,
+          },
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    });
+
+    if (!code) {
+      return res.status(404).json({ error: "Code not found" });
+    }
+
+    // Verify code belongs to this manufacturer
+    const codeManufacturer = await prisma.code.findUnique({
+      where: { id: codeId },
+      select: { manufacturerId: true },
+    });
+
+    if (codeManufacturer.manufacturerId !== manufacturer.id) {
+      return res
+        .status(403)
+        .json({ error: "Unauthorized - code does not belong to you" });
+    }
+
+    console.log(
+      "[CODE_DETAILS] Found",
+      code.verificationLogs.length,
+      "verification logs",
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        code: code.codeValue,
+        batch: code.batch,
+        isUsed: code.isUsed,
+        usedCount: code.usedCount,
+        isFlagged: code.isFlagged,
+        createdAt: code.createdAt,
+        verifications: code.verificationLogs.map((log) => ({
+          id: log.id,
+          state: log.verificationState,
+          latitude: log.latitude,
+          longitude: log.longitude,
+          location: log.location,
+          timestamp: log.createdAt || log.timestamp,
+          userId: log.userId,
+          mapUrl:
+            log.latitude && log.longitude
+              ? `https://maps.google.com/?q=${log.latitude},${log.longitude}`
+              : null,
+        })),
+      },
+    });
+  } catch (err) {
+    console.error("[GET_CODE_DETAILS] Error:", err.message);
+    res.status(500).json({
+      error: "Failed to fetch code details",
+      message:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Please try again later",
+    });
+  }
+}
