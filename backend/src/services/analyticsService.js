@@ -287,18 +287,54 @@ export async function getHotspotPredictions(manufacturerId) {
         createdAt: true,
       },
       orderBy: { createdAt: "desc" },
-      take: 20,
+      take: 50,
     });
 
-    // Return hotspots with location info
-    return hotspots.map((spot, index) => ({
-      id: index,
-      latitude: spot.latitude,
-      longitude: spot.longitude,
-      location: spot.location,
-      verificationState: spot.verificationState,
-      timestamp: spot.createdAt,
-    }));
+    // Group by location to get frequency
+    const locationMap = {};
+    hotspots.forEach((spot) => {
+      const locationKey = spot.location || "Unknown";
+      if (!locationMap[locationKey]) {
+        locationMap[locationKey] = {
+          location: spot.location || "Unknown",
+          latitude: spot.latitude,
+          longitude: spot.longitude,
+          frequency: 0,
+          verificationStates: [],
+          lastVerifiedAt: spot.createdAt,
+        };
+      }
+      locationMap[locationKey].frequency++;
+      if (!locationMap[locationKey].verificationStates.includes(spot.verificationState)) {
+        locationMap[locationKey].verificationStates.push(spot.verificationState);
+      }
+    });
+
+    // Convert to array and sort by frequency
+    const grouped = Object.values(locationMap)
+      .sort((a, b) => b.frequency - a.frequency)
+      .slice(0, 20);
+
+    // Parse location string into components (e.g., "Lagos, Lagos, NG" -> city, state, country)
+    return grouped.map((spot, index) => {
+      const parts = spot.location.split(",").map((p) => p.trim());
+      const country = parts[parts.length - 1] || "Unknown";
+      const state = parts[parts.length - 2] || "Unknown";
+      const city = parts[0] || "Unknown";
+
+      return {
+        id: index,
+        lat: spot.latitude,
+        lng: spot.longitude,
+        location: spot.location,
+        city,
+        state,
+        country,
+        frequency: spot.frequency,
+        verificationStates: spot.verificationStates,
+        lastVerifiedAt: spot.lastVerifiedAt,
+      };
+    });
   } catch (err) {
     console.error("[GET_HOTSPOT_PREDICTIONS] Error:", err);
     throw err;
