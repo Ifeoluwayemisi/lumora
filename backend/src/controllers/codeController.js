@@ -380,6 +380,16 @@ export async function getManufacturerCodes(req, res) {
       "total",
     );
 
+    // Debug: Check first code's verificationLogs
+    if (codes.length > 0) {
+      console.log("[MANU-CODES] First code structure:", {
+        codeValue: codes[0].codeValue,
+        hasVerificationLogs: !!codes[0].verificationLogs,
+        verificationLogsCount: codes[0].verificationLogs?.length || 0,
+        firstLog: codes[0].verificationLogs?.[0] || "NO LOGS",
+      });
+    }
+
     // Map codes to include latest verification state
     const mappedCodes = codes.map((code) => ({
       id: code.id,
