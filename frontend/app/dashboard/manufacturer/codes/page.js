@@ -136,6 +136,13 @@ export default function CodesPage() {
 
   const getStatusBadge = (state) => {
     switch (state) {
+      case "GENUINE":
+        return {
+          text: "Genuine",
+          color:
+            "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300",
+          icon: "✓",
+        };
       case "VERIFIED":
         return {
           text: "Verified",
