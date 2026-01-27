@@ -403,6 +403,16 @@ export async function getManufacturerCodes(req, res) {
       riskScore: code.verificationLogs[0]?.riskScore || null,
     }));
 
+    // Debug: Log a sample to see structure
+    if (mappedCodes.length > 0) {
+      console.log("[MANU-CODES] Sample code with location:", {
+        code: mappedCodes[0].code,
+        latitude: mappedCodes[0].latitude,
+        longitude: mappedCodes[0].longitude,
+        verificationState: mappedCodes[0].verificationState,
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: mappedCodes,
