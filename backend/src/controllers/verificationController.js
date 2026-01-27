@@ -6,15 +6,22 @@ import prisma from "../models/prismaClient.js";
 
 /* Helpers */
 function normalizeLocation(latitude, longitude) {
+  // Convert to numbers if they're strings
+  const lat = typeof latitude === "string" ? parseFloat(latitude) : latitude;
+  const lon = typeof longitude === "string" ? parseFloat(longitude) : longitude;
+
+  // Validate as numbers
   if (
-    typeof latitude === "number" &&
-    typeof longitude === "number" &&
-    latitude >= -90 &&
-    latitude <= 90 &&
-    longitude >= -180 &&
-    longitude <= 180
+    typeof lat === "number" &&
+    typeof lon === "number" &&
+    !isNaN(lat) &&
+    !isNaN(lon) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lon >= -180 &&
+    lon <= 180
   ) {
-    return { latitude, longitude };
+    return { latitude: lat, longitude: lon };
   }
   return { latitude: null, longitude: null };
 }
