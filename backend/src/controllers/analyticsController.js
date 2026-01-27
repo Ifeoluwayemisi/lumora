@@ -3,6 +3,7 @@ import {
   getManufacturerAnalytics,
   getHotspotPredictions,
   getExportData,
+  getTopVerifications,
 } from "../services/analyticsService.js";
 import {
   getRevenueData,
@@ -91,6 +92,84 @@ export async function getAnalytics(req, res) {
     });
     res.status(500).json({
       error: "Failed to fetch analytics",
+      message:
+        process.env.NODE_ENV === "development" ? err?.message : undefined,
+      requestId,
+    });
+  }
+}
+
+/**
+ * Get top verification products for dashboard
+ */
+export async function getTopVerificationsController(req, res) {
+  const requestId = Math.random().toString(36).substring(7);
+  const startTime = Date.now();
+
+  try {
+    const userId = req.user?.id;
+    const { limit = 10 } = req.query;
+
+    console.log(
+      `[TOP_VERIFICATIONS-${requestId}] Request started for userId: ${userId}`,
+    );
+
+    if (!userId) {
+      console.warn(
+        `[TOP_VERIFICATIONS-${requestId}] Unauthorized: No user ID`,
+      );
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Look up manufacturer from user
+    console.log(
+      `[TOP_VERIFICATIONS-${requestId}] Looking up manufacturer...`,
+    );
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      console.warn(
+        `[TOP_VERIFICATIONS-${requestId}] Manufacturer not found for userId: ${userId}`,
+      );
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const manufacturerId = manufacturer.id;
+    console.log(
+      `[TOP_VERIFICATIONS-${requestId}] Found manufacturerId: ${manufacturerId}`,
+    );
+
+    console.log(
+      `[TOP_VERIFICATIONS-${requestId}] Fetching top verifications with limit: ${limit}`,
+    );
+    const topVerifications = await getTopVerifications(
+      manufacturerId,
+      parseInt(limit),
+    );
+
+    const duration = Date.now() - startTime;
+    console.log(
+      `[TOP_VERIFICATIONS-${requestId}] Data fetched successfully in ${duration}ms`,
+    );
+
+    res.status(200).json({
+      data: topVerifications,
+    });
+  } catch (err) {
+    const duration = Date.now() - startTime;
+    console.error(
+      `[TOP_VERIFICATIONS-${requestId}] Error after ${duration}ms:`,
+      {
+        message: err?.message,
+        code: err?.code,
+        stack: err?.stack,
+      },
+    );
+    res.status(500).json({
+      error: "Failed to fetch top verifications",
       message:
         process.env.NODE_ENV === "development" ? err?.message : undefined,
       requestId,

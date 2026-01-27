@@ -46,6 +46,7 @@ import {
   getSchedulesController,
   updateScheduleController,
   deleteScheduleController,
+  getTopVerificationsController,
 } from "../controllers/analyticsController.js";
 import {
   initiatePayment,
@@ -113,6 +114,7 @@ router.patch("/profile", updateProfile);
 
 // Analytics
 router.get("/analytics", getAnalytics);
+router.get("/analytics/top-verifications", getTopVerificationsController);
 router.get("/analytics/hotspots", getHotspots);
 router.get(
   "/analytics/export",

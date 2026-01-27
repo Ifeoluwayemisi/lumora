@@ -433,3 +433,104 @@ function calculateRiskScore(genuine, suspicious, invalid, alreadyUsed) {
 
   return Math.min(100, Math.round(score));
 }
+
+/**
+ * Get top verification products for analytics dashboard
+ */
+export async function getTopVerifications(manufacturerId, limit = 10) {
+  try {
+    console.log(
+      `[TOP_VERIFICATIONS] Getting top ${limit} products for manufacturerId: ${manufacturerId}`,
+    );
+
+    // Get verification counts grouped by product
+    const productVerifications = await prisma.verificationLog.findMany({
+      where: { manufacturerId },
+      select: {
+        code: {
+          select: {
+            batch: {
+              select: {
+                product: {
+                  select: {
+                    id: true,
+                    name: true,
+                    category: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        verificationState: true,
+        createdAt: true,
+      },
+    });
+
+    // Group by product and count verifications
+    const productMap = {};
+    productVerifications.forEach((verification) => {
+      const product = verification.code?.batch?.product;
+      if (!product) return;
+
+      if (!productMap[product.id]) {
+        productMap[product.id] = {
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          total: 0,
+          genuine: 0,
+          suspicious: 0,
+          invalid: 0,
+          alreadyUsed: 0,
+          unregistered: 0,
+        };
+      }
+
+      productMap[product.id].total++;
+
+      // Count by state
+      switch (verification.verificationState) {
+        case "GENUINE":
+          productMap[product.id].genuine++;
+          break;
+        case "SUSPICIOUS":
+          productMap[product.id].suspicious++;
+          break;
+        case "INVALID":
+          productMap[product.id].invalid++;
+          break;
+        case "CODE_ALREADY_USED":
+          productMap[product.id].alreadyUsed++;
+          break;
+        case "UNREGISTERED":
+          productMap[product.id].unregistered++;
+          break;
+      }
+    });
+
+    // Convert to array and sort by total verifications
+    const topVerifications = Object.values(productMap)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, limit)
+      .map((product) => ({
+        ...product,
+        authenticity: Math.round((product.genuine / product.total) * 100) || 0,
+        riskScore: calculateRiskScore(
+          product.genuine,
+          product.suspicious,
+          product.invalid,
+          product.alreadyUsed,
+        ),
+      }));
+
+    console.log(
+      `[TOP_VERIFICATIONS] Found ${topVerifications.length} products with verifications`,
+    );
+
+    return topVerifications;
+  } catch (err) {
+    console.error("[TOP_VERIFICATIONS] Error:", err);
+    throw err;
+  }
+}
