@@ -1,5 +1,6 @@
 import { generateCodesForBatch } from "../services/codeService.js";
 import prisma from "../models/prismaClient.js";
+import { reverseGeocode } from "../services/analyticsService.js";
 
 /**
  * Generate codes for a product batch
@@ -359,7 +360,6 @@ export async function getManufacturerCodes(req, res) {
               createdAt: true,
               latitude: true,
               longitude: true,
-              location: true,
               riskScore: true,
             },
             orderBy: { createdAt: "desc" },
@@ -381,39 +381,48 @@ export async function getManufacturerCodes(req, res) {
       "total",
     );
 
-    // Debug: Check first code's verificationLogs
-    if (codes.length > 0) {
-      console.log("[MANU-CODES] First code structure:", {
-        codeValue: codes[0].codeValue,
-        hasVerificationLogs: !!codes[0].verificationLogs,
-        verificationLogsCount: codes[0].verificationLogs?.length || 0,
-        firstLog: codes[0].verificationLogs?.[0] || "NO LOGS",
-      });
-    }
+    // Map codes to include latest verification state and location names
+    const mappedCodes = await Promise.all(
+      codes.map(async (code) => {
+        let locationName = null;
+        
+        // Get location name if coordinates exist
+        if (code.verificationLogs[0]?.latitude && code.verificationLogs[0]?.longitude) {
+          try {
+            locationName = await reverseGeocode(
+              code.verificationLogs[0].latitude,
+              code.verificationLogs[0].longitude
+            );
+          } catch (err) {
+            console.warn("[MANU-CODES] Reverse geocoding failed:", err.message);
+            // Continue without location name
+          }
+        }
 
-    // Map codes to include latest verification state
-    const mappedCodes = codes.map((code) => ({
-      id: code.id,
-      code: code.codeValue,
-      productId: code.batch.product.id,
-      productName: code.batch.product.name,
-      batchId: code.batch.id,
-      batchNumber: code.batch.batchNumber,
-      productionDate: code.batch.productionDate,
-      expirationDate: code.batch.expirationDate,
-      isUsed: code.isUsed,
-      usedAt: code.usedAt,
-      usedCount: code.usedCount,
-      isFlagged: code.isFlagged,
-      createdAt: code.createdAt,
-      verificationState:
-        code.verificationLogs[0]?.verificationState || "UNUSED",
-      lastVerifiedAt: code.verificationLogs[0]?.createdAt,
-      latitude: code.verificationLogs[0]?.latitude || null,
-      longitude: code.verificationLogs[0]?.longitude || null,
-      location: code.verificationLogs[0]?.location || null,
-      riskScore: code.verificationLogs[0]?.riskScore || null,
-    }));
+        return {
+          id: code.id,
+          code: code.codeValue,
+          productId: code.batch.product.id,
+          productName: code.batch.product.name,
+          batchId: code.batch.id,
+          batchNumber: code.batch.batchNumber,
+          productionDate: code.batch.productionDate,
+          expirationDate: code.batch.expirationDate,
+          isUsed: code.isUsed,
+          usedAt: code.usedAt,
+          usedCount: code.usedCount,
+          isFlagged: code.isFlagged,
+          createdAt: code.createdAt,
+          verificationState:
+            code.verificationLogs[0]?.verificationState || "UNUSED",
+          lastVerifiedAt: code.verificationLogs[0]?.createdAt,
+          latitude: code.verificationLogs[0]?.latitude || null,
+          longitude: code.verificationLogs[0]?.longitude || null,
+          location: locationName,
+          riskScore: code.verificationLogs[0]?.riskScore || null,
+        };
+      })
+    );
 
     // Debug: Log a sample to see structure
     if (mappedCodes.length > 0) {

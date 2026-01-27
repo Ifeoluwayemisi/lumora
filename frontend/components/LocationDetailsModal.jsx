@@ -58,6 +58,15 @@ export default function LocationDetailsModal({
     );
   };
 
+  const getDirections = () => {
+    // Open Google Maps with destination prefilled
+    // This will open with the verification location as destination
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
+      "_blank",
+    );
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -142,6 +151,14 @@ export default function LocationDetailsModal({
                 >
                   <FiMapPin className="w-4 h-4" />
                   Open in Google Maps
+                </button>
+
+                <button
+                  onClick={getDirections}
+                  className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <FiArrowUpRight className="w-4 h-4" />
+                  Get Directions
                 </button>
               </div>
             ) : (

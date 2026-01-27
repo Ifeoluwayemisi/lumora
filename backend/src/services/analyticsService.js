@@ -1172,3 +1172,5 @@ export async function getAlertSummary(manufacturerId) {
     throw err;
   }
 }
+
+export { reverseGeocode };
