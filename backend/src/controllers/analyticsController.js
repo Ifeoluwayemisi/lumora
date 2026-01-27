@@ -4,6 +4,7 @@ import {
   getHotspotPredictions,
   getExportData,
   getTopVerifications,
+  getProductsWithRisk,
 } from "../services/analyticsService.js";
 import {
   getRevenueData,
@@ -174,7 +175,7 @@ export async function getTopVerificationsController(req, res) {
 }
 
 /**
- * Get products with risk scores and authenticity metrics
+ * Get products with risk metrics for dashboard
  */
 export async function getProductsWithRiskController(req, res) {
   const requestId = Math.random().toString(36).substring(7);
@@ -189,11 +190,16 @@ export async function getProductsWithRiskController(req, res) {
     );
 
     if (!userId) {
-      console.warn(`[PRODUCTS_RISK-${requestId}] Unauthorized: No user ID`);
+      console.warn(
+        `[PRODUCTS_RISK-${requestId}] Unauthorized: No user ID`,
+      );
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     // Look up manufacturer from user
+    console.log(
+      `[PRODUCTS_RISK-${requestId}] Looking up manufacturer...`,
+    );
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { userId },
       select: { id: true },
@@ -211,140 +217,13 @@ export async function getProductsWithRiskController(req, res) {
       `[PRODUCTS_RISK-${requestId}] Found manufacturerId: ${manufacturerId}`,
     );
 
-    // Get all products for this manufacturer
-    const products = await prisma.product.findMany({
-      where: { manufacturerId },
-      select: {
-        id: true,
-        name: true,
-        category: true,
-        batches: { select: { id: true } },
-      },
-    });
-
     console.log(
-      `[PRODUCTS_RISK-${requestId}] Found ${products.length} products`,
+      `[PRODUCTS_RISK-${requestId}] Fetching products with risk metrics (limit: ${limit})`,
     );
-
-    // Get verification data for each product
-    const verifications = await prisma.verificationLog.findMany({
-      where: {
-        manufacturerId,
-        code: {
-          batch: {
-            product: {
-              manufacturerId,
-            },
-          },
-        },
-      },
-      select: {
-        code: {
-          select: {
-            batch: {
-              select: {
-                product: {
-                  select: {
-                    id: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-        verificationState: true,
-        createdAt: true,
-      },
-    });
-
-    console.log(
-      `[PRODUCTS_RISK-${requestId}] Found ${verifications.length} verifications`,
+    const products = await getProductsWithRisk(
+      manufacturerId,
+      parseInt(limit),
     );
-
-    // Group verifications by product
-    const productMetrics = {};
-    products.forEach((product) => {
-      productMetrics[product.id] = {
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        batchCount: product.batches.length,
-        total: 0,
-        genuine: 0,
-        suspicious: 0,
-        invalid: 0,
-        alreadyUsed: 0,
-        unregistered: 0,
-      };
-    });
-
-    // Count verifications by state
-    verifications.forEach((verification) => {
-      const productId = verification.code?.batch?.product?.id;
-      if (!productId || !productMetrics[productId]) return;
-
-      productMetrics[productId].total++;
-
-      switch (verification.verificationState) {
-        case "GENUINE":
-          productMetrics[productId].genuine++;
-          break;
-        case "SUSPICIOUS":
-          productMetrics[productId].suspicious++;
-          break;
-        case "INVALID":
-          productMetrics[productId].invalid++;
-          break;
-        case "CODE_ALREADY_USED":
-          productMetrics[productId].alreadyUsed++;
-          break;
-        case "UNREGISTERED":
-          productMetrics[productId].unregistered++;
-          break;
-      }
-    });
-
-    // Calculate risk scores and authenticity
-    const productsWithRisk = Object.values(productMetrics)
-      .map((product) => {
-        const total = product.total || 1;
-        const authenticity = Math.round((product.genuine / total) * 100);
-        const suspiciousRatio = (product.suspicious / total) * 100;
-        const invalidRatio = (product.invalid / total) * 100;
-        const reuseRatio = (product.alreadyUsed / total) * 100;
-
-        // Risk score 0-100
-        const riskScore = Math.min(
-          100,
-          Math.round(
-            suspiciousRatio * 0.5 + invalidRatio * 0.3 + reuseRatio * 0.2,
-          ),
-        );
-
-        return {
-          ...product,
-          authenticity,
-          riskScore,
-          riskLevel:
-            riskScore >= 70
-              ? "VERY_HIGH"
-              : riskScore >= 50
-                ? "HIGH"
-                : riskScore >= 30
-                  ? "MEDIUM"
-                  : "LOW",
-          status:
-            product.total === 0
-              ? "No verifications"
-              : riskScore >= 70
-                ? "⚠️ Critical attention needed"
-                : riskScore >= 50
-                  ? "⚠️ Review recommended"
-                  : "✅ Good standing",
-        };
-      })
-      .sort((a, b) => b.riskScore - a.riskScore)
-      .slice(0, parseInt(limit));
 
     const duration = Date.now() - startTime;
     console.log(
@@ -352,17 +231,20 @@ export async function getProductsWithRiskController(req, res) {
     );
 
     res.status(200).json({
-      data: productsWithRisk,
+      data: products,
     });
   } catch (err) {
     const duration = Date.now() - startTime;
-    console.error(`[PRODUCTS_RISK-${requestId}] Error after ${duration}ms:`, {
-      message: err?.message,
-      code: err?.code,
-      stack: err?.stack,
-    });
+    console.error(
+      `[PRODUCTS_RISK-${requestId}] Error after ${duration}ms:`,
+      {
+        message: err?.message,
+        code: err?.code,
+        stack: err?.stack,
+      },
+    );
     res.status(500).json({
-      error: "Failed to fetch products with risk",
+      error: "Failed to fetch product risk metrics",
       message:
         process.env.NODE_ENV === "development" ? err?.message : undefined,
       requestId,

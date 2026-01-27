@@ -629,3 +629,158 @@ export async function getTopVerifications(manufacturerId, limit = 10) {
     throw err;
   }
 }
+
+/**
+ * Get products with risk metrics for manufacturer dashboard
+ */
+export async function getProductsWithRisk(manufacturerId, limit = 20) {
+  try {
+    console.log(
+      `[PRODUCTS_WITH_RISK] Getting products with risk for manufacturerId: ${manufacturerId}`,
+    );
+
+    // Get all products for this manufacturer
+    const products = await prisma.product.findMany({
+      where: { manufacturerId },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        skuPrefix: true,
+      },
+      take: limit,
+    });
+
+    console.log(
+      `[PRODUCTS_WITH_RISK] Found ${products.length} products`,
+    );
+
+    // Get verification data for all codes of these products
+    const verifications = await prisma.verificationLog.findMany({
+      where: {
+        code: {
+          batch: {
+            product: {
+              manufacturerId,
+            },
+          },
+        },
+      },
+      select: {
+        code: {
+          select: {
+            batch: {
+              select: {
+                product: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        verificationState: true,
+      },
+    });
+
+    console.log(
+      `[PRODUCTS_WITH_RISK] Found ${verifications.length} total verifications`,
+    );
+
+    // Group verifications by product
+    const productVerificationMap = {};
+    verifications.forEach((verification) => {
+      const productId = verification.code?.batch?.product?.id;
+      if (!productId) return;
+
+      if (!productVerificationMap[productId]) {
+        productVerificationMap[productId] = {
+          total: 0,
+          genuine: 0,
+          suspicious: 0,
+          invalid: 0,
+          alreadyUsed: 0,
+          unregistered: 0,
+        };
+      }
+
+      productVerificationMap[productId].total++;
+
+      switch (verification.verificationState) {
+        case "GENUINE":
+          productVerificationMap[productId].genuine++;
+          break;
+        case "SUSPICIOUS":
+          productVerificationMap[productId].suspicious++;
+          break;
+        case "INVALID":
+          productVerificationMap[productId].invalid++;
+          break;
+        case "CODE_ALREADY_USED":
+          productVerificationMap[productId].alreadyUsed++;
+          break;
+        case "UNREGISTERED":
+          productVerificationMap[productId].unregistered++;
+          break;
+      }
+    });
+
+    // Enhance products with risk metrics
+    const productsWithRisk = products.map((product) => {
+      const stats = productVerificationMap[product.id] || {
+        total: 0,
+        genuine: 0,
+        suspicious: 0,
+        invalid: 0,
+        alreadyUsed: 0,
+        unregistered: 0,
+      };
+
+      const authenticity =
+        stats.total > 0
+          ? Math.round((stats.genuine / stats.total) * 100)
+          : 0;
+
+      const riskScore = calculateRiskScore(
+        stats.genuine,
+        stats.suspicious,
+        stats.invalid,
+        stats.alreadyUsed,
+      );
+
+      // Determine risk level
+      let riskLevel = "LOW";
+      if (riskScore >= 70) riskLevel = "CRITICAL";
+      else if (riskScore >= 50) riskLevel = "HIGH";
+      else if (riskScore >= 30) riskLevel = "MEDIUM";
+
+      return {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        skuPrefix: product.skuPrefix,
+        ...stats,
+        authenticity,
+        riskScore,
+        riskLevel,
+        needsAttention: riskScore >= 50, // Flag products with 50+ risk score
+      };
+    });
+
+    // Sort by risk score (highest first)
+    const sorted = productsWithRisk.sort(
+      (a, b) => b.riskScore - a.riskScore,
+    );
+
+    console.log(
+      `[PRODUCTS_WITH_RISK] Returning ${sorted.length} products with risk metrics`,
+    );
+
+    return sorted;
+  } catch (err) {
+    console.error("[PRODUCTS_WITH_RISK] Error:", err);
+    throw err;
+  }
+}
+

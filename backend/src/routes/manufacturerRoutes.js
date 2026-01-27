@@ -23,7 +23,6 @@ import {
   unflagCode,
   getFlaggedCodes,
   getManufacturerCodes,
-  getCodeVerificationDetails,
 } from "../controllers/codeController.js";
 import {
   uploadDocument,
@@ -423,13 +422,6 @@ router.get(
   authMiddleware,
   roleMiddleware("manufacturer"),
   getManufacturerCodes,
-);
-
-router.get(
-  "/codes/:codeId/details",
-  authMiddleware,
-  roleMiddleware("manufacturer"),
-  getCodeVerificationDetails,
 );
 
 router.get(

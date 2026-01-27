@@ -25,7 +25,9 @@ import { FiArrowLeft } from "react-icons/fi";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
+  const [productsWithRisk, setProductsWithRisk] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("products"); // "products" or "risk"
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -47,8 +49,26 @@ export default function ProductsPage() {
 
   // Fetch products
   useEffect(() => {
-    fetchProducts();
-  }, [pagination.page, search, category]);
+    if (activeTab === "products") {
+      fetchProducts();
+    } else {
+      fetchProductsWithRisk();
+    }
+  }, [pagination.page, search, category, activeTab]);
+
+  const fetchProductsWithRisk = async () => {
+    setLoading(true);
+    try {
+      const response = await api.get("/manufacturer/analytics/products-with-risk?limit=20");
+      setProductsWithRisk(response.data?.data || []);
+    } catch (err) {
+      console.error("[FETCH_PRODUCTS_RISK] Error:", err.response?.data || err.message);
+      setProductsWithRisk([]);
+      toast.error("Failed to load risk data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -200,14 +220,15 @@ export default function ProductsPage() {
               </p>
             </div>
 
-            <button
-              onClick={() => openModal()}
-              className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold transition-all flex items-center gap-2 w-fit"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
+            {activeTab === "products" && (
+              <button
+                onClick={() => openModal()}
+                className="px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold transition-all flex items-center gap-2 w-fit"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path
@@ -221,6 +242,35 @@ export default function ProductsPage() {
             </button>
           </div>
 
+          {/* Tabs */}
+          <div className="flex gap-4 mb-6 border-b border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => {
+                setActiveTab("products");
+                setPagination({ ...pagination, page: 1 });
+              }}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+                activeTab === "products"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+              }`}
+            >
+              📦 All Products
+            </button>
+            <button
+              onClick={() => setActiveTab("risk")}
+              className={`px-4 py-3 font-medium border-b-2 transition-colors ${
+                activeTab === "risk"
+                  ? "border-red-600 text-red-600"
+                  : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300"
+              }`}
+            >
+              ⚠️ Risk Assessment
+            </button>
+          </div>
+
+          {activeTab === "products" && (
+            <>
           {/* Search & Filter */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <input
@@ -397,7 +447,128 @@ export default function ProductsPage() {
         )}
       </div>
 
+      {/* Risk Assessment Tab */}
+      {activeTab === "risk" && (
+        <div className="space-y-6">
+          {loading ? (
+            <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-xl">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <p className="mt-3 text-gray-600 dark:text-gray-400">
+                Loading risk assessment...
+              </p>
+            </div>
+          ) : productsWithRisk.length === 0 ? (
+            <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-xl text-gray-600 dark:text-gray-400">
+              ✅ No products with risk data yet
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {productsWithRisk.map((product) => (
+                <div
+                  key={product.id}
+                  className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {product.name}
+                        </h3>
+                        <span className="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+                          {product.category}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                        {product.batchCount} batches • {product.total} verifications
+                      </p>
+
+                      {/* Risk Metrics */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Genuine</p>
+                          <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                            {product.genuine}
+                          </p>
+                        </div>
+                        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Suspicious</p>
+                          <p className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                            {product.suspicious}
+                          </p>
+                        </div>
+                        <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Invalid</p>
+                          <p className="text-lg font-bold text-red-600 dark:text-red-400">
+                            {product.invalid}
+                          </p>
+                        </div>
+                        <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg">
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Already Used</p>
+                          <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                            {product.alreadyUsed}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Risk Score Badge */}
+                    <div className="md:text-right">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">Authenticity</p>
+                      <p className="text-3xl font-bold text-green-600 dark:text-green-400 mb-4">
+                        {product.authenticity}%
+                      </p>
+
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex-1">
+                          <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Risk Score</p>
+                          <div className="relative h-8 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full flex items-center justify-center text-white text-xs font-bold transition-all ${
+                                product.riskScore >= 70
+                                  ? "bg-red-600"
+                                  : product.riskScore >= 50
+                                    ? "bg-orange-600"
+                                    : product.riskScore >= 30
+                                      ? "bg-yellow-600"
+                                      : "bg-green-600"
+                              }`}
+                              style={{ width: `${product.riskScore}%` }}
+                            >
+                              {product.riskScore > 15 && product.riskScore}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="text-sm">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            product.riskLevel === "VERY_HIGH"
+                              ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                              : product.riskLevel === "HIGH"
+                                ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
+                                : product.riskLevel === "MEDIUM"
+                                  ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
+                                  : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                          }`}
+                        >
+                          {product.riskLevel}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                        {product.status}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Products Cards - Mobile */}
+      {activeTab === "products" && (
       <div className="md:hidden space-y-4">
         {loading ? (
           <div className="p-8 text-center">
@@ -488,6 +659,7 @@ export default function ProductsPage() {
           ))
         )}
       </div>
+      )}
 
       {/* Create/Edit Modal */}
       {showModal && (
