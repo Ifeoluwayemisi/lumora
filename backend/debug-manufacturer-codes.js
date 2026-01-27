@@ -68,7 +68,9 @@ async function debugManufacturerCodes() {
 
         console.log("\nBatches:");
         batches.forEach((batch) => {
-          console.log(`  - ${batch.batchNumber} (Product: ${batch.product?.name})`);
+          console.log(
+            `  - ${batch.batchNumber} (Product: ${batch.product?.name})`,
+          );
         });
       }
     }
@@ -94,7 +96,7 @@ async function debugManufacturerCodes() {
       console.log("\nSample codes with NULL manufacturerId:");
       samples.forEach((code) => {
         console.log(
-          `  - ${code.codeValue} (batch manufacturerId: ${code.batch?.manufacturerId})`
+          `  - ${code.codeValue} (batch manufacturerId: ${code.batch?.manufacturerId})`,
         );
       });
     }
@@ -108,7 +110,6 @@ async function debugManufacturerCodes() {
     console.log(`Total Codes: ${totalCodes}`);
     console.log(`Total Batches: ${totalBatches}`);
     console.log(`Total Manufacturers: ${totalManufacturers}`);
-
   } catch (error) {
     console.error("Error:", error.message);
   } finally {

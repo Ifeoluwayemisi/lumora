@@ -28,7 +28,10 @@ export default function AIProductGuide({
     <div
       className={`${toneClasses[tone] || toneClasses.neutral} p-4 rounded-lg mb-6`}
     >
-      <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
+      <div
+        className="flex items-center justify-between cursor-pointer"
+        onClick={() => setExpanded(!expanded)}
+      >
         <h3 className="font-semibold text-gray-900 dark:text-gray-100">
           📋 Safety Guide
           {(riskLevel === "HIGH" || riskLevel === "VERY_HIGH") && (

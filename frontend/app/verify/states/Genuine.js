@@ -132,11 +132,11 @@ export default function Genuine({
           </div>
         )}
 
-        {/* Safety Guide - Expanded for safe products */}
+        {/* Safety Guide - Collapsed for genuine products (low risk) */}
         {product?.guide && (
           <AIProductGuide
             guide={product.guide}
-            defaultExpanded={true}
+            defaultExpanded={false}
             tone="neutral"
             riskLevel="LOW"
           />

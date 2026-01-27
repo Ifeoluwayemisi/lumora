@@ -121,6 +121,7 @@ export default function CodeUsed({ code, product, batch, codeInfo }) {
         {product?.guide && (
           <AIProductGuide
             guide={product.guide}
+            defaultExpanded={false}
             tone="danger"
             riskLevel="HIGH"
           />
@@ -145,6 +146,16 @@ export default function CodeUsed({ code, product, batch, codeInfo }) {
             className="w-full px-4 py-3 rounded-lg bg-orange-500 text-white font-medium hover:bg-orange-600 transition"
           >
             ← Try Another Code
+          </button>
+          <button
+            onClick={() =>
+              router.push(
+                `/report?code=${encodeURIComponent(code)}&type=already_used`,
+              )
+            }
+            className="w-full px-4 py-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition"
+          >
+            🚩 Report Suspicious Code
           </button>
           <button
             onClick={handleCopy}

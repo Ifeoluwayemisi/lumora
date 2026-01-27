@@ -292,7 +292,10 @@ export async function getManufacturerCodes(req, res) {
     console.log("[MANU-CODES] Manufacturer found:", manufacturer?.id);
 
     if (!manufacturer) {
-      console.log("[MANU-CODES] ERROR: No manufacturer found for userId:", userId);
+      console.log(
+        "[MANU-CODES] ERROR: No manufacturer found for userId:",
+        userId,
+      );
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
@@ -350,7 +353,13 @@ export async function getManufacturerCodes(req, res) {
       prisma.code.count({ where }),
     ]);
 
-    console.log("[MANU-CODES] Found", codes.length, "codes out of", total, "total");
+    console.log(
+      "[MANU-CODES] Found",
+      codes.length,
+      "codes out of",
+      total,
+      "total",
+    );
 
     // Map codes to include latest verification state
     const mappedCodes = codes.map((code) => ({
