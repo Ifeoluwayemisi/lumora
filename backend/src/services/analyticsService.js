@@ -65,7 +65,8 @@ async function getTopVerificationLocations(manufacturerId, limit = 10) {
       .slice(0, limit)
       .map((loc) => ({
         ...loc,
-        authenticity: loc.total > 0 ? Math.round((loc.genuine / loc.total) * 100) : 0,
+        authenticity:
+          loc.total > 0 ? Math.round((loc.genuine / loc.total) * 100) : 0,
         riskScore: calculateRiskScore(
           loc.genuine,
           loc.suspicious,

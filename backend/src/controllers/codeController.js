@@ -356,9 +356,9 @@ export async function getManufacturerCodes(req, res) {
             select: {
               id: true,
               verificationState: true,
-              verifiedAt: true,
+              createdAt: true,
             },
-            orderBy: { verifiedAt: "desc" },
+            orderBy: { createdAt: "desc" },
             take: 1,
           },
         },
@@ -394,7 +394,7 @@ export async function getManufacturerCodes(req, res) {
       createdAt: code.createdAt,
       verificationState:
         code.verificationLogs[0]?.verificationState || "UNUSED",
-      lastVerifiedAt: code.verificationLogs[0]?.verifiedAt,
+      lastVerifiedAt: code.verificationLogs[0]?.createdAt,
     }));
 
     res.status(200).json({
