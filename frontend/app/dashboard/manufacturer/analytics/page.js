@@ -117,7 +117,7 @@ export default function AnalyticsPage() {
   const manufacturer = analytics?.manufacturer;
 
   // Prepare chart data
-  const trendData = verificationTrends.map((item) => ({
+  const chartTrendData = verificationTrends.map((item) => ({
     date: new Date(item.createdAt).toLocaleDateString(),
     verifications: item._count.id,
   }));
@@ -287,13 +287,13 @@ export default function AnalyticsPage() {
           )}
 
           {/* PHASE 2: 30-Day Authenticity Trend */}
-          {trendData.length > 0 && (
+          {chartTrendData.length > 0 && (
             <div className="p-6 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 mb-8">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 30-Day Authenticity Trend
               </h3>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={trendData}>
+                <LineChart data={chartTrendData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
@@ -359,7 +359,7 @@ export default function AnalyticsPage() {
                 Verification Trend (30 days)
               </h3>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={trendData}>
+                <LineChart data={chartTrendData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
@@ -427,7 +427,10 @@ export default function AnalyticsPage() {
                 {hotspots.slice(0, 10).map((spot, idx) => (
                   <a
                     key={idx}
-                    href={spot.mapsUrl || `https://www.google.com/maps/search/${spot.lat},${spot.lng}`}
+                    href={
+                      spot.mapsUrl ||
+                      `https://www.google.com/maps/search/${spot.lat},${spot.lng}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"

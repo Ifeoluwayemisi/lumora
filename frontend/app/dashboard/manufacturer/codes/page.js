@@ -550,3 +550,7 @@ export default function CodesPage() {
             }}
           />
         )}
+      </div>
+    </>
+  );
+}
