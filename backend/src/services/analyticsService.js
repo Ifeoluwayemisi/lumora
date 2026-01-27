@@ -305,8 +305,14 @@ export async function getHotspotPredictions(manufacturerId) {
         };
       }
       locationMap[locationKey].frequency++;
-      if (!locationMap[locationKey].verificationStates.includes(spot.verificationState)) {
-        locationMap[locationKey].verificationStates.push(spot.verificationState);
+      if (
+        !locationMap[locationKey].verificationStates.includes(
+          spot.verificationState,
+        )
+      ) {
+        locationMap[locationKey].verificationStates.push(
+          spot.verificationState,
+        );
       }
     });
 
@@ -688,9 +694,7 @@ export async function getProductsWithRisk(manufacturerId, limit = 20) {
       take: limit,
     });
 
-    console.log(
-      `[PRODUCTS_WITH_RISK] Found ${products.length} products`,
-    );
+    console.log(`[PRODUCTS_WITH_RISK] Found ${products.length} products`);
 
     // Get verification data for all codes of these products
     const verifications = await prisma.verificationLog.findMany({
@@ -775,9 +779,7 @@ export async function getProductsWithRisk(manufacturerId, limit = 20) {
       };
 
       const authenticity =
-        stats.total > 0
-          ? Math.round((stats.genuine / stats.total) * 100)
-          : 0;
+        stats.total > 0 ? Math.round((stats.genuine / stats.total) * 100) : 0;
 
       const riskScore = calculateRiskScore(
         stats.genuine,
@@ -786,11 +788,27 @@ export async function getProductsWithRisk(manufacturerId, limit = 20) {
         stats.alreadyUsed,
       );
 
-      // Determine risk level
+      // Determine risk level and status
       let riskLevel = "LOW";
-      if (riskScore >= 70) riskLevel = "CRITICAL";
-      else if (riskScore >= 50) riskLevel = "HIGH";
-      else if (riskScore >= 30) riskLevel = "MEDIUM";
+      let status = "NEW";
+      
+      if (stats.total === 0) {
+        // No verifications yet
+        status = "NEW";
+        riskLevel = "UNVERIFIED";
+      } else if (riskScore >= 70) {
+        riskLevel = "CRITICAL";
+        status = "CRITICAL";
+      } else if (riskScore >= 50) {
+        riskLevel = "HIGH";
+        status = "AT_RISK";
+      } else if (authenticity >= 95) {
+        riskLevel = "LOW";
+        status = "VERIFIED_SAFE";
+      } else {
+        riskLevel = "LOW";
+        status = "LOW_RISK";
+      }
 
       // Trigger alert if risk is high or critical (async, don't wait)
       if (riskScore >= 50) {
@@ -816,14 +834,13 @@ export async function getProductsWithRisk(manufacturerId, limit = 20) {
         authenticity,
         riskScore,
         riskLevel,
+        status,
         needsAttention: riskScore >= 50, // Flag products with 50+ risk score
       };
     });
 
     // Sort by risk score (highest first)
-    const sorted = productsWithRisk.sort(
-      (a, b) => b.riskScore - a.riskScore,
-    );
+    const sorted = productsWithRisk.sort((a, b) => b.riskScore - a.riskScore);
 
     console.log(
       `[PRODUCTS_WITH_RISK] Returning ${sorted.length} products with risk metrics`,
@@ -835,4 +852,3 @@ export async function getProductsWithRisk(manufacturerId, limit = 20) {
     throw err;
   }
 }
-

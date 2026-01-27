@@ -52,7 +52,10 @@ export default function LocationDetailsModal({
   };
 
   const openGoogleMaps = () => {
-    window.open(`https://maps.google.com/?q=${latitude},${longitude}`, "_blank");
+    window.open(
+      `https://maps.google.com/?q=${latitude},${longitude}`,
+      "_blank",
+    );
   };
 
   return (

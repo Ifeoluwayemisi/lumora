@@ -190,16 +190,12 @@ export async function getProductsWithRiskController(req, res) {
     );
 
     if (!userId) {
-      console.warn(
-        `[PRODUCTS_RISK-${requestId}] Unauthorized: No user ID`,
-      );
+      console.warn(`[PRODUCTS_RISK-${requestId}] Unauthorized: No user ID`);
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     // Look up manufacturer from user
-    console.log(
-      `[PRODUCTS_RISK-${requestId}] Looking up manufacturer...`,
-    );
+    console.log(`[PRODUCTS_RISK-${requestId}] Looking up manufacturer...`);
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { userId },
       select: { id: true },
@@ -220,10 +216,7 @@ export async function getProductsWithRiskController(req, res) {
     console.log(
       `[PRODUCTS_RISK-${requestId}] Fetching products with risk metrics (limit: ${limit})`,
     );
-    const products = await getProductsWithRisk(
-      manufacturerId,
-      parseInt(limit),
-    );
+    const products = await getProductsWithRisk(manufacturerId, parseInt(limit));
 
     const duration = Date.now() - startTime;
     console.log(
@@ -235,14 +228,11 @@ export async function getProductsWithRiskController(req, res) {
     });
   } catch (err) {
     const duration = Date.now() - startTime;
-    console.error(
-      `[PRODUCTS_RISK-${requestId}] Error after ${duration}ms:`,
-      {
-        message: err?.message,
-        code: err?.code,
-        stack: err?.stack,
-      },
-    );
+    console.error(`[PRODUCTS_RISK-${requestId}] Error after ${duration}ms:`, {
+      message: err?.message,
+      code: err?.code,
+      stack: err?.stack,
+    });
     res.status(500).json({
       error: "Failed to fetch product risk metrics",
       message:

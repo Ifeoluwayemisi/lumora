@@ -70,9 +70,7 @@ export async function checkAndSendProductRiskAlert(
     });
 
     if (!manufacturer || !product) {
-      console.warn(
-        `[RISK_ALERT] Manufacturer or product not found for alert`,
-      );
+      console.warn(`[RISK_ALERT] Manufacturer or product not found for alert`);
       return null;
     }
 
@@ -246,10 +244,7 @@ async function sendProductRiskAlertEmail(
 /**
  * Get recent alerts for manufacturer
  */
-export async function getManufacturerRiskAlerts(
-  manufacturerId,
-  limit = 20,
-) {
+export async function getManufacturerRiskAlerts(manufacturerId, limit = 20) {
   try {
     const alerts = await prisma.riskAlert.findMany({
       where: { manufacturerId },
