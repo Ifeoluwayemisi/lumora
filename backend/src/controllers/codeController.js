@@ -282,6 +282,13 @@ export async function getManufacturerCodes(req, res) {
     } = req.query;
 
     console.log("[MANU-CODES] Request from userId:", userId);
+    console.log("[MANU-CODES] Query params:", {
+      page,
+      limit,
+      status,
+      productId,
+      batchId,
+    });
 
     // Get manufacturer
     const manufacturer = await prisma.manufacturer.findUnique({
@@ -308,15 +315,24 @@ export async function getManufacturerCodes(req, res) {
       manufacturerId: manufacturer.id,
     };
 
-    if (productId) where.batch = { productId };
-    if (batchId) where.batchId = batchId;
+    // Fix: Correct Prisma nested query syntax for product filter
+    if (productId) {
+      where.batch = {
+        product: {
+          id: productId,
+        },
+      };
+    }
+    if (batchId) {
+      where.batchId = batchId;
+    }
 
     // Status filter
     if (status === "unused") where.isUsed = false;
     if (status === "used") where.isUsed = true;
     if (status === "flagged") where.isFlagged = true;
 
-    console.log("[MANU-CODES] Query filter:", JSON.stringify(where));
+    console.log("[MANU-CODES] Query filter:", JSON.stringify(where, null, 2));
 
     const [codes, total] = await Promise.all([
       prisma.code.findMany({
@@ -392,7 +408,11 @@ export async function getManufacturerCodes(req, res) {
       },
     });
   } catch (err) {
-    console.error("[GET_MANUFACTURER_CODES] Error:", err.message);
+    console.error("[GET_MANUFACTURER_CODES] Error:", {
+      message: err.message,
+      code: err.code,
+      stack: err.stack,
+    });
     res.status(500).json({
       error: "Failed to fetch codes",
       message:
