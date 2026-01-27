@@ -323,19 +323,40 @@ export async function getHotspotPredictions(manufacturerId) {
 
     // Parse location string into components (e.g., "Lagos, Lagos, NG" -> city, state, country)
     return grouped.map((spot, index) => {
-      const parts = spot.location.split(",").map((p) => p.trim());
-      const country = parts[parts.length - 1] || "Unknown";
-      const state = parts[parts.length - 2] || "Unknown";
-      const city = parts[0] || "Unknown";
+      let city = "Unknown",
+        state = "Unknown",
+        country = "Unknown";
+
+      if (spot.location && spot.location.trim()) {
+        const parts = spot.location
+          .split(",")
+          .map((p) => p.trim())
+          .filter((p) => p.length > 0);
+
+        // Handle different location formats
+        if (parts.length >= 3) {
+          // Full format: city, state, country
+          city = parts[0];
+          state = parts[1];
+          country = parts[2];
+        } else if (parts.length === 2) {
+          // Partial format: city, country (or city, state)
+          city = parts[0];
+          country = parts[1];
+        } else if (parts.length === 1) {
+          // Just one part
+          city = parts[0];
+        }
+      }
 
       return {
         id: index,
         lat: spot.latitude,
         lng: spot.longitude,
-        location: spot.location,
-        city,
-        state,
-        country,
+        location: spot.location || "Unknown Location",
+        city: city || "Unknown",
+        state: state || "Unknown",
+        country: country || "Unknown",
         frequency: spot.frequency,
         verificationStates: spot.verificationStates,
         lastVerifiedAt: spot.lastVerifiedAt,
@@ -791,7 +812,7 @@ export async function getProductsWithRisk(manufacturerId, limit = 20) {
       // Determine risk level and status
       let riskLevel = "LOW";
       let status = "NEW";
-      
+
       if (stats.total === 0) {
         // No verifications yet
         status = "NEW";
