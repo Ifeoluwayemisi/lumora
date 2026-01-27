@@ -318,7 +318,7 @@ export default function CodesPage() {
                           <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                             {log.latitude && log.longitude ? (
                               <div>
-                                <div>
+                                <div className="mb-2">
                                   {log.latitude.toFixed(4)},{" "}
                                   {log.longitude.toFixed(4)}
                                 </div>
@@ -332,13 +332,25 @@ export default function CodesPage() {
                                     });
                                     setShowLocationModal(true);
                                   }}
-                                  className="text-green-600 hover:underline text-xs font-medium"
+                                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline text-xs font-medium"
                                 >
-                                  View Details
+                                  📍 View on Map
                                 </button>
                               </div>
                             ) : (
-                              <span className="text-gray-400">—</span>
+                              <div>
+                                <span className="text-gray-400">No location data</span>
+                                <div className="mt-2">
+                                  <a
+                                    href={`https://www.google.com/maps/search/lumora/`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline text-xs font-medium"
+                                  >
+                                    🗺️ Open Map
+                                  </a>
+                                </div>
+                              </div>
                             )}
                           </td>
                           <td className="px-6 py-4">
