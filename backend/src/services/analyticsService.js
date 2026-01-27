@@ -2,6 +2,52 @@ import prisma from "../models/prismaClient.js";
 import { checkAndSendProductRiskAlert } from "./riskAlertService.js";
 
 /**
+ * Reverse geocode coordinates to location name using Open Street Map (free)
+ */
+async function reverseGeocode(latitude, longitude) {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
+      {
+        headers: {
+          "User-Agent": "Lumora-Verification-System",
+        },
+      },
+    );
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    const address = data.address || {};
+
+    // Extract city, state, country
+    const city =
+      address.city ||
+      address.town ||
+      address.village ||
+      address.county ||
+      "Unknown";
+    const state = address.state || "Unknown";
+    const country = address.country || "Unknown";
+
+    return {
+      location: `${city}, ${state}, ${country}`,
+      city,
+      state,
+      country,
+    };
+  } catch (err) {
+    console.warn(
+      `[REVERSE_GEOCODE] Failed for ${latitude}, ${longitude}:`,
+      err.message,
+    );
+    return null;
+  }
+}
+
+/**
  * Get top verification locations grouped by location string
  */
 async function getTopVerificationLocations(manufacturerId, limit = 10) {
@@ -322,46 +368,62 @@ export async function getHotspotPredictions(manufacturerId) {
       .slice(0, 20);
 
     // Parse location string into components (e.g., "Lagos, Lagos, NG" -> city, state, country)
-    return grouped.map((spot, index) => {
-      let city = "Unknown",
-        state = "Unknown",
-        country = "Unknown";
+    return await Promise.all(
+      grouped.map(async (spot, index) => {
+        let city = "Unknown",
+          state = "Unknown",
+          country = "Unknown",
+          location = spot.location;
 
-      if (spot.location && spot.location.trim()) {
-        const parts = spot.location
-          .split(",")
-          .map((p) => p.trim())
-          .filter((p) => p.length > 0);
+        // Try to parse existing location string
+        if (spot.location && spot.location.trim()) {
+          const parts = spot.location
+            .split(",")
+            .map((p) => p.trim())
+            .filter((p) => p.length > 0);
 
-        // Handle different location formats
-        if (parts.length >= 3) {
-          // Full format: city, state, country
-          city = parts[0];
-          state = parts[1];
-          country = parts[2];
-        } else if (parts.length === 2) {
-          // Partial format: city, country (or city, state)
-          city = parts[0];
-          country = parts[1];
-        } else if (parts.length === 1) {
-          // Just one part
-          city = parts[0];
+          // Handle different location formats
+          if (parts.length >= 3) {
+            // Full format: city, state, country
+            city = parts[0];
+            state = parts[1];
+            country = parts[2];
+          } else if (parts.length === 2) {
+            // Partial format: city, country
+            city = parts[0];
+            country = parts[1];
+          } else if (parts.length === 1) {
+            // Just one part
+            city = parts[0];
+          }
+        } else {
+          // Location is empty/null, try reverse geocoding from coordinates
+          const geocoded = await reverseGeocode(
+            spot.latitude,
+            spot.longitude,
+          );
+          if (geocoded) {
+            city = geocoded.city;
+            state = geocoded.state;
+            country = geocoded.country;
+            location = geocoded.location;
+          }
         }
-      }
 
-      return {
-        id: index,
-        lat: spot.latitude,
-        lng: spot.longitude,
-        location: spot.location || "Unknown Location",
-        city: city || "Unknown",
-        state: state || "Unknown",
-        country: country || "Unknown",
-        frequency: spot.frequency,
-        verificationStates: spot.verificationStates,
-        lastVerifiedAt: spot.lastVerifiedAt,
-      };
-    });
+        return {
+          id: index,
+          lat: spot.latitude,
+          lng: spot.longitude,
+          location: location || `${city}, ${state}, ${country}`,
+          city: city || "Unknown",
+          state: state || "Unknown",
+          country: country || "Unknown",
+          frequency: spot.frequency,
+          verificationStates: spot.verificationStates,
+          lastVerifiedAt: spot.lastVerifiedAt,
+        };
+      }),
+    );
   } catch (err) {
     console.error("[GET_HOTSPOT_PREDICTIONS] Error:", err);
     throw err;

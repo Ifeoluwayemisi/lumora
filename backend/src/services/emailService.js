@@ -47,7 +47,10 @@ export async function sendEmail({
     console.log(`[EMAIL_SERVICE] Email sent to ${to}: ${subject}`);
     return result;
   } catch (err) {
-    console.error(`[EMAIL_SERVICE] Failed to send email to ${to}:`, err.message);
+    console.error(
+      `[EMAIL_SERVICE] Failed to send email to ${to}:`,
+      err.message,
+    );
     throw err;
   }
 }
@@ -85,7 +88,10 @@ export async function sendEmailWithText({
     console.log(`[EMAIL_SERVICE] Email sent to ${to}: ${subject}`);
     return result;
   } catch (err) {
-    console.error(`[EMAIL_SERVICE] Failed to send email to ${to}:`, err.message);
+    console.error(
+      `[EMAIL_SERVICE] Failed to send email to ${to}:`,
+      err.message,
+    );
     throw err;
   }
 }
