@@ -32,6 +32,8 @@ export default function AnalyticsPage() {
   const [alertSummary, setAlertSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [selectedHotspot, setSelectedHotspot] = useState(null);
 
   useEffect(() => {
     fetchAnalytics();
@@ -427,19 +429,30 @@ export default function AnalyticsPage() {
                 {hotspots.slice(0, 10).map((spot, idx) => (
                   <div
                     key={idx}
-                    className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                    className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors cursor-pointer"
                   >
-                    <div>
+                    <div className="flex-1">
                       <p className="font-medium text-gray-900 dark:text-white text-sm">
                         {spot.city}, {spot.state}, {spot.country}
                       </p>
                       <p className="text-xs text-gray-500">
-                        ({spot.lat}, {spot.lng})
+                        ({spot.lat.toFixed(4)}, {spot.lng.toFixed(4)})
                       </p>
                     </div>
-                    <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
-                      {spot.frequency}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
+                        {spot.frequency}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setSelectedHotspot(spot);
+                          setShowMapModal(true);
+                        }}
+                        className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded text-xs font-medium hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                      >
+                        📍 Map
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -471,6 +484,87 @@ export default function AnalyticsPage() {
                     </p>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Location Map Modal */}
+          {showMapModal && selectedHotspot && (
+            <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6 flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                    📍 {selectedHotspot.city}, {selectedHotspot.state}, {selectedHotspot.country}
+                  </h2>
+                  <button
+                    onClick={() => setShowMapModal(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="p-6">
+                  {/* Google Map Embed */}
+                  <div className="mb-6 rounded-lg overflow-hidden">
+                    <iframe
+                      width="100%"
+                      height="400"
+                      frameBorder="0"
+                      src={`https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3962.3${Math.random().toString().slice(2, 10)}!2d${selectedHotspot.lng}!3d${selectedHotspot.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0:0x0!2z${selectedHotspot.lat.toFixed(4)},${selectedHotspot.lng.toFixed(4)}!5e0!3m2!1sen!2sng!4v${Date.now()}`}
+                      allowFullScreen=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Verification Location"
+                    />
+                  </div>
+
+                  {/* Location Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">City</p>
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {selectedHotspot.city}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">State</p>
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {selectedHotspot.state}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Country</p>
+                      <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                        {selectedHotspot.country}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Verifications</p>
+                      <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                        {selectedHotspot.frequency}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* GPS Coordinates */}
+                  <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mb-6">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">GPS Coordinates</p>
+                    <p className="text-lg font-mono text-gray-900 dark:text-white">
+                      {selectedHotspot.lat.toFixed(6)}, {selectedHotspot.lng.toFixed(6)}
+                    </p>
+                  </div>
+
+                  {/* Direct Google Maps Link */}
+                  <a
+                    href={`https://www.google.com/maps?q=${selectedHotspot.lat},${selectedHotspot.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block w-full text-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors"
+                  >
+                    🔗 Open in Google Maps
+                  </a>
+                </div>
               </div>
             </div>
           )}

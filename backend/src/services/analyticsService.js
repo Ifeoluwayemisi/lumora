@@ -398,10 +398,7 @@ export async function getHotspotPredictions(manufacturerId) {
           }
         } else {
           // Location is empty/null, try reverse geocoding from coordinates
-          const geocoded = await reverseGeocode(
-            spot.latitude,
-            spot.longitude,
-          );
+          const geocoded = await reverseGeocode(spot.latitude, spot.longitude);
           if (geocoded) {
             city = geocoded.city;
             state = geocoded.state;
