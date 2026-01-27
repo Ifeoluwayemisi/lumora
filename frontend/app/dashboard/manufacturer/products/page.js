@@ -540,24 +540,48 @@ export default function ProductsPage() {
                         </div>
                       </div>
 
+                      {/* Status Badge */}
+                      <div className="mb-3">
+                        <span
+                          className={`px-3 py-2 rounded-full text-xs font-semibold inline-block ${
+                            product.status === "NEW"
+                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                              : product.status === "VERIFIED_SAFE"
+                                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                : product.status === "AT_RISK"
+                                  ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
+                                  : product.status === "CRITICAL"
+                                    ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                                    : "bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400"
+                          }`}
+                        >
+                          {product.status === "NEW" && "🆕 New Product"}
+                          {product.status === "VERIFIED_SAFE" && "✅ Verified Safe"}
+                          {product.status === "AT_RISK" && "⚠️ At Risk"}
+                          {product.status === "CRITICAL" && "🚨 Critical"}
+                          {product.status === "LOW_RISK" && "📊 Low Risk"}
+                          {!["NEW", "VERIFIED_SAFE", "AT_RISK", "CRITICAL", "LOW_RISK"].includes(product.status) && product.status}
+                        </span>
+                      </div>
+
+                      {/* Risk Level */}
                       <div className="text-sm">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            product.riskLevel === "VERY_HIGH"
+                            product.riskLevel === "CRITICAL"
                               ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                               : product.riskLevel === "HIGH"
                                 ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
                                 : product.riskLevel === "MEDIUM"
                                   ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
-                                  : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                  : product.riskLevel === "UNVERIFIED"
+                                    ? "bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400"
+                                    : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
                           }`}
                         >
                           {product.riskLevel}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-                        {product.status}
-                      </p>
                     </div>
                   </div>
                 </div>
