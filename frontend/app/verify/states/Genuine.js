@@ -81,7 +81,9 @@ export default function Genuine({
           <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-6 space-y-2 text-sm">
             {product.name && (
               <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Product</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Product
+                </p>
                 <p className="font-semibold text-gray-900 dark:text-white">
                   {product.name}
                 </p>
@@ -89,25 +91,39 @@ export default function Genuine({
             )}
             {product.category && (
               <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Category</p>
-                <p className="text-gray-900 dark:text-white">{product.category}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Category
+                </p>
+                <p className="text-gray-900 dark:text-white">
+                  {product.category}
+                </p>
               </div>
             )}
             {product.manufacturer && (
               <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Manufacturer</p>
-                <p className="text-gray-900 dark:text-white">{product.manufacturer}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Manufacturer
+                </p>
+                <p className="text-gray-900 dark:text-white">
+                  {product.manufacturer}
+                </p>
               </div>
             )}
             {batch?.batchNumber && (
               <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Batch</p>
-                <p className="font-mono text-xs text-gray-900 dark:text-white">{batch.batchNumber}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Batch
+                </p>
+                <p className="font-mono text-xs text-gray-900 dark:text-white">
+                  {batch.batchNumber}
+                </p>
               </div>
             )}
             {batch?.expirationDate && (
               <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Expiration</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  Expiration
+                </p>
                 <p className="text-gray-900 dark:text-white">
                   {new Date(batch.expirationDate).toLocaleDateString()}
                 </p>
@@ -116,12 +132,13 @@ export default function Genuine({
           </div>
         )}
 
-        {/* AI Product Guide */}
+        {/* Safety Guide - Expanded for safe products */}
         {product?.guide && (
           <AIProductGuide
             guide={product.guide}
             defaultExpanded={true}
             tone="neutral"
+            riskLevel="LOW"
           />
         )}
 

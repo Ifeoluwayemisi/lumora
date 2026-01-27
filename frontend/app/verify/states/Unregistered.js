@@ -66,12 +66,12 @@ export default function UnregisteredProduct({ code, product, verification }) {
           </p>
         </div>
 
-        {/* AI Product Guide */}
+        {/* AI Product Guide - Auto-expanded if high-risk */}
         {product?.guide && (
           <AIProductGuide
             guide={product.guide}
-            defaultExpanded={false}
             tone="warning"
+            riskLevel={verification?.riskLevel || "MEDIUM"}
           />
         )}
 

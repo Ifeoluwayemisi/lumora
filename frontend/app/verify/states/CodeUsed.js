@@ -117,12 +117,12 @@ export default function CodeUsed({ code, product, batch, codeInfo }) {
           </div>
         )}
 
-        {/* AI Product Guide */}
+        {/* AI Product Guide - Auto-expanded for high-risk */}
         {product?.guide && (
           <AIProductGuide
             guide={product.guide}
-            defaultExpanded={false}
             tone="danger"
+            riskLevel="HIGH"
           />
         )}
 

@@ -75,12 +75,13 @@ export default function Suspicious({ code, product, verification }) {
           </div>
         )}
 
-        {/* AI Product Guide */}
+        {/* AI Product Guide - Always expanded for critical safety */}
         {product?.guide && (
           <AIProductGuide
             guide={product.guide}
-            defaultExpanded={false}
+            defaultExpanded={true}
             tone="danger"
+            riskLevel="VERY_HIGH"
           />
         )}
 

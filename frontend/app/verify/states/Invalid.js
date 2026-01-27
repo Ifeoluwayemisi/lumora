@@ -78,12 +78,13 @@ export default function Invalid({ code, product, verification }) {
           </div>
         )}
 
-        {/* AI Product Guide */}
+        {/* AI Product Guide - Auto-expanded for critical issues */}
         {product?.guide && (
           <AIProductGuide
             guide={product.guide}
-            defaultExpanded={false}
+            defaultExpanded={true}
             tone="danger"
+            riskLevel="VERY_HIGH"
           />
         )}
 

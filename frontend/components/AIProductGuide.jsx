@@ -5,8 +5,12 @@ export default function AIProductGuide({
   guide,
   defaultExpanded = false,
   tone = "neutral",
+  riskLevel = "LOW", // AUTO: LOW, MEDIUM, HIGH, VERY_HIGH
 }) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
+  // Auto-expand for high-risk scenarios (safety-first)
+  const shouldAutoExpand =
+    defaultExpanded || riskLevel === "HIGH" || riskLevel === "VERY_HIGH";
+  const [expanded, setExpanded] = useState(shouldAutoExpand);
   if (!guide) return null;
 
   const toneClasses = {
@@ -24,14 +28,18 @@ export default function AIProductGuide({
     <div
       className={`${toneClasses[tone] || toneClasses.neutral} p-4 rounded-lg mb-6`}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-          Safety Guide
+          📋 Safety Guide
+          {(riskLevel === "HIGH" || riskLevel === "VERY_HIGH") && (
+            <span className="ml-2 text-xs font-bold text-red-600 dark:text-red-400">
+              ⚠️ IMPORTANT
+            </span>
+          )}
         </h3>
         <button
           aria-expanded={expanded}
-          onClick={() => setExpanded(!expanded)}
-          className={`text-sm font-medium transition-transform ${expanded ? "rotate-180" : ""}`}
+          className={`text-lg font-bold transition-transform ${expanded ? "rotate-180" : ""}`}
         >
           ▼
         </button>
