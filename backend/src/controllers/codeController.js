@@ -359,6 +359,7 @@ export async function getManufacturerCodes(req, res) {
               createdAt: true,
               latitude: true,
               longitude: true,
+              location: true,
               riskScore: true,
             },
             orderBy: { createdAt: "desc" },
@@ -410,6 +411,7 @@ export async function getManufacturerCodes(req, res) {
       lastVerifiedAt: code.verificationLogs[0]?.createdAt,
       latitude: code.verificationLogs[0]?.latitude || null,
       longitude: code.verificationLogs[0]?.longitude || null,
+      location: code.verificationLogs[0]?.location || null,
       riskScore: code.verificationLogs[0]?.riskScore || null,
     }));
 
