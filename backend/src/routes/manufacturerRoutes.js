@@ -48,6 +48,9 @@ import {
   deleteScheduleController,
   getTopVerificationsController,
   getProductsWithRiskController,
+  getTrustMetrics,
+  getAuthenticityTrendController,
+  getAlertSummaryController,
 } from "../controllers/analyticsController.js";
 import {
   initiatePayment,
@@ -118,6 +121,10 @@ router.get("/analytics", getAnalytics);
 router.get("/analytics/top-verifications", getTopVerificationsController);
 router.get("/analytics/products-with-risk", getProductsWithRiskController);
 router.get("/analytics/hotspots", getHotspots);
+// Phase 2: Trust metrics and trends
+router.get("/analytics/trust-metrics", getTrustMetrics);
+router.get("/analytics/authenticity-trend", getAuthenticityTrendController);
+router.get("/analytics/alert-summary", getAlertSummaryController);
 router.get(
   "/analytics/export",
   authMiddleware,

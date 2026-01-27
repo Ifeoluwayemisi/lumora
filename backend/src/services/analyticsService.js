@@ -873,3 +873,233 @@ export async function getProductsWithRisk(manufacturerId, limit = 20) {
     throw err;
   }
 }
+
+/**
+ * PHASE 2: Get overall manufacturer trust metrics
+ * Calculates: overall authenticity %, trust badge status, alert counts
+ */
+export async function getManufacturerTrustMetrics(manufacturerId) {
+  try {
+    console.log(
+      `[TRUST_METRICS] Calculating for manufacturerId: ${manufacturerId}`,
+    );
+
+    // Get all verifications for this manufacturer
+    const allVerifications = await prisma.verificationLog.findMany({
+      where: { manufacturerId },
+      select: { verificationState: true, createdAt: true },
+    });
+
+    if (allVerifications.length === 0) {
+      return {
+        overallAuthenticity: 0,
+        trustBadge: "NEW_SELLER",
+        trustLevel: "UNVERIFIED",
+        totalVerifications: 0,
+        alertCounts: { critical: 0, high: 0, medium: 0 },
+        trustScore: 0,
+        message: "No verification data yet",
+      };
+    }
+
+    // Calculate overall authenticity
+    const genuineCount = allVerifications.filter(
+      (v) => v.verificationState === "GENUINE",
+    ).length;
+    const overallAuthenticity = Math.round(
+      (genuineCount / allVerifications.length) * 100,
+    );
+
+    // Determine trust badge based on authenticity
+    let trustBadge = "SAFE";
+    let trustLevel = "VERIFIED";
+    let message = "";
+
+    if (overallAuthenticity >= 98) {
+      trustBadge = "ELITE";
+      trustLevel = "ELITE_SELLER";
+      message = "Outstanding authenticity record";
+    } else if (overallAuthenticity >= 95) {
+      trustBadge = "VERIFIED";
+      trustLevel = "VERIFIED_SELLER";
+      message = "Excellent authenticity record";
+    } else if (overallAuthenticity >= 90) {
+      trustBadge = "TRUSTED";
+      trustLevel = "TRUSTED_SELLER";
+      message = "Good authenticity record";
+    } else if (overallAuthenticity >= 80) {
+      trustBadge = "CAUTION";
+      trustLevel = "MONITOR";
+      message = "Some counterfeiting detected";
+    } else {
+      trustBadge = "AT_RISK";
+      trustLevel = "AT_RISK";
+      message = "Significant counterfeiting issues";
+    }
+
+    // Get alert counts from RiskAlert table
+    const alertCounts = {
+      critical: await prisma.riskAlert.count({
+        where: {
+          manufacturerId,
+          riskLevel: "CRITICAL",
+          status: "sent",
+        },
+      }),
+      high: await prisma.riskAlert.count({
+        where: {
+          manufacturerId,
+          riskLevel: "HIGH",
+          status: "sent",
+        },
+      }),
+      medium: await prisma.riskAlert.count({
+        where: {
+          manufacturerId,
+          riskLevel: "MEDIUM",
+          status: "sent",
+        },
+      }),
+    };
+
+    // Calculate trust score (0-100)
+    const trustScore = Math.round(
+      overallAuthenticity * 0.7 + (100 - alertCounts.critical * 5) * 0.3,
+    );
+
+    return {
+      overallAuthenticity,
+      trustBadge,
+      trustLevel,
+      totalVerifications: allVerifications.length,
+      genuineCount,
+      alertCounts,
+      trustScore,
+      message,
+    };
+  } catch (err) {
+    console.error("[TRUST_METRICS] Error:", err);
+    throw err;
+  }
+}
+
+/**
+ * PHASE 2: Get 30-day authenticity trend data for charts
+ */
+export async function getAuthenticityTrend(manufacturerId, days = 30) {
+  try {
+    console.log(
+      `[AUTHENTICITY_TREND] Calculating ${days}-day trend for manufacturerId: ${manufacturerId}`,
+    );
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const verifications = await prisma.verificationLog.findMany({
+      where: {
+        manufacturerId,
+        createdAt: { gte: startDate },
+      },
+      select: {
+        verificationState: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "asc" },
+    });
+
+    // Group by day
+    const dailyData = {};
+    verifications.forEach((v) => {
+      const dateKey = new Date(v.createdAt).toISOString().split("T")[0];
+      if (!dailyData[dateKey]) {
+        dailyData[dateKey] = {
+          date: dateKey,
+          genuine: 0,
+          suspicious: 0,
+          invalid: 0,
+          alreadyUsed: 0,
+          unregistered: 0,
+          total: 0,
+        };
+      }
+
+      dailyData[dateKey].total++;
+      switch (v.verificationState) {
+        case "GENUINE":
+          dailyData[dateKey].genuine++;
+          break;
+        case "SUSPICIOUS":
+          dailyData[dateKey].suspicious++;
+          break;
+        case "INVALID":
+          dailyData[dateKey].invalid++;
+          break;
+        case "CODE_ALREADY_USED":
+          dailyData[dateKey].alreadyUsed++;
+          break;
+        case "UNREGISTERED":
+          dailyData[dateKey].unregistered++;
+          break;
+      }
+    });
+
+    // Convert to array and add authenticity percentage
+    const trend = Object.values(dailyData)
+      .map((day) => ({
+        ...day,
+        authenticity:
+          day.total > 0 ? Math.round((day.genuine / day.total) * 100) : 0,
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    return trend;
+  } catch (err) {
+    console.error("[AUTHENTICITY_TREND] Error:", err);
+    throw err;
+  }
+}
+
+/**
+ * PHASE 2: Get alert summary (counts by status and severity)
+ */
+export async function getAlertSummary(manufacturerId) {
+  try {
+    console.log(
+      `[ALERT_SUMMARY] Getting for manufacturerId: ${manufacturerId}`,
+    );
+
+    const alerts = await prisma.riskAlert.findMany({
+      where: { manufacturerId },
+      select: {
+        riskLevel: true,
+        status: true,
+        createdAt: true,
+        sentAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // Summary counts
+    const summary = {
+      totalAlerts: alerts.length,
+      byStatus: {
+        pending: alerts.filter((a) => a.status === "pending").length,
+        sent: alerts.filter((a) => a.status === "sent").length,
+        failed: alerts.filter((a) => a.status === "failed").length,
+      },
+      bySeverity: {
+        critical: alerts.filter((a) => a.riskLevel === "CRITICAL").length,
+        high: alerts.filter((a) => a.riskLevel === "HIGH").length,
+        medium: alerts.filter((a) => a.riskLevel === "MEDIUM").length,
+      },
+      lastAlert:
+        alerts.length > 0 ? alerts[0].sentAt || alerts[0].createdAt : null,
+      recentAlerts: alerts.slice(0, 5),
+    };
+
+    return summary;
+  } catch (err) {
+    console.error("[ALERT_SUMMARY] Error:", err);
+    throw err;
+  }
+}

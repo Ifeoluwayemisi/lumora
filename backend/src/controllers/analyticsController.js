@@ -5,6 +5,9 @@ import {
   getExportData,
   getTopVerifications,
   getProductsWithRisk,
+  getManufacturerTrustMetrics,
+  getAuthenticityTrend,
+  getAlertSummary,
 } from "../services/analyticsService.js";
 import {
   getRevenueData,
@@ -945,5 +948,104 @@ export async function deleteScheduleController(req, res) {
       success: false,
       error: error.message,
     });
+  }
+}
+
+/**
+ * PHASE 2: Get manufacturer trust metrics
+ * Returns: overall authenticity %, trust badge, alert counts
+ */
+export async function getTrustMetrics(req, res) {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const metrics = await getManufacturerTrustMetrics(manufacturer.id);
+
+    res.status(200).json({
+      data: metrics,
+    });
+  } catch (err) {
+    console.error("[GET_TRUST_METRICS] Error:", err);
+    res.status(500).json({ error: "Failed to fetch trust metrics" });
+  }
+}
+
+/**
+ * PHASE 2: Get authenticity trend for charts (30-day by default)
+ */
+export async function getAuthenticityTrendController(req, res) {
+  try {
+    const userId = req.user?.id;
+    const { days = 30 } = req.query;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const trend = await getAuthenticityTrend(manufacturer.id, parseInt(days));
+
+    res.status(200).json({
+      data: trend,
+      meta: {
+        days: parseInt(days),
+        count: trend.length,
+      },
+    });
+  } catch (err) {
+    console.error("[GET_AUTHENTICITY_TREND] Error:", err);
+    res.status(500).json({ error: "Failed to fetch trend data" });
+  }
+}
+
+/**
+ * PHASE 2: Get alert summary
+ */
+export async function getAlertSummaryController(req, res) {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    if (!manufacturer) {
+      return res.status(404).json({ error: "Manufacturer not found" });
+    }
+
+    const summary = await getAlertSummary(manufacturer.id);
+
+    res.status(200).json({
+      data: summary,
+    });
+  } catch (err) {
+    console.error("[GET_ALERT_SUMMARY] Error:", err);
+    res.status(500).json({ error: "Failed to fetch alert summary" });
   }
 }
