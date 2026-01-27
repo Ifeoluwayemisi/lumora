@@ -76,104 +76,40 @@ export default function Genuine({
           </p>
         </div>
 
-        {/* Product Details */}
+        {/* Product Details - Essential Info Only */}
         {product && (
-          <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-6 space-y-3">
-            <div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                Product Name
-              </p>
-              <p className="font-semibold text-gray-900 dark:text-white">
-                {product.name || "N/A"}
-              </p>
-            </div>
-            {product.description && (
+          <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg mb-6 space-y-2 text-sm">
+            {product.name && (
               <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Description
-                </p>
-                <p className="text-sm text-gray-900 dark:text-white">
-                  {product.description}
+                <p className="text-xs text-gray-600 dark:text-gray-400">Product</p>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {product.name}
                 </p>
               </div>
             )}
             {product.category && (
               <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Category
-                </p>
-                <p className="font-semibold text-gray-900 dark:text-white">
-                  {product.category}
-                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Category</p>
+                <p className="text-gray-900 dark:text-white">{product.category}</p>
               </div>
             )}
             {product.manufacturer && (
               <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Manufacturer
-                </p>
-                <p className="font-semibold text-gray-900 dark:text-white">
-                  {product.manufacturer}
-                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Manufacturer</p>
+                <p className="text-gray-900 dark:text-white">{product.manufacturer}</p>
               </div>
             )}
-            {product.manufacturerEmail && (
+            {batch?.batchNumber && (
               <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Manufacturer Email
-                </p>
-                <p className="text-sm text-gray-900 dark:text-white break-all">
-                  {product.manufacturerEmail}
-                </p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Batch</p>
+                <p className="font-mono text-xs text-gray-900 dark:text-white">{batch.batchNumber}</p>
               </div>
             )}
-            {product.manufacturerPhone && (
+            {batch?.expirationDate && (
               <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Manufacturer Phone
-                </p>
-                <p className="text-sm text-gray-900 dark:text-white">
-                  {product.manufacturerPhone}
-                </p>
-              </div>
-            )}
-            {batch && batch.batchNumber && (
-              <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Batch Number
-                </p>
-                <p className="font-semibold text-gray-900 dark:text-white">
-                  {batch.batchNumber}
-                </p>
-              </div>
-            )}
-            {batch && batch.expirationDate && (
-              <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Expiration Date
-                </p>
-                <p className="font-semibold text-gray-900 dark:text-white">
+                <p className="text-xs text-gray-600 dark:text-gray-400">Expiration</p>
+                <p className="text-gray-900 dark:text-white">
                   {new Date(batch.expirationDate).toLocaleDateString()}
-                </p>
-              </div>
-            )}
-            {batch && batch.manufacturingDate && (
-              <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Manufacturing Date
-                </p>
-                <p className="text-sm text-gray-900 dark:text-white">
-                  {new Date(batch.manufacturingDate).toLocaleDateString()}
-                </p>
-              </div>
-            )}
-            {batch && batch.quantity && (
-              <div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Batch Quantity
-                </p>
-                <p className="text-sm text-gray-900 dark:text-white">
-                  {batch.quantity} units
                 </p>
               </div>
             )}

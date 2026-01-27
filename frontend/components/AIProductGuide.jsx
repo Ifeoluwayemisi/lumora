@@ -25,13 +25,15 @@ export default function AIProductGuide({
       className={`${toneClasses[tone] || toneClasses.neutral} p-4 rounded-lg mb-6`}
     >
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold">🤖 AI Safety Guide</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+          Safety Guide
+        </h3>
         <button
           aria-expanded={expanded}
           onClick={() => setExpanded(!expanded)}
-          className="text-sm text-gray-600 dark:text-gray-300 hover:underline"
+          className={`text-sm font-medium transition-transform ${expanded ? "rotate-180" : ""}`}
         >
-          {expanded ? "Hide details" : "Show details"}
+          ▼
         </button>
       </div>
 
@@ -39,7 +41,7 @@ export default function AIProductGuide({
         <div className="mt-3 space-y-3 text-sm text-gray-900 dark:text-gray-200">
           {guide.usageInstructions && guide.usageInstructions.length > 0 && (
             <div>
-              <p className="text-xs font-medium mb-1">Usage Instructions:</p>
+              <p className="text-xs font-medium mb-1">How to Use:</p>
               <ul className="ml-4 space-y-1 list-disc">
                 {guide.usageInstructions.map((u, i) => (
                   <li key={i}>{u}</li>
@@ -50,7 +52,7 @@ export default function AIProductGuide({
 
           {guide.safetyWarnings && guide.safetyWarnings.length > 0 && (
             <div>
-              <p className="text-xs font-medium mb-1">Safety Warnings:</p>
+              <p className="text-xs font-medium mb-1">⚠️ Safety Warnings:</p>
               <ul className="ml-4 space-y-1 list-disc">
                 {guide.safetyWarnings.map((w, i) => (
                   <li key={i}>{w}</li>

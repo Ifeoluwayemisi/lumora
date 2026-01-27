@@ -95,7 +95,7 @@ function getDefaultGuide(category, riskScore, verificationState) {
       safetyWarnings: [
         "⚠ HIGH RISK: This product shows signs of being counterfeit.",
         "⚠ Do not consume or use this product.",
-        "🚨 Report to NAFDAC: 08037020131",
+        "🚨 Report this product to NAFDAC immediately.",
       ],
       storageHandling: ["Store safely away from others until verified."],
     };
