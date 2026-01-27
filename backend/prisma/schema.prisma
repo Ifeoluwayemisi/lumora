@@ -76,6 +76,7 @@ model Manufacturer {
   reportSchedules              ReportSchedule[]
   analyticsAudits              AnalyticsAudit[]
   manufacturerReview           ManufacturerReview?
+  riskAlerts                   RiskAlert[]
 
   @@index([userId])
   @@index([email])
@@ -193,6 +194,7 @@ model Product {
   category       String
   skuPrefix      String?
   codes          Code[]
+  riskAlerts     RiskAlert[]
 }
 
 model UserFavorites {
@@ -681,4 +683,25 @@ model CaseNote {
 
   @@index([caseId])
   @@index([adminId])
+}
+model RiskAlert {
+  id              String       @id @default(uuid())
+  manufacturerId  String
+  productId       String
+  riskScore       Int          // Risk score 0-100
+  riskLevel       String       // LOW, MEDIUM, HIGH, CRITICAL
+  status          String       @default("pending") // pending, sent, failed
+  failureReason   String?      // Why it failed if status = failed
+  sentAt          DateTime?    // When the alert was actually sent
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  manufacturer    Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Cascade)
+  product         Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([manufacturerId])
+  @@index([productId])
+  @@index([riskLevel])
+  @@index([status])
+  @@index([createdAt])
 }

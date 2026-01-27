@@ -1,4 +1,5 @@
 import prisma from "../models/prismaClient.js";
+import { checkAndSendProductRiskAlert } from "./riskAlertService.js";
 
 /**
  * Get top verification locations grouped by location string
@@ -754,6 +755,21 @@ export async function getProductsWithRisk(manufacturerId, limit = 20) {
       if (riskScore >= 70) riskLevel = "CRITICAL";
       else if (riskScore >= 50) riskLevel = "HIGH";
       else if (riskScore >= 30) riskLevel = "MEDIUM";
+
+      // Trigger alert if risk is high or critical (async, don't wait)
+      if (riskScore >= 50) {
+        checkAndSendProductRiskAlert(
+          manufacturerId,
+          product.id,
+          riskScore,
+          riskLevel,
+        ).catch((err) => {
+          console.error(
+            `[PRODUCTS_WITH_RISK] Failed to send alert for product ${product.id}:`,
+            err?.message,
+          );
+        });
+      }
 
       return {
         id: product.id,
