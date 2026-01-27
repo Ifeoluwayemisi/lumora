@@ -281,13 +281,18 @@ export async function getManufacturerCodes(req, res) {
       batchId,
     } = req.query;
 
+    console.log("[MANU-CODES] Request from userId:", userId);
+
     // Get manufacturer
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { userId },
       select: { id: true },
     });
 
+    console.log("[MANU-CODES] Manufacturer found:", manufacturer?.id);
+
     if (!manufacturer) {
+      console.log("[MANU-CODES] ERROR: No manufacturer found for userId:", userId);
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
@@ -307,6 +312,8 @@ export async function getManufacturerCodes(req, res) {
     if (status === "unused") where.isUsed = false;
     if (status === "used") where.isUsed = true;
     if (status === "flagged") where.isFlagged = true;
+
+    console.log("[MANU-CODES] Query filter:", JSON.stringify(where));
 
     const [codes, total] = await Promise.all([
       prisma.code.findMany({
@@ -342,6 +349,8 @@ export async function getManufacturerCodes(req, res) {
       }),
       prisma.code.count({ where }),
     ]);
+
+    console.log("[MANU-CODES] Found", codes.length, "codes out of", total, "total");
 
     // Map codes to include latest verification state
     const mappedCodes = codes.map((code) => ({
