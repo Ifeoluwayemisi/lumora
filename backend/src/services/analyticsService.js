@@ -1,6 +1,87 @@
 import prisma from "../models/prismaClient.js";
 
 /**
+ * Get top verification locations grouped by location string
+ */
+async function getTopVerificationLocations(manufacturerId, limit = 10) {
+  try {
+    const verifications = await prisma.verificationLog.findMany({
+      where: {
+        manufacturerId,
+        location: { not: null },
+      },
+      select: {
+        location: true,
+        latitude: true,
+        longitude: true,
+        verificationState: true,
+        createdAt: true,
+      },
+    });
+
+    // Group by location string
+    const locationMap = {};
+    verifications.forEach((verification) => {
+      const locationKey = verification.location || "Unknown";
+      if (!locationMap[locationKey]) {
+        locationMap[locationKey] = {
+          location: verification.location || "Unknown",
+          latitude: verification.latitude,
+          longitude: verification.longitude,
+          total: 0,
+          genuine: 0,
+          suspicious: 0,
+          invalid: 0,
+          alreadyUsed: 0,
+          unregistered: 0,
+        };
+      }
+
+      locationMap[locationKey].total++;
+
+      // Count by verification state
+      switch (verification.verificationState) {
+        case "GENUINE":
+          locationMap[locationKey].genuine++;
+          break;
+        case "SUSPICIOUS":
+          locationMap[locationKey].suspicious++;
+          break;
+        case "INVALID":
+          locationMap[locationKey].invalid++;
+          break;
+        case "CODE_ALREADY_USED":
+          locationMap[locationKey].alreadyUsed++;
+          break;
+        case "UNREGISTERED":
+          locationMap[locationKey].unregistered++;
+          break;
+      }
+    });
+
+    // Convert to array, sort by total, and return top N
+    const topLocations = Object.values(locationMap)
+      .sort((a, b) => b.total - a.total)
+      .slice(0, limit)
+      .map((loc) => ({
+        ...loc,
+        authenticity: loc.total > 0 ? Math.round((loc.genuine / loc.total) * 100) : 0,
+        riskScore: calculateRiskScore(
+          loc.genuine,
+          loc.suspicious,
+          loc.invalid,
+          loc.alreadyUsed,
+        ),
+      }));
+
+    return topLocations;
+  } catch (err) {
+    console.error("[TOP_VERIFICATION_LOCATIONS] Error:", err);
+    return [];
+  }
+}
+
+/**
  * Get manufacturer analytics data
  */
 export async function getManufacturerAnalytics(manufacturerId) {
@@ -146,10 +227,23 @@ export async function getManufacturerAnalytics(manufacturerId) {
       manufacturer ? "yes" : "no",
     );
 
+    // Get top verification locations - group by location
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Fetching top verification locations...`,
+    );
+    const topVerificationLocations = await getTopVerificationLocations(
+      manufacturerId,
+      10,
+    );
+    console.log(
+      `[ANALYTICS_SERVICE-${serviceId}] Found ${topVerificationLocations.length} top locations`,
+    );
+
     const result = {
       verificationTrends,
       verificationByStatus,
       locationData,
+      topVerificationLocations,
       codeMetrics,
       suspiciousTrends,
       manufacturer,

@@ -115,16 +115,12 @@ export async function getTopVerificationsController(req, res) {
     );
 
     if (!userId) {
-      console.warn(
-        `[TOP_VERIFICATIONS-${requestId}] Unauthorized: No user ID`,
-      );
+      console.warn(`[TOP_VERIFICATIONS-${requestId}] Unauthorized: No user ID`);
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     // Look up manufacturer from user
-    console.log(
-      `[TOP_VERIFICATIONS-${requestId}] Looking up manufacturer...`,
-    );
+    console.log(`[TOP_VERIFICATIONS-${requestId}] Looking up manufacturer...`);
     const manufacturer = await prisma.manufacturer.findUnique({
       where: { userId },
       select: { id: true },
