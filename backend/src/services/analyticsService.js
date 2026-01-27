@@ -404,8 +404,17 @@ export async function getHotspotPredictions(manufacturerId) {
             state = geocoded.state;
             country = geocoded.country;
             location = geocoded.location;
+          } else {
+            // Reverse geocoding failed - use coordinates as fallback
+            city = `Lat: ${spot.latitude.toFixed(4)}`;
+            state = `Lng: ${spot.longitude.toFixed(4)}`;
+            country = "GPS Coordinates";
+            location = `${spot.latitude.toFixed(4)}, ${spot.longitude.toFixed(4)}`;
           }
         }
+
+        // Generate Google Maps URL
+        const mapsUrl = `https://www.google.com/maps/search/${spot.latitude},${spot.longitude}`;
 
         return {
           id: index,
@@ -418,6 +427,7 @@ export async function getHotspotPredictions(manufacturerId) {
           frequency: spot.frequency,
           verificationStates: spot.verificationStates,
           lastVerifiedAt: spot.lastVerifiedAt,
+          mapsUrl,
         };
       }),
     );

@@ -425,22 +425,27 @@ export default function AnalyticsPage() {
               </h3>
               <div className="space-y-2 max-h-80 overflow-y-auto">
                 {hotspots.slice(0, 10).map((spot, idx) => (
-                  <div
+                  <a
                     key={idx}
-                    className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                    href={spot.mapsUrl || `https://www.google.com/maps/search/${spot.lat},${spot.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer"
                   >
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white text-sm">
-                        {spot.city}, {spot.state}, {spot.country}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        ({spot.lat}, {spot.lng})
-                      </p>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white text-sm hover:text-blue-600 dark:hover:text-blue-400">
+                          📍 {spot.city}, {spot.state}, {spot.country}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          ({spot.lat.toFixed(4)}, {spot.lng.toFixed(4)})
+                        </p>
+                      </div>
+                      <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
+                        {spot.frequency}
+                      </span>
                     </div>
-                    <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
-                      {spot.frequency}
-                    </span>
-                  </div>
+                  </a>
                 ))}
               </div>
             </div>
