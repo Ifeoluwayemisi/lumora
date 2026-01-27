@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import LocationDetailsModal from "@/components/LocationDetailsModal";
 import { FiArrowLeft } from "react-icons/fi";
 
 /**
@@ -30,6 +31,8 @@ export default function CodesPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(50);
   const [showFlagModal, setShowFlagModal] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedCode, setSelectedCode] = useState(null);
   const [flagFormData, setFlagFormData] = useState({
     reason: "suspicious_pattern",
@@ -319,14 +322,20 @@ export default function CodesPage() {
                                   {log.latitude.toFixed(4)},{" "}
                                   {log.longitude.toFixed(4)}
                                 </div>
-                                <a
-                                  href={`https://maps.google.com/?q=${log.latitude},${log.longitude}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-green-600 hover:underline text-xs"
+                                <button
+                                  onClick={() => {
+                                    setSelectedLocation({
+                                      code: log.code,
+                                      latitude: log.latitude,
+                                      longitude: log.longitude,
+                                      location: log.location || "Unknown Location",
+                                    });
+                                    setShowLocationModal(true);
+                                  }}
+                                  className="text-green-600 hover:underline text-xs font-medium"
                                 >
-                                  View on Map
-                                </a>
+                                  View Details
+                                </button>
                               </div>
                             ) : (
                               <span className="text-gray-400">—</span>
@@ -513,8 +522,19 @@ export default function CodesPage() {
               </div>
             </div>
           )}
-        </div>
-      </div>
-    </>
-  );
-}
+
+        {/* Location Details Modal */}
+        {showLocationModal && selectedLocation && (
+          <LocationDetailsModal
+            code={selectedLocation.code}
+            location={selectedLocation.location}
+            latitude={selectedLocation.latitude}
+            longitude={selectedLocation.longitude}
+            verificationHistory={[]}
+            manufacturerLocation={null}
+            onClose={() => {
+              setShowLocationModal(false);
+              setSelectedLocation(null);
+            }}
+          />
+        )}
