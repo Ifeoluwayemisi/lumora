@@ -382,8 +382,8 @@ export default function CodesPage() {
                               }`}
                               title={
                                 isPremium
-                                  ? "Flag this code as suspicious or blacklist"
-                                  : "Premium feature - Upgrade to unlock"
+                                  ? "Flag code as suspicious, counterfeit, or blacklisted to alert the system"
+                                  : "Upgrade to Premium to flag suspicious/counterfeit codes and protect your brand"
                               }
                             >
                               🚩 Flag{" "}
