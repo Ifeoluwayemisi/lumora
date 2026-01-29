@@ -141,6 +141,7 @@ export async function flagCode(req, res) {
 
     // Send notification to admin about flagged code
     try {
+      // Notify manufacturer's admin
       await sendSuspiciousActivityEmail(manufacturer.id, {
         codeValue: code.codeValue,
         reason: flagReason,
@@ -149,6 +150,34 @@ export async function flagCode(req, res) {
         message: `Code flagged as ${flagReason} with ${severity || "medium"} severity`,
       });
       console.log("[FLAG_CODE] Notification email sent to admin");
+
+      // Also notify NAFDAC (get all NAFDAC admin users)
+      const nafdacAdmins = await prisma.user.findMany({
+        where: {
+          role: "ADMIN",
+          email: { contains: "nafdac" }, // Find NAFDAC admins by email pattern
+        },
+        select: { email: true },
+      });
+
+      if (nafdacAdmins.length > 0) {
+        for (const admin of nafdacAdmins) {
+          try {
+            await sendSuspiciousActivityEmail(admin.email, {
+              codeValue: code.codeValue,
+              reason: flagReason,
+              severity: severity || "medium",
+              manufacturerId: manufacturer.id,
+              timestamp: new Date(),
+              message: `URGENT: Suspicious code flagged by manufacturer - ${flagReason}`,
+              isNafdacAlert: true,
+            });
+            console.log("[FLAG_CODE] NAFDAC notification sent to:", admin.email);
+          } catch (err) {
+            console.warn("[FLAG_CODE] Failed to send NAFDAC notification:", err.message);
+          }
+        }
+      }
     } catch (emailErr) {
       console.warn("[FLAG_CODE] Failed to send notification email:", emailErr.message);
       // Don't fail the flag operation if email fails
@@ -156,7 +185,7 @@ export async function flagCode(req, res) {
 
     res.status(200).json({
       success: true,
-      message: `Code flagged as ${flagReason}. Admin has been notified.`,
+      message: `Code flagged as ${flagReason}. Admin and NAFDAC have been notified.`,
       code: flaggedCode,
     });
   } catch (err) {
