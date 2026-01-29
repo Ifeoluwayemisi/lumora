@@ -927,3 +927,125 @@ export async function sendDocumentUploadEmail(manufacturerId, documentType) {
     return false;
   }
 }
+
+/**
+ * Send flagged code alert to regulatory authorities (NAFDAC, etc.)
+ * CRITICAL: Alerts regulatory bodies about suspicious/counterfeit codes
+ */
+export async function sendRegulatoryAlert(flagData) {
+  try {
+    const {
+      codeValue,
+      reason,
+      severity,
+      manufacturerName,
+      manufacturerId,
+      timestamp,
+    } = flagData;
+
+    // NAFDAC email (should be configured in environment)
+    const nafdacEmail = process.env.NAFDAC_EMAIL || "alert@nafdac.gov.ng";
+    const regulatoryEmails = [
+      nafdacEmail,
+      process.env.REGULATORY_ALERT_EMAIL || "alerts@nafdac.gov.ng",
+    ].filter(Boolean);
+
+    if (!regulatoryEmails.length) {
+      console.warn("[REGULATORY] No regulatory email configured");
+      return false;
+    }
+
+    // Get manufacturer details
+    const manufacturer = await prisma.manufacturer.findUnique({
+      where: { id: manufacturerId },
+      select: { name: true, email: true, verified: true },
+    });
+
+    const severityColor = {
+      critical: "#dc2626",
+      high: "#f97316",
+      medium: "#eab308",
+      low: "#6366f1",
+    };
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto;">
+        <div style="background: ${severityColor[severity] || "#dc2626"}; color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">🚨 SUSPICIOUS CODE FLAGGED</h1>
+          <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Severity: ${severity.toUpperCase()}</p>
+        </div>
+        
+        <div style="padding: 30px; background: #f9fafb; border: 1px solid #e5e7eb;">
+          <h2 style="color: #1f2937; margin-top: 0;">Alert Details</h2>
+          
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; color: #374151; width: 150px;">Code:</td>
+              <td style="padding: 10px; color: #1f2937; font-family: monospace; background: #f3f4f6; border-radius: 4px;">${codeValue}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; color: #374151;">Reason:</td>
+              <td style="padding: 10px; color: #1f2937;">${reason.replace(/_/g, " ").toUpperCase()}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; color: #374151;">Severity:</td>
+              <td style="padding: 10px; color: #1f2937;">
+                <span style="background: ${severityColor[severity]}; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold;">
+                  ${severity.toUpperCase()}
+                </span>
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; color: #374151;">Manufacturer:</td>
+              <td style="padding: 10px; color: #1f2937;">${manufacturer?.name || "Unknown"}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; color: #374151;">Flagged At:</td>
+              <td style="padding: 10px; color: #1f2937;">${new Date(timestamp).toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px; font-weight: bold; color: #374151;">Status:</td>
+              <td style="padding: 10px; color: #1f2937;">${manufacturer?.verified ? "✅ Verified Manufacturer" : "⚠️ Unverified Manufacturer"}</td>
+            </tr>
+          </table>
+
+          <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold; color: #991b1b;">Recommended Actions:</p>
+            <ul style="margin: 10px 0 0 20px; color: #7c2d12;">
+              <li>Investigate code distribution chain</li>
+              <li>Cross-reference with other flagged codes from same manufacturer</li>
+              <li>Contact manufacturer for explanation</li>
+              <li>Consider issuing product recall if counterfeit confirmed</li>
+              <li>Report to appropriate authorities if criminal activity suspected</li>
+            </ul>
+          </div>
+
+          <p style="font-size: 12px; color: #6b7280; margin-top: 20px; text-align: center;">
+            This is an automated alert from Lumora Verification System.
+            <br/>Reply to this email or contact: support@lumora.app
+          </p>
+        </div>
+      </div>
+    `;
+
+    // Send to all regulatory addresses
+    for (const email of regulatoryEmails) {
+      try {
+        await transporter.sendMail({
+          from: `"Lumora Alert System" <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: `🚨 URGENT: Suspicious Code Flagged - ${codeValue}`,
+          html,
+        });
+        console.log(`[REGULATORY] Alert sent to ${email}`);
+      } catch (err) {
+        console.error(`[REGULATORY] Failed to send alert to ${email}:`, err.message);
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[REGULATORY] Error sending alert:", error.message);
+    return false;
+  }
+}

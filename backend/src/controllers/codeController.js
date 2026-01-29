@@ -1,7 +1,7 @@
 import { generateCodesForBatch } from "../services/codeService.js";
 import prisma from "../models/prismaClient.js";
 import { reverseGeocode } from "../services/analyticsService.js";
-import { sendSuspiciousActivityEmail } from "../services/notificationService.js";
+import { sendSuspiciousActivityEmail, sendRegulatoryAlert } from "../services/notificationService.js";
 
 /**
  * Generate codes for a product batch
@@ -141,7 +141,6 @@ export async function flagCode(req, res) {
 
     // Send notification to admin about flagged code
     try {
-      // Notify manufacturer's admin
       await sendSuspiciousActivityEmail(manufacturer.id, {
         codeValue: code.codeValue,
         reason: flagReason,
@@ -150,42 +149,35 @@ export async function flagCode(req, res) {
         message: `Code flagged as ${flagReason} with ${severity || "medium"} severity`,
       });
       console.log("[FLAG_CODE] Notification email sent to admin");
-
-      // Also notify NAFDAC (get all NAFDAC admin users)
-      const nafdacAdmins = await prisma.user.findMany({
-        where: {
-          role: "ADMIN",
-          email: { contains: "nafdac" }, // Find NAFDAC admins by email pattern
-        },
-        select: { email: true },
-      });
-
-      if (nafdacAdmins.length > 0) {
-        for (const admin of nafdacAdmins) {
-          try {
-            await sendSuspiciousActivityEmail(admin.email, {
-              codeValue: code.codeValue,
-              reason: flagReason,
-              severity: severity || "medium",
-              manufacturerId: manufacturer.id,
-              timestamp: new Date(),
-              message: `URGENT: Suspicious code flagged by manufacturer - ${flagReason}`,
-              isNafdacAlert: true,
-            });
-            console.log("[FLAG_CODE] NAFDAC notification sent to:", admin.email);
-          } catch (err) {
-            console.warn("[FLAG_CODE] Failed to send NAFDAC notification:", err.message);
-          }
-        }
-      }
     } catch (emailErr) {
       console.warn("[FLAG_CODE] Failed to send notification email:", emailErr.message);
       // Don't fail the flag operation if email fails
     }
 
+    // Send alert to regulatory authorities (NAFDAC, etc.)
+    try {
+      const manufacturerData = await prisma.manufacturer.findUnique({
+        where: { id: manufacturer.id },
+        select: { name: true },
+      });
+
+      await sendRegulatoryAlert({
+        codeValue: code.codeValue,
+        reason: flagReason,
+        severity: severity || "medium",
+        manufacturerName: manufacturerData?.name || "Unknown",
+        manufacturerId: manufacturer.id,
+        timestamp: new Date(),
+      });
+      console.log("[FLAG_CODE] Regulatory alert sent to NAFDAC and authorities");
+    } catch (regulatoryErr) {
+      console.warn("[FLAG_CODE] Failed to send regulatory alert:", regulatoryErr.message);
+      // Don't fail the flag operation if regulatory alert fails
+    }
+
     res.status(200).json({
       success: true,
-      message: `Code flagged as ${flagReason}. Admin and NAFDAC have been notified.`,
+      message: `Code flagged as ${flagReason}. Admin has been notified.`,
       code: flaggedCode,
     });
   } catch (err) {
