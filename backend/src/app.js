@@ -12,6 +12,7 @@ import manufacturerRoutes from "./routes/manufacturerRoutes.js";
 import nafdacRoutes from "./routes/nafdacRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import adminSecurityRoutes from "./routes/adminSecurityRoutes.js";
+import adminAnalyticsRoutes from "./routes/adminAnalytics.js";
 import userRoute from "./routes/userRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import "dotenv/config";
@@ -136,6 +137,7 @@ app.use("/api/manufacturer", manufacturerRoutes);
 app.use("/api/nafdac", nafdacRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/security", adminSecurityRoutes);
+app.use("/api/admin", adminAnalyticsRoutes);
 app.use("/api/user", userRoute);
 app.use("/api/reports", reportRoutes);
 

@@ -702,7 +702,99 @@ model RiskAlert {
 
   @@index([manufacturerId])
   @@index([productId])
-  @@index([riskLevel])
-  @@index([status])
   @@index([createdAt])
+}
+
+// Webhook configuration for regulatory agencies
+model RegulatoryWebhook {
+  id                    String     @id @default(uuid())
+  agency                String     // NAFDAC, FIRS, etc.
+  webhookUrl            String     @unique
+  isActive              Boolean    @default(true)
+  secret                String     // HMAC secret for verification
+  retryAttempts         Int        @default(3)
+  retryIntervalSeconds  Int        @default(300) // 5 minutes
+  timeoutSeconds        Int        @default(30)
+  headers               Json?      // Custom headers
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+  lastSuccessfulWebhook DateTime?
+  lastFailedWebhook     DateTime?
+  failureReason         String?
+  webhookLogs           WebhookLog[]
+
+  @@unique([agency])
+  @@index([isActive])
+}
+
+// Log for tracking webhook deliveries
+model WebhookLog {
+  id                String             @id @default(uuid())
+  webhookId         String
+  webhook           RegulatoryWebhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  eventType         String             // "code_flagged", "code_verified", etc.
+  payload           Json               // The data sent
+  statusCode        Int?               // HTTP response status
+  responseBody      String?            // Response from webhook endpoint
+  attempt           Int                @default(1)
+  success           Boolean
+  errorMessage      String?
+  nextRetryAt       DateTime?
+  createdAt         DateTime           @default(now())
+
+  @@index([webhookId])
+  @@index([createdAt])
+  @@index([success])
+}
+
+// Rate limiting per regulatory agency
+model AgencyRateLimit {
+  id                  String     @id @default(uuid())
+  agency              String     @unique // NAFDAC, FIRS, COSMETICS, OTHER
+  alertsPerHour       Int        @default(100)
+  alertsPerDay        Int        @default(1000)
+  currentHourlyCount  Int        @default(0)
+  currentDailyCount   Int        @default(0)
+  hourlyResetAt       DateTime
+  dailyResetAt        DateTime
+  isThrottled         Boolean    @default(false)
+  throttleUntil       DateTime?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  @@index([agency])
+}
+
+// Analytics: flags per agency
+model AgencyFlagAnalytics {
+  id                    String     @id @default(uuid())
+  agency                String     // NAFDAC, FIRS, etc.
+  date                  DateTime   @db.Date
+  totalFlaggedCodes     Int        @default(0)
+  criticalSeverity      Int        @default(0)
+  highSeverity          Int        @default(0)
+  mediumSeverity        Int        @default(0)
+  lowSeverity           Int        @default(0)
+  uniqueManufacturers   Int        @default(0)
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  @@unique([agency, date])
+  @@index([agency])
+  @@index([date])
+}
+
+// Category distribution snapshot for admin dashboard
+model CategoryDistributionSnapshot {
+  id              String     @id @default(uuid())
+  snapshotDate    DateTime   @db.Date
+  drugs           Int        @default(0)
+  food            Int        @default(0)
+  cosmetics       Int        @default(0)
+  other           Int        @default(0)
+  totalCount      Int        @default(0)
+  createdAt       DateTime   @default(now())
+
+  @@unique([snapshotDate])
+  @@index([snapshotDate])
 }

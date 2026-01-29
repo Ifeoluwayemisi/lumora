@@ -227,3 +227,249 @@ export async function checkRateLimitLegacy(userId, ipAddress) {
     throw new Error("Rate limit exceeded");
   }
 }
+
+// ========== AGENCY RATE LIMITING ==========
+
+/**
+ * Check if an agency can receive a new alert
+ * Returns { canSend, reason, throttleUntil }
+ */
+export async function checkAgencyRateLimit(agency) {
+  try {
+    let rateLimit = await prisma.agencyRateLimit.findUnique({
+      where: { agency },
+    });
+
+    // Initialize if doesn't exist
+    if (!rateLimit) {
+      rateLimit = await prisma.agencyRateLimit.create({
+        data: {
+          agency,
+          hourlyResetAt: new Date(Date.now() + 3600000),
+          dailyResetAt: new Date(Date.now() + 86400000),
+        },
+      });
+    }
+
+    const now = new Date();
+
+    // Reset hourly counter if needed
+    if (now > rateLimit.hourlyResetAt) {
+      rateLimit = await prisma.agencyRateLimit.update({
+        where: { agency },
+        data: {
+          currentHourlyCount: 0,
+          hourlyResetAt: new Date(now.getTime() + 3600000),
+        },
+      });
+    }
+
+    // Reset daily counter if needed
+    if (now > rateLimit.dailyResetAt) {
+      rateLimit = await prisma.agencyRateLimit.update({
+        where: { agency },
+        data: {
+          currentDailyCount: 0,
+          dailyResetAt: new Date(now.getTime() + 86400000),
+        },
+      });
+    }
+
+    // Check if throttled
+    if (rateLimit.isThrottled && now < rateLimit.throttleUntil) {
+      return {
+        canSend: false,
+        reason: "Agency is currently throttled",
+        throttleUntil: rateLimit.throttleUntil,
+      };
+    }
+
+    // Clear throttle if expired
+    if (rateLimit.isThrottled && now >= rateLimit.throttleUntil) {
+      rateLimit = await prisma.agencyRateLimit.update({
+        where: { agency },
+        data: {
+          isThrottled: false,
+          throttleUntil: null,
+        },
+      });
+    }
+
+    // Check hourly limit
+    if (rateLimit.currentHourlyCount >= rateLimit.alertsPerHour) {
+      // Throttle for 1 hour
+      await activateThrottling(agency, 3600);
+      return {
+        canSend: false,
+        reason: `Hourly limit (${rateLimit.alertsPerHour}) exceeded`,
+        throttleUntil: new Date(now.getTime() + 3600000),
+      };
+    }
+
+    // Check daily limit
+    if (rateLimit.currentDailyCount >= rateLimit.alertsPerDay) {
+      // Throttle for 24 hours
+      await activateThrottling(agency, 86400);
+      return {
+        canSend: false,
+        reason: `Daily limit (${rateLimit.alertsPerDay}) exceeded`,
+        throttleUntil: new Date(now.getTime() + 86400000),
+      };
+    }
+
+    return {
+      canSend: true,
+      hourlyRemaining: rateLimit.alertsPerHour - rateLimit.currentHourlyCount,
+      dailyRemaining: rateLimit.alertsPerDay - rateLimit.currentDailyCount,
+    };
+  } catch (error) {
+    console.error("[RATE_LIMIT] Error checking rate limit:", error.message);
+    // Allow on error (fail open)
+    return { canSend: true, reason: "Rate limit check failed" };
+  }
+}
+
+/**
+ * Increment alert count for agency
+ */
+export async function incrementAgencyAlertCount(agency) {
+  try {
+    await prisma.agencyRateLimit.upsert({
+      where: { agency },
+      update: {
+        currentHourlyCount: { increment: 1 },
+        currentDailyCount: { increment: 1 },
+      },
+      create: {
+        agency,
+        currentHourlyCount: 1,
+        currentDailyCount: 1,
+        hourlyResetAt: new Date(Date.now() + 3600000),
+        dailyResetAt: new Date(Date.now() + 86400000),
+      },
+    });
+    console.log(`[RATE_LIMIT] Incremented count for ${agency}`);
+  } catch (error) {
+    console.error(
+      "[RATE_LIMIT] Error incrementing alert count:",
+      error.message,
+    );
+  }
+}
+
+/**
+ * Activate throttling for an agency
+ */
+export async function activateThrottling(agency, durationSeconds) {
+  try {
+    const throttleUntil = new Date(Date.now() + durationSeconds * 1000);
+    await prisma.agencyRateLimit.update({
+      where: { agency },
+      data: {
+        isThrottled: true,
+        throttleUntil,
+      },
+    });
+    console.log(
+      `[RATE_LIMIT] Throttled ${agency} until ${throttleUntil.toISOString()}`,
+    );
+  } catch (error) {
+    console.error("[RATE_LIMIT] Error activating throttling:", error.message);
+  }
+}
+
+/**
+ * Get current rate limit status for agency
+ */
+export async function getAgencyRateLimitStatus(agency) {
+  try {
+    let rateLimit = await prisma.agencyRateLimit.findUnique({
+      where: { agency },
+    });
+
+    if (!rateLimit) {
+      return {
+        agency,
+        status: "not_configured",
+      };
+    }
+
+    const now = new Date();
+    const hourlyPercentage =
+      (rateLimit.currentHourlyCount / rateLimit.alertsPerHour) * 100;
+    const dailyPercentage =
+      (rateLimit.currentDailyCount / rateLimit.alertsPerDay) * 100;
+
+    return {
+      agency,
+      isThrottled: rateLimit.isThrottled && now < rateLimit.throttleUntil,
+      throttleUntil: rateLimit.throttleUntil,
+      hourly: {
+        current: rateLimit.currentHourlyCount,
+        limit: rateLimit.alertsPerHour,
+        remaining: Math.max(
+          0,
+          rateLimit.alertsPerHour - rateLimit.currentHourlyCount,
+        ),
+        percentage: hourlyPercentage,
+        resetsAt: rateLimit.hourlyResetAt,
+      },
+      daily: {
+        current: rateLimit.currentDailyCount,
+        limit: rateLimit.alertsPerDay,
+        remaining: Math.max(
+          0,
+          rateLimit.alertsPerDay - rateLimit.currentDailyCount,
+        ),
+        percentage: dailyPercentage,
+        resetsAt: rateLimit.dailyResetAt,
+      },
+    };
+  } catch (error) {
+    console.error(
+      "[RATE_LIMIT] Error getting rate limit status:",
+      error.message,
+    );
+    return null;
+  }
+}
+
+/**
+ * Update rate limit configuration for agency
+ */
+export async function updateAgencyRateLimit(agency, config) {
+  try {
+    const updated = await prisma.agencyRateLimit.update({
+      where: { agency },
+      data: {
+        alertsPerHour: config.alertsPerHour || undefined,
+        alertsPerDay: config.alertsPerDay || undefined,
+      },
+    });
+    console.log(`[RATE_LIMIT] Updated configuration for ${agency}`);
+    return updated;
+  } catch (error) {
+    console.error("[RATE_LIMIT] Error updating configuration:", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Get all agencies rate limit status
+ */
+export async function getAllAgenciesRateLimitStatus() {
+  try {
+    const rateLimits = await prisma.agencyRateLimit.findMany();
+    return rateLimits.map((rl) => ({
+      agency: rl.agency,
+      isThrottled: rl.isThrottled && new Date() < rl.throttleUntil,
+      hourlyUsage:
+        ((rl.currentHourlyCount / rl.alertsPerHour) * 100).toFixed(1) + "%",
+      dailyUsage:
+        ((rl.currentDailyCount / rl.alertsPerDay) * 100).toFixed(1) + "%",
+    }));
+  } catch (error) {
+    console.error("[RATE_LIMIT] Error getting all statuses:", error.message);
+    return [];
+  }
+}

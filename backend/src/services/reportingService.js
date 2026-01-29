@@ -313,3 +313,353 @@ function getDaysDifference(startDate, endDate) {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return Math.max(1, diffDays);
 }
+
+// ========== ADMIN REPORTING ==========
+
+/**
+ * Get category distribution snapshot
+ */
+export async function getCategoryDistribution() {
+  try {
+    const categories = await prisma.manufacturer.groupBy({
+      by: ["productCategory"],
+      _count: true,
+    });
+
+    const distribution = {
+      drugs: 0,
+      food: 0,
+      cosmetics: 0,
+      other: 0,
+      total: 0,
+    };
+
+    categories.forEach((cat) => {
+      const category = cat.productCategory || "other";
+      distribution[category] = cat._count;
+      distribution.total += cat._count;
+    });
+
+    return distribution;
+  } catch (error) {
+    console.error(
+      "[REPORTING] Error getting category distribution:",
+      error.message,
+    );
+    throw error;
+  }
+}
+
+/**
+ * Update category distribution snapshot (call daily)
+ */
+export async function updateCategoryDistributionSnapshot() {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const distribution = await getCategoryDistribution();
+
+    await prisma.categoryDistributionSnapshot.upsert({
+      where: { snapshotDate: today },
+      create: {
+        snapshotDate: today,
+        drugs: distribution.drugs,
+        food: distribution.food,
+        cosmetics: distribution.cosmetics,
+        other: distribution.other,
+        totalCount: distribution.total,
+      },
+      update: {
+        drugs: distribution.drugs,
+        food: distribution.food,
+        cosmetics: distribution.cosmetics,
+        other: distribution.other,
+        totalCount: distribution.total,
+      },
+    });
+
+    console.log("[REPORTING] Updated category distribution snapshot");
+    return distribution;
+  } catch (error) {
+    console.error("[REPORTING] Error updating snapshot:", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Get agency-specific flagged codes report
+ */
+export async function getAgencyFlagReport(agency, dateRange = 30) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - dateRange);
+
+    // Get all codes flagged in this period that should go to this agency
+    const flaggedCodes = await prisma.code.findMany({
+      where: {
+        isFlagged: true,
+        flaggedAt: { gte: startDate },
+        manufacturer: {
+          productCategory: getAgencyCategoryMapping(agency),
+        },
+      },
+      include: {
+        manufacturer: {
+          select: { name: true, id: true },
+        },
+      },
+    });
+
+    const bySeverity = {
+      critical: 0,
+      high: 0,
+      medium: 0,
+      low: 0,
+    };
+
+    const byReason = {};
+    const manufacturerCounts = {};
+
+    flaggedCodes.forEach((code) => {
+      // Count by severity
+      if (code.flagSeverity) {
+        bySeverity[code.flagSeverity]++;
+      }
+
+      // Count by reason
+      byReason[code.flagReason] = (byReason[code.flagReason] || 0) + 1;
+
+      // Count by manufacturer
+      const mfgName = code.manufacturer?.name || "Unknown";
+      manufacturerCounts[mfgName] = (manufacturerCounts[mfgName] || 0) + 1;
+    });
+
+    return {
+      agency,
+      period: `Last ${dateRange} days`,
+      totalFlaggedCodes: flaggedCodes.length,
+      bySeverity,
+      byReason,
+      topManufacturers: Object.entries(manufacturerCounts)
+        .sort(([, a], [, b]) => b - a)
+        .slice(0, 10)
+        .map(([name, count]) => ({ name, count })),
+    };
+  } catch (error) {
+    console.error("[REPORTING] Error getting agency report:", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Update agency flag analytics (call daily)
+ */
+export async function updateAgencyFlagAnalytics(agency) {
+  try {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Count flagged codes for this agency yesterday
+    const flaggedCodes = await prisma.code.findMany({
+      where: {
+        isFlagged: true,
+        flaggedAt: {
+          gte: yesterday,
+          lt: today,
+        },
+        manufacturer: {
+          productCategory: getAgencyCategoryMapping(agency),
+        },
+      },
+    });
+
+    const analytics = {
+      totalFlaggedCodes: flaggedCodes.length,
+      criticalSeverity: flaggedCodes.filter(
+        (c) => c.flagSeverity === "critical",
+      ).length,
+      highSeverity: flaggedCodes.filter((c) => c.flagSeverity === "high")
+        .length,
+      mediumSeverity: flaggedCodes.filter((c) => c.flagSeverity === "medium")
+        .length,
+      lowSeverity: flaggedCodes.filter((c) => c.flagSeverity === "low").length,
+      uniqueManufacturers: new Set(flaggedCodes.map((c) => c.manufacturerId))
+        .size,
+    };
+
+    await prisma.agencyFlagAnalytics.upsert({
+      where: {
+        agency_date: {
+          agency,
+          date: yesterday,
+        },
+      },
+      create: {
+        agency,
+        date: yesterday,
+        ...analytics,
+      },
+      update: analytics,
+    });
+
+    console.log(`[REPORTING] Updated analytics for ${agency}`);
+    return analytics;
+  } catch (error) {
+    console.error("[REPORTING] Error updating analytics:", error.message);
+    throw error;
+  }
+}
+
+/**
+ * Get all agencies analytics for admin dashboard
+ */
+export async function getAllAgenciesAnalytics(days = 30) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    const analytics = await prisma.agencyFlagAnalytics.findMany({
+      where: {
+        date: { gte: startDate },
+      },
+      orderBy: [{ agency: "asc" }, { date: "desc" }],
+    });
+
+    // Aggregate by agency
+    const byAgency = {};
+
+    analytics.forEach((record) => {
+      if (!byAgency[record.agency]) {
+        byAgency[record.agency] = {
+          agency: record.agency,
+          totalFlagged: 0,
+          criticalSeverity: 0,
+          highSeverity: 0,
+          mediumSeverity: 0,
+          lowSeverity: 0,
+          averageDaily: 0,
+          dailyRecords: [],
+        };
+      }
+
+      const agency = byAgency[record.agency];
+      agency.totalFlagged += record.totalFlaggedCodes;
+      agency.criticalSeverity += record.criticalSeverity;
+      agency.highSeverity += record.highSeverity;
+      agency.mediumSeverity += record.mediumSeverity;
+      agency.lowSeverity += record.lowSeverity;
+      agency.dailyRecords.push(record);
+    });
+
+    // Calculate averages
+    Object.values(byAgency).forEach((agency) => {
+      const recordCount = agency.dailyRecords.length;
+      agency.averageDaily = (agency.totalFlagged / recordCount).toFixed(2);
+      delete agency.dailyRecords; // Remove for response
+    });
+
+    return byAgency;
+  } catch (error) {
+    console.error(
+      "[REPORTING] Error getting all agencies analytics:",
+      error.message,
+    );
+    throw error;
+  }
+}
+
+/**
+ * Get category distribution history
+ */
+export async function getCategoryDistributionHistory(days = 30) {
+  try {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    const snapshots = await prisma.categoryDistributionSnapshot.findMany({
+      where: {
+        snapshotDate: { gte: startDate },
+      },
+      orderBy: { snapshotDate: "asc" },
+    });
+
+    return snapshots;
+  } catch (error) {
+    console.error(
+      "[REPORTING] Error getting distribution history:",
+      error.message,
+    );
+    throw error;
+  }
+}
+
+/**
+ * Helper: Map agency name to product categories they handle
+ */
+function getAgencyCategoryMapping(agency) {
+  const mapping = {
+    NAFDAC: "drugs",
+    "NAFDAC Cosmetics": "cosmetics",
+    "FIRS Food Safety": "food",
+  };
+  return mapping[agency] || "other";
+}
+
+/**
+ * Get manufacturer category breakdown for admin dashboard
+ */
+export async function getManufacturerCategoryBreakdown() {
+  try {
+    const manufacturers = await prisma.manufacturer.findMany({
+      select: {
+        id: true,
+        name: true,
+        productCategory: true,
+        verified: true,
+        accountStatus: true,
+      },
+    });
+
+    const breakdown = {
+      byCategory: {
+        drugs: [],
+        food: [],
+        cosmetics: [],
+        other: [],
+      },
+      totalVerified: 0,
+      totalUnverified: 0,
+    };
+
+    manufacturers.forEach((mfg) => {
+      const category = mfg.productCategory || "other";
+      breakdown.byCategory[category].push({
+        id: mfg.id,
+        name: mfg.name,
+        verified: mfg.verified,
+        status: mfg.accountStatus,
+      });
+
+      if (mfg.verified) {
+        breakdown.totalVerified++;
+      } else {
+        breakdown.totalUnverified++;
+      }
+    });
+
+    return breakdown;
+  } catch (error) {
+    console.error(
+      "[REPORTING] Error getting category breakdown:",
+      error.message,
+    );
+    throw error;
+  }
+}
