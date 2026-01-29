@@ -3,7 +3,7 @@
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import Link from "next/link";
-import { FiBarChart3, FiTrendingUp, FiSettings, FiActivity } from "react-icons/fi";
+import { FiBarChart2, FiTrendingUp, FiSettings } from "react-icons/fi";
 
 export default function AdminDashboard() {
   const dashboards = [
@@ -11,7 +11,7 @@ export default function AdminDashboard() {
       title: "Category Distribution",
       description: "Monitor manufacturer distribution across product categories",
       href: "/dashboard/admin/analytics/category-distribution",
-      icon: FiBarChart3,
+      icon: FiBarChart2,
       color: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
     },
     {
