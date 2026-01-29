@@ -1,6 +1,7 @@
 import { generateCodesForBatch } from "../services/codeService.js";
 import prisma from "../models/prismaClient.js";
 import { reverseGeocode } from "../services/analyticsService.js";
+import { sendSuspiciousActivityEmail } from "../services/notificationService.js";
 
 /**
  * Generate codes for a product batch
@@ -138,9 +139,24 @@ export async function flagCode(req, res) {
       },
     });
 
+    // Send notification to admin about flagged code
+    try {
+      await sendSuspiciousActivityEmail(manufacturer.id, {
+        codeValue: code.codeValue,
+        reason: flagReason,
+        severity: severity || "medium",
+        timestamp: new Date(),
+        message: `Code flagged as ${flagReason} with ${severity || "medium"} severity`,
+      });
+      console.log("[FLAG_CODE] Notification email sent to admin");
+    } catch (emailErr) {
+      console.warn("[FLAG_CODE] Failed to send notification email:", emailErr.message);
+      // Don't fail the flag operation if email fails
+    }
+
     res.status(200).json({
       success: true,
-      message: `Code flagged as ${flagReason}`,
+      message: `Code flagged as ${flagReason}. Admin has been notified.`,
       code: flaggedCode,
     });
   } catch (err) {
@@ -385,13 +401,16 @@ export async function getManufacturerCodes(req, res) {
     const mappedCodes = await Promise.all(
       codes.map(async (code) => {
         let locationName = null;
-        
+
         // Get location name if coordinates exist
-        if (code.verificationLogs[0]?.latitude && code.verificationLogs[0]?.longitude) {
+        if (
+          code.verificationLogs[0]?.latitude &&
+          code.verificationLogs[0]?.longitude
+        ) {
           try {
             locationName = await reverseGeocode(
               code.verificationLogs[0].latitude,
-              code.verificationLogs[0].longitude
+              code.verificationLogs[0].longitude,
             );
           } catch (err) {
             console.warn("[MANU-CODES] Reverse geocoding failed:", err.message);
@@ -421,7 +440,7 @@ export async function getManufacturerCodes(req, res) {
           location: locationName,
           riskScore: code.verificationLogs[0]?.riskScore || null,
         };
-      })
+      }),
     );
 
     // Debug: Log a sample to see structure
