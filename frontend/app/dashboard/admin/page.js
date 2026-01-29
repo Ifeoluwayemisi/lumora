@@ -9,24 +9,28 @@ export default function AdminDashboard() {
   const dashboards = [
     {
       title: "Category Distribution",
-      description: "Monitor manufacturer distribution across product categories",
+      description:
+        "Monitor manufacturer distribution across product categories",
       href: "/dashboard/admin/analytics/category-distribution",
       icon: FiBarChart2,
-      color: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+      color:
+        "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
     },
     {
       title: "Agency Reports",
       description: "Detailed analysis of flagged codes by regulatory agency",
       href: "/dashboard/admin/analytics/agencies",
       icon: FiTrendingUp,
-      color: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+      color:
+        "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
     },
     {
       title: "Rate Limiting & Webhooks",
       description: "Configure per-agency rate limits and webhook notifications",
       href: "/dashboard/admin/analytics/rate-limiting",
       icon: FiSettings,
-      color: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800",
+      color:
+        "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800",
     },
   ];
 
@@ -61,7 +65,10 @@ export default function AdminDashboard() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <IconComponent size={24} className="text-gray-900 dark:text-white" />
+                          <IconComponent
+                            size={24}
+                            className="text-gray-900 dark:text-white"
+                          />
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                             {dashboard.title}
                           </h3>
@@ -70,7 +77,9 @@ export default function AdminDashboard() {
                           {dashboard.description}
                         </p>
                       </div>
-                      <span className="text-2xl text-gray-400 dark:text-gray-600">→</span>
+                      <span className="text-2xl text-gray-400 dark:text-gray-600">
+                        →
+                      </span>
                     </div>
                   </div>
                 </Link>
@@ -84,7 +93,8 @@ export default function AdminDashboard() {
               System Overview
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Navigate to any dashboard above to view detailed analytics, agency reports, and system configuration.
+              Navigate to any dashboard above to view detailed analytics, agency
+              reports, and system configuration.
             </p>
           </div>
         </div>

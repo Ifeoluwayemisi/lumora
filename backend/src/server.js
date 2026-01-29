@@ -3,6 +3,8 @@ import { execSync } from "child_process";
 import app from "./app.js";
 import prisma from "./models/prismaClient.js";
 import { setupSecurityJobs, cleanupSecurityJobs } from "./jobs/securityJobs.js";
+import { initializeAgencies, resetHourlyCounters, resetDailyCounters } from "./utils/initializeAgencies.js";
+import { runAnalyticsJobs } from "./jobs/analyticsJobs.js";
 
 // Trigger redeploy - ESM fixes applied
 
@@ -75,12 +77,53 @@ async function startServer() {
 
     await testDatabaseConnection();
 
+    // Initialize agencies on startup
+    await initializeAgencies();
+
     let securityJobs = undefined;
+    let backgroundJobs = [];
 
     const server = app.listen(PORT, () => {
       console.log(
         `\n🚀 Lumora backend running on port ${PORT} (${NODE_ENV})\n`,
       );
+
+      // Setup background jobs for rate limiting and analytics
+      try {
+        // Reset counters every hour
+        const hourlyResetInterval = setInterval(async () => {
+          await resetHourlyCounters();
+        }, 60 * 60 * 1000); // 1 hour
+        backgroundJobs.push(hourlyResetInterval);
+
+        // Reset counters every day
+        const dailyResetInterval = setInterval(async () => {
+          await resetDailyCounters();
+        }, 24 * 60 * 60 * 1000); // 24 hours
+        backgroundJobs.push(dailyResetInterval);
+
+        // Run analytics jobs daily at midnight
+        const now = new Date();
+        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        tomorrow.setHours(0, 0, 0, 0);
+        const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+        // Run immediately on startup
+        runAnalyticsJobs();
+
+        // Schedule for midnight daily
+        const analyticsInterval = setInterval(() => {
+          runAnalyticsJobs();
+        }, 24 * 60 * 60 * 1000); // 24 hours
+        backgroundJobs.push(analyticsInterval);
+
+        console.log("[JOBS] Background jobs initialized:");
+        console.log("  - Hourly rate limit counter reset");
+        console.log("  - Daily rate limit counter reset");
+        console.log("  - Daily analytics snapshot job");
+      } catch (jobErr) {
+        console.error("Failed to setup background jobs:", jobErr.message);
+      }
 
       // Initialize security jobs
       // DISABLED: Jobs exhausting connection pool - enable only in production
@@ -100,6 +143,8 @@ async function startServer() {
     // Handle graceful shutdown
     process.on("SIGTERM", async () => {
       console.log("\n📉 SIGTERM received, shutting down gracefully...");
+      // Clear background jobs
+      backgroundJobs.forEach((job) => clearInterval(job));
       cleanupSecurityJobs(securityJobs);
       server.close(async () => {
         await prisma.$disconnect();
@@ -109,6 +154,8 @@ async function startServer() {
 
     process.on("SIGINT", async () => {
       console.log("\n SIGINT received, shutting down...");
+      // Clear background jobs
+      backgroundJobs.forEach((job) => clearInterval(job));
       cleanupSecurityJobs(securityJobs);
     });
   } catch (err) {

@@ -5,6 +5,7 @@ import {
   sendSuspiciousActivityEmail,
   sendRegulatoryAlert,
 } from "../services/notificationService.js";
+import { sendWebhookNotification } from "../services/webhookNotificationService.js";
 import { getRegulatoryBody } from "../config/regulatoryConfig.js";
 
 /**
@@ -185,6 +186,88 @@ export async function flagCode(req, res) {
       console.log(
         `[FLAG_CODE] Regulatory alert sent to ${regulatoryBody.name}`,
       );
+
+      // Send webhook notifications to each agency (with rate limiting)
+      const agenciesToNotify = regulatoryBody.agencies || [regulatoryBody.name];
+      
+      for (const agency of agenciesToNotify) {
+        try {
+          // Check rate limit before sending webhook
+          const rateLimit = await prisma.agencyRateLimit.findUnique({
+            where: { agency },
+          });
+
+          if (rateLimit) {
+            // Check if throttled
+            if (rateLimit.isThrottled) {
+              const now = new Date();
+              if (rateLimit.throttleUntil && rateLimit.throttleUntil > now) {
+                console.log(
+                  `[WEBHOOK] ${agency} is throttled, skipping notification`,
+                );
+                continue;
+              } else {
+                // Remove throttle if time has passed
+                await prisma.agencyRateLimit.update({
+                  where: { agency },
+                  data: { isThrottled: false, throttleUntil: null },
+                });
+              }
+            }
+
+            // Check hourly and daily limits
+            if (
+              rateLimit.currentHourCount >= rateLimit.alertsPerHour ||
+              rateLimit.currentDayCount >= rateLimit.alertsPerDay
+            ) {
+              // Activate throttling for 1 hour
+              const throttleUntil = new Date(Date.now() + 60 * 60 * 1000);
+              await prisma.agencyRateLimit.update({
+                where: { agency },
+                data: {
+                  isThrottled: true,
+                  throttleUntil,
+                },
+              });
+              console.log(
+                `[WEBHOOK] ${agency} rate limit exceeded, activating throttle`,
+              );
+              continue;
+            }
+
+            // Send webhook
+            const webhookResult = await sendWebhookNotification({
+              agency,
+              codeValue: code.codeValue,
+              reason: flagReason,
+              severity: severity || "medium",
+              manufacturerName: manufacturerData?.name || "Unknown",
+              manufacturerId: manufacturer.id,
+              productCategory: manufacturerData?.productCategory || "other",
+            });
+
+            if (webhookResult.success) {
+              // Increment counters after successful send
+              await prisma.agencyRateLimit.update({
+                where: { agency },
+                data: {
+                  currentHourCount: rateLimit.currentHourCount + 1,
+                  currentDayCount: rateLimit.currentDayCount + 1,
+                },
+              });
+              console.log(
+                `[FLAG_CODE] Webhook sent to ${agency}, counters updated`,
+              );
+            }
+          }
+        } catch (webhookErr) {
+          console.warn(
+            `[FLAG_CODE] Failed to send webhook to ${agency}:`,
+            webhookErr.message,
+          );
+          // Don't fail the flag operation if webhook fails
+        }
+      }
     } catch (regulatoryErr) {
       console.warn(
         "[FLAG_CODE] Failed to send regulatory alert:",
