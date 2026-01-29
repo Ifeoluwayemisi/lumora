@@ -34,6 +34,7 @@ export default function CodesPage() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedCode, setSelectedCode] = useState(null);
+  const [manufacturer, setManufacturer] = useState(null);
   const [flagFormData, setFlagFormData] = useState({
     reason: "suspicious_pattern",
     severity: "medium",
@@ -60,6 +61,7 @@ export default function CodesPage() {
       
       setCodes(codesData);
       setProducts(productsRes.data?.data || []);
+      setManufacturer(profileRes.data?.manufacturer);
       setIsPremium(profileRes.data?.manufacturer?.plan === "PREMIUM");
     } catch (err) {
       console.error("[FETCH_DATA] Error:", err.response?.data || err.message);
@@ -516,6 +518,21 @@ export default function CodesPage() {
                       rows="3"
                     />
                   </div>
+
+                  {/* Regulatory Body Info */}
+                  {manufacturer && manufacturer.regulatoryBody && (
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Alert will be sent to:
+                      </p>
+                      <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mt-1">
+                        {manufacturer.regulatoryBody.name}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        {manufacturer.regulatoryBody.description}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">

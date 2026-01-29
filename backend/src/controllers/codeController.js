@@ -1,7 +1,11 @@
 import { generateCodesForBatch } from "../services/codeService.js";
 import prisma from "../models/prismaClient.js";
 import { reverseGeocode } from "../services/analyticsService.js";
-import { sendSuspiciousActivityEmail, sendRegulatoryAlert } from "../services/notificationService.js";
+import {
+  sendSuspiciousActivityEmail,
+  sendRegulatoryAlert,
+} from "../services/notificationService.js";
+import { getRegulatoryBody } from "../config/regulatoryConfig.js";
 
 /**
  * Generate codes for a product batch
@@ -150,16 +154,23 @@ export async function flagCode(req, res) {
       });
       console.log("[FLAG_CODE] Notification email sent to admin");
     } catch (emailErr) {
-      console.warn("[FLAG_CODE] Failed to send notification email:", emailErr.message);
+      console.warn(
+        "[FLAG_CODE] Failed to send notification email:",
+        emailErr.message,
+      );
       // Don't fail the flag operation if email fails
     }
 
-    // Send alert to regulatory authorities (NAFDAC, etc.)
+    // Send alert to regulatory authorities (NAFDAC, FIRS, etc.) based on product category
     try {
       const manufacturerData = await prisma.manufacturer.findUnique({
         where: { id: manufacturer.id },
-        select: { name: true },
+        select: { name: true, productCategory: true },
       });
+
+      const regulatoryBody = getRegulatoryBody(
+        manufacturerData?.productCategory || "other",
+      );
 
       await sendRegulatoryAlert({
         codeValue: code.codeValue,
@@ -167,11 +178,18 @@ export async function flagCode(req, res) {
         severity: severity || "medium",
         manufacturerName: manufacturerData?.name || "Unknown",
         manufacturerId: manufacturer.id,
+        productCategory: manufacturerData?.productCategory || "other",
+        regulatoryBody: regulatoryBody,
         timestamp: new Date(),
       });
-      console.log("[FLAG_CODE] Regulatory alert sent to NAFDAC and authorities");
+      console.log(
+        `[FLAG_CODE] Regulatory alert sent to ${regulatoryBody.name}`,
+      );
     } catch (regulatoryErr) {
-      console.warn("[FLAG_CODE] Failed to send regulatory alert:", regulatoryErr.message);
+      console.warn(
+        "[FLAG_CODE] Failed to send regulatory alert:",
+        regulatoryErr.message,
+      );
       // Don't fail the flag operation if regulatory alert fails
     }
 

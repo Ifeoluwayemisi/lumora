@@ -43,6 +43,7 @@ model Manufacturer {
   trustScore                   Float                       @default(0)
   riskLevel                    String                      @default("MEDIUM") // LOW, MEDIUM, HIGH
   plan                         String                      @default("BASIC") // BASIC (50/day), PREMIUM (1000/day)
+  productCategory              String?                     @default("other") // drugs, food, cosmetics, other
   companyName                  String?
   website                      String?
   nafdacLicensePath            String?

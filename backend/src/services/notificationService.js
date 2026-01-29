@@ -929,8 +929,8 @@ export async function sendDocumentUploadEmail(manufacturerId, documentType) {
 }
 
 /**
- * Send flagged code alert to regulatory authorities (NAFDAC, etc.)
- * CRITICAL: Alerts regulatory bodies about suspicious/counterfeit codes
+ * Send flagged code alert to regulatory authorities (NAFDAC, FIRS, etc.)
+ * CRITICAL: Alerts specific regulatory bodies based on product category
  */
 export async function sendRegulatoryAlert(flagData) {
   try {
@@ -940,18 +940,19 @@ export async function sendRegulatoryAlert(flagData) {
       severity,
       manufacturerName,
       manufacturerId,
+      productCategory,
+      regulatoryBody,
       timestamp,
     } = flagData;
 
-    // NAFDAC email (should be configured in environment)
-    const nafdacEmail = process.env.NAFDAC_EMAIL || "alert@nafdac.gov.ng";
-    const regulatoryEmails = [
-      nafdacEmail,
-      process.env.REGULATORY_ALERT_EMAIL || "alerts@nafdac.gov.ng",
-    ].filter(Boolean);
+    // Use specific regulatory body or fallback to generic
+    const targetEmail = regulatoryBody?.email;
 
-    if (!regulatoryEmails.length) {
-      console.warn("[REGULATORY] No regulatory email configured");
+    if (!targetEmail) {
+      console.warn(
+        "[REGULATORY] No regulatory email configured for category:",
+        productCategory,
+      );
       return false;
     }
 
@@ -972,7 +973,7 @@ export async function sendRegulatoryAlert(flagData) {
       <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto;">
         <div style="background: ${severityColor[severity] || "#dc2626"}; color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
           <h1 style="margin: 0; font-size: 24px;">🚨 SUSPICIOUS CODE FLAGGED</h1>
-          <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Severity: ${severity.toUpperCase()}</p>
+          <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">Severity: ${severity.toUpperCase()} | Category: ${productCategory.toUpperCase()}</p>
         </div>
         
         <div style="padding: 30px; background: #f9fafb; border: 1px solid #e5e7eb;">
@@ -982,6 +983,10 @@ export async function sendRegulatoryAlert(flagData) {
             <tr style="border-bottom: 1px solid #e5e7eb;">
               <td style="padding: 10px; font-weight: bold; color: #374151; width: 150px;">Code:</td>
               <td style="padding: 10px; color: #1f2937; font-family: monospace; background: #f3f4f6; border-radius: 4px;">${codeValue}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e5e7eb;">
+              <td style="padding: 10px; font-weight: bold; color: #374151;">Product Category:</td>
+              <td style="padding: 10px; color: #1f2937;">${productCategory.replace(/_/g, " ").toUpperCase()}</td>
             </tr>
             <tr style="border-bottom: 1px solid #e5e7eb;">
               <td style="padding: 10px; font-weight: bold; color: #374151;">Reason:</td>
@@ -1010,13 +1015,18 @@ export async function sendRegulatoryAlert(flagData) {
           </table>
 
           <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold; color: #991b1b;">Regulatory Authority: ${regulatoryBody?.fullName || "Unknown"}</p>
+            <p style="margin: 10px 0 0 0; color: #7c2d12; font-size: 13px;">${regulatoryBody?.description || ""}</p>
+          </div>
+
+          <div style="background: #fef2f2; border-left: 4px solid #dc2626; padding: 15px; border-radius: 4px; margin: 20px 0;">
             <p style="margin: 0; font-weight: bold; color: #991b1b;">Recommended Actions:</p>
             <ul style="margin: 10px 0 0 20px; color: #7c2d12;">
               <li>Investigate code distribution chain</li>
               <li>Cross-reference with other flagged codes from same manufacturer</li>
               <li>Contact manufacturer for explanation</li>
               <li>Consider issuing product recall if counterfeit confirmed</li>
-              <li>Report to appropriate authorities if criminal activity suspected</li>
+              <li>Report to appropriate law enforcement if criminal activity suspected</li>
             </ul>
           </div>
 
@@ -1028,22 +1038,25 @@ export async function sendRegulatoryAlert(flagData) {
       </div>
     `;
 
-    // Send to all regulatory addresses
-    for (const email of regulatoryEmails) {
-      try {
-        await transporter.sendMail({
-          from: `"Lumora Alert System" <${process.env.EMAIL_USER}>`,
-          to: email,
-          subject: `🚨 URGENT: Suspicious Code Flagged - ${codeValue}`,
-          html,
-        });
-        console.log(`[REGULATORY] Alert sent to ${email}`);
-      } catch (err) {
-        console.error(`[REGULATORY] Failed to send alert to ${email}:`, err.message);
-      }
+    // Send to specific regulatory body email
+    try {
+      await transporter.sendMail({
+        from: `"Lumora Alert System" <${process.env.EMAIL_USER}>`,
+        to: targetEmail,
+        subject: `🚨 URGENT: Suspicious ${productCategory.toUpperCase()} Code - ${codeValue}`,
+        html,
+      });
+      console.log(
+        `[REGULATORY] Alert sent to ${regulatoryBody?.name} (${targetEmail})`,
+      );
+      return true;
+    } catch (err) {
+      console.error(
+        `[REGULATORY] Failed to send alert to ${targetEmail}:`,
+        err.message,
+      );
+      return false;
     }
-
-    return true;
   } catch (error) {
     console.error("[REGULATORY] Error sending alert:", error.message);
     return false;

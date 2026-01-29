@@ -6,6 +6,11 @@ import {
 import { canCreateCode, getQuotaInfo } from "../services/quotaService.js";
 import { parseISO, isValid } from "date-fns";
 import { generateBatchPDF, generateBatchCSV } from "../utils/pdfGenerator.js";
+import {
+  isValidCategory,
+  PRODUCT_CATEGORY_LABELS,
+  REGULATORY_MAPPING,
+} from "../config/regulatoryConfig.js";
 
 /**
  * Get manufacturer profile
@@ -25,6 +30,7 @@ export async function getProfile(req, res) {
         email: true,
         verified: true,
         accountStatus: true,
+        productCategory: true,
       },
     });
 
@@ -32,7 +38,17 @@ export async function getProfile(req, res) {
       return res.status(404).json({ error: "Manufacturer not found" });
     }
 
-    res.status(200).json({ manufacturer });
+    res.status(200).json({
+      manufacturer: {
+        ...manufacturer,
+        productCategoryLabel: manufacturer.productCategory
+          ? PRODUCT_CATEGORY_LABELS[manufacturer.productCategory]
+          : undefined,
+        regulatoryBody: manufacturer.productCategory
+          ? REGULATORY_MAPPING[manufacturer.productCategory]
+          : undefined,
+      },
+    });
   } catch (err) {
     console.error("[GET_PROFILE] Error:", err.message);
     res.status(500).json({ error: "Failed to get profile" });
@@ -1382,10 +1398,19 @@ export async function getManufacturerHistory(req, res) {
 export async function updateProfile(req, res) {
   try {
     const manufacturerId = req.user?.id;
-    const { name, email, phone, country, website } = req.body;
+    const { name, email, phone, country, website, productCategory } = req.body;
 
     if (!manufacturerId) {
       return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // Validate product category if provided
+    if (productCategory && !isValidCategory(productCategory)) {
+      return res.status(400).json({
+        error: "Invalid product category",
+        validCategories: Object.values(PRODUCT_CATEGORY_LABELS),
+        message: `Product category must be one of: ${Object.values(PRODUCT_CATEGORY_LABELS).join(", ")}`,
+      });
     }
 
     // Update manufacturer
@@ -1397,13 +1422,22 @@ export async function updateProfile(req, res) {
         ...(phone && { phone }),
         ...(country && { country }),
         ...(website && { website }),
+        ...(productCategory && { productCategory }),
       },
     });
 
     res.json({
       success: true,
       message: "Profile updated successfully",
-      data: updated,
+      data: {
+        ...updated,
+        productCategoryLabel: productCategory
+          ? PRODUCT_CATEGORY_LABELS[productCategory]
+          : undefined,
+        regulatoryBody: productCategory
+          ? REGULATORY_MAPPING[productCategory]
+          : undefined,
+      },
     });
   } catch (err) {
     console.error("[UPDATE_PROFILE] Error:", err);

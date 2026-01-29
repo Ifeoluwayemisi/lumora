@@ -47,6 +47,7 @@ export default function ManufacturerProfilePage() {
     phone: "",
     country: "",
     website: "",
+    productCategory: "",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -76,6 +77,7 @@ export default function ManufacturerProfilePage() {
         phone: manufacturer.phone || "",
         country: manufacturer.country || "",
         website: manufacturer.website || "",
+        productCategory: manufacturer.productCategory || "",
       });
     } catch (err) {
       console.error("[FETCH] Error:", err);
@@ -264,6 +266,69 @@ export default function ManufacturerProfilePage() {
                       className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
                     />
                   </div>
+
+                  {/* Product Category */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Product Category
+                    </label>
+                    <select
+                      value={formData.productCategory}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          productCategory: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                    >
+                      <option value="">Select a product category</option>
+                      <option value="drugs">Drugs & Pharmaceuticals</option>
+                      <option value="food">Food & Beverages</option>
+                      <option value="cosmetics">
+                        Cosmetics & Personal Care
+                      </option>
+                      <option value="other">Other</option>
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      This helps route alerts to the appropriate regulatory
+                      authority when codes are flagged
+                    </p>
+                  </div>
+
+                  {/* Regulatory Body Info */}
+                  {formData.productCategory && (
+                    <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        <span className="font-semibold">
+                          Regulatory Authority:
+                        </span>
+                      </p>
+                      <p className="text-lg font-semibold text-blue-700 dark:text-blue-300 mt-1">
+                        {
+                          {
+                            drugs:
+                              "NAFDAC - National Agency for Food & Drug Administration",
+                            food: "FIRS Food Safety Division",
+                            cosmetics: "NAFDAC - Cosmetics Division",
+                            other: "Generic Regulatory Authority",
+                          }[formData.productCategory]
+                        }
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                        ✓ Flagged codes from your products will alert the{" "}
+                        {
+                          {
+                            drugs: "NAFDAC",
+                            food: "FIRS",
+                            cosmetics: "NAFDAC Cosmetics Division",
+                            other: "Generic",
+                          }[formData.productCategory]
+                        }{" "}
+                        regulatory authority
+                      </p>
+                    </div>
+                  )}
 
                   <button
                     type="submit"

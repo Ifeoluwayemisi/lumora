@@ -110,13 +110,6 @@ export async function verifyCode({
     },
   });
 
-  console.log("[VERIFY] Code lookup result:", {
-    searchedFor: normalizedCode,
-    found: !!code,
-    codeId: code?.id || null,
-    batchId: code?.batch?.id || null,
-  });
-
   let verificationState;
   let advisory = null;
   let riskScore = 0;
