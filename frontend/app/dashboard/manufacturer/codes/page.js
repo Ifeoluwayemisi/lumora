@@ -55,7 +55,10 @@ export default function CodesPage() {
         api.get("/manufacturer/profile"),
       ]);
 
-      setCodes(codesRes.data?.data || []);
+      const codesData = codesRes.data?.data || [];
+      console.log("[CODES_PAGE] Received codes with states:", codesData.map(c => ({ code: c.code.substring(0, 10), state: c.verificationState })));
+      
+      setCodes(codesData);
       setProducts(productsRes.data?.data || []);
       setIsPremium(profileRes.data?.manufacturer?.plan === "PREMIUM");
     } catch (err) {
