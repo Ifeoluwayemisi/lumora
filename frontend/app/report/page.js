@@ -28,6 +28,28 @@ function ReportContent() {
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [locationStatus, setLocationStatus] = useState("requesting"); // requesting, captured, failed
+  const [locationName, setLocationName] = useState("");
+
+  // Reverse geocode coordinates to get location name
+  const reverseGeocode = async (latitude, longitude) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+      );
+      const data = await response.json();
+      if (data.address) {
+        const city = data.address.city || data.address.town || data.address.village || "Unknown";
+        const state = data.address.state || "";
+        const country = data.address.country || "";
+        const displayLocation = [city, state, country].filter(Boolean).join(", ");
+        return displayLocation;
+      }
+    } catch (err) {
+      console.error("Reverse geocoding error:", err);
+    }
+    return null;
+  };
 
   // Capture location when page loads
   useEffect(() => {
@@ -36,14 +58,26 @@ function ReportContent() {
       const location = await getLocationPermission();
       if (location.latitude && location.longitude) {
         console.log("✅ Reporter location captured:", location);
+        
+        // Get location name from coordinates
+        const locName = await reverseGeocode(location.latitude, location.longitude);
+        
         setFormData((prev) => ({
           ...prev,
           latitude: location.latitude,
           longitude: location.longitude,
+          location: locName || "Current Location",
         }));
-        toast.success("📍 Your location has been recorded for this report");
+        
+        if (locName) {
+          setLocationName(locName);
+        }
+        
+        setLocationStatus("captured");
+        toast.success(`📍 Location recorded: ${locName || "Current Location"}`);
       } else {
         console.warn("⚠️  Reporter location not available");
+        setLocationStatus("failed");
         toast.info(
           "Location not available, but your report will still be processed"
         );
@@ -172,6 +206,28 @@ function ReportContent() {
             Help us identify and prevent counterfeiting. Your information is
             valuable to us.
           </p>
+          
+          {/* Location Status */}
+          <div className="mt-6">
+            {locationStatus === "requesting" && (
+              <div className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                Requesting your location...
+              </div>
+            )}
+            {locationStatus === "captured" && (
+              <div className="inline-flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-300">
+                <span>✓</span>
+                Location captured: <span className="font-semibold">{locationName || "Current Location"}</span>
+              </div>
+            )}
+            {locationStatus === "failed" && (
+              <div className="inline-flex items-center gap-2 px-3 py-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-sm text-yellow-700 dark:text-yellow-300">
+                <span>⚠️</span>
+                Location not available
+              </div>
+            )}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
