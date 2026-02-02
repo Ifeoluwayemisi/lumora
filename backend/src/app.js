@@ -13,8 +13,10 @@ import nafdacRoutes from "./routes/nafdacRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import adminSecurityRoutes from "./routes/adminSecurityRoutes.js";
 import adminAnalyticsRoutes from "./routes/adminAnalytics.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
 import userRoute from "./routes/userRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import reputationRoutes from "./routes/reputationRoutes.js";
 import "dotenv/config";
 
 const app = express();
@@ -138,8 +140,10 @@ app.use("/api/nafdac", nafdacRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/security", adminSecurityRoutes);
 app.use("/api/admin", adminAnalyticsRoutes);
+app.use("/api/analytics", analyticsRoutes);
 app.use("/api/user", userRoute);
 app.use("/api/reports", reportRoutes);
+app.use("/api/reputation", reputationRoutes);
 
 app.get("/", (req, res) => {
   res.json({

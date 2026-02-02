@@ -36,6 +36,8 @@ function ReportContent() {
   const [submitted, setSubmitted] = useState(false);
   const [locationStatus, setLocationStatus] = useState("requesting"); // requesting, captured, failed
   const [locationName, setLocationName] = useState("");
+  const [productImage, setProductImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Reverse geocode coordinates to get location name
   const reverseGeocode = async (latitude, longitude) => {
@@ -110,6 +112,34 @@ function ReportContent() {
     }));
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image size should be less than 5MB");
+        return;
+      }
+
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        toast.error("Please upload a valid image file");
+        return;
+      }
+
+      setProductImage(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+
+      toast.success("Image selected successfully");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -131,24 +161,50 @@ function ReportContent() {
     setLoading(true);
 
     try {
-      await api.post("/reports/submit", {
-        codeValue: formData.codeValue,
-        productName: formData.productName || null,
-        reportType: formData.reportType,
-        description: formData.description,
-        location: formData.location || null,
-        purchaseDate: formData.purchaseDate || null,
-        purchaseLocation: formData.purchaseLocation || null,
-        contact: formData.contact || null,
-        latitude: formData.latitude, // Reporter's location
-        longitude: formData.longitude, // Reporter's location
-        // New fields
-        reporterName: formData.reporterName || null,
-        reporterPhone: formData.reporterPhone || null,
-        batchNumber: formData.batchNumber || null,
-        healthImpact: formData.healthImpact,
-        healthSymptoms: formData.healthSymptoms || null,
-      });
+      // Use FormData if image is present, otherwise use JSON
+      if (productImage) {
+        const uploadFormData = new FormData();
+        uploadFormData.append("codeValue", formData.codeValue);
+        uploadFormData.append("productName", formData.productName || "");
+        uploadFormData.append("reportType", formData.reportType);
+        uploadFormData.append("description", formData.description);
+        uploadFormData.append("location", formData.location || "");
+        uploadFormData.append("purchaseDate", formData.purchaseDate || "");
+        uploadFormData.append("purchaseLocation", formData.purchaseLocation || "");
+        uploadFormData.append("contact", formData.contact || "");
+        uploadFormData.append("latitude", formData.latitude || "");
+        uploadFormData.append("longitude", formData.longitude || "");
+        uploadFormData.append("reporterName", formData.reporterName || "");
+        uploadFormData.append("reporterPhone", formData.reporterPhone || "");
+        uploadFormData.append("batchNumber", formData.batchNumber || "");
+        uploadFormData.append("healthImpact", formData.healthImpact);
+        uploadFormData.append("healthSymptoms", formData.healthSymptoms || "");
+        uploadFormData.append("image", productImage);
+
+        await api.post("/reports/submit", uploadFormData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      } else {
+        await api.post("/reports/submit", {
+          codeValue: formData.codeValue,
+          productName: formData.productName || null,
+          reportType: formData.reportType,
+          description: formData.description,
+          location: formData.location || null,
+          purchaseDate: formData.purchaseDate || null,
+          purchaseLocation: formData.purchaseLocation || null,
+          contact: formData.contact || null,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+          reporterName: formData.reporterName || null,
+          reporterPhone: formData.reporterPhone || null,
+          batchNumber: formData.batchNumber || null,
+          healthImpact: formData.healthImpact,
+          healthSymptoms: formData.healthSymptoms || null,
+        });
+      }
 
       setSubmitted(true);
       toast.success("Report submitted successfully. Thank you!");
@@ -335,6 +391,45 @@ function ReportContent() {
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 resize-none"
               required
             />
+          </div>
+
+          {/* Product Photo */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+              Product Photo (Optional)
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="block w-full text-sm text-gray-600 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/30 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50"
+              />
+              {productImage && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProductImage(null);
+                    setImagePreview(null);
+                  }}
+                  className="text-red-600 dark:text-red-400 hover:text-red-700 text-sm"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+            {imagePreview && (
+              <div className="mt-4 relative">
+                <img
+                  src={imagePreview}
+                  alt="Product preview"
+                  className="max-w-sm max-h-48 rounded-lg border border-gray-300 dark:border-gray-700"
+                />
+              </div>
+            )}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Upload a clear photo of the product packaging (max 5MB)
+            </p>
           </div>
 
           {/* Purchase Location */}

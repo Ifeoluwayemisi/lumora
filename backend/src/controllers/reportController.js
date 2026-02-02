@@ -1,8 +1,12 @@
 import prisma from "../models/prismaClient.js";
+import fs from "fs/promises";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+import * as emailService from "../services/emailService.js";
 
 /**
  * POST /reports/submit
- * Submit a report for a suspicious product
+ * Submit a report for a suspicious product with optional image
  */
 export async function submitReport(req, res) {
   try {
@@ -24,6 +28,28 @@ export async function submitReport(req, res) {
       healthImpact,
       healthSymptoms,
     } = req.body;
+
+    let imagePath = null;
+
+    // Handle file upload if present
+    if (req.file) {
+      try {
+        const uploadDir = path.join(process.cwd(), "backend", "uploads", "reports");
+        await fs.mkdir(uploadDir, { recursive: true });
+
+        const filename = `${uuidv4()}-${Date.now()}.jpg`;
+        const filepath = path.join(uploadDir, filename);
+
+        // Save uploaded file
+        await fs.writeFile(filepath, req.file.buffer);
+
+        imagePath = `/uploads/reports/${filename}`;
+        console.log("[REPORT] Image saved:", imagePath);
+      } catch (uploadErr) {
+        console.error("[REPORT] Image upload error:", uploadErr.message);
+        // Continue without image rather than failing entire submission
+      }
+    }
 
     // Validate required fields
     if (!codeValue || !reportType || !description) {
@@ -60,6 +86,7 @@ export async function submitReport(req, res) {
           location: location || null,
           latitude: latitude || null,
           longitude: longitude || null,
+          imagePath: imagePath,
           reason: reportType,
           description: [
             description,
@@ -77,6 +104,38 @@ export async function submitReport(req, res) {
         },
       }),
     ]);
+
+    // Send confirmation email if contact provided
+    if (contact || reporterEmail) {
+      const emailAddr = contact || reporterEmail;
+      const caseName = `CASE-${userReport.id.substring(0, 8).toUpperCase()}`;
+      
+      emailService.sendReportReceivedEmail(emailAddr, reporterName, codeValue, caseName).catch(err => {
+        console.error("[REPORT] Email send failed:", err.message);
+      });
+    }
+
+    // If health impact reported, escalate to authorities
+    if (healthImpact !== "no") {
+      emailService.notifyAuthoritiesHealthAlert({
+        reportId: userReport.id,
+        codeValue,
+        reporterName,
+        healthImpact,
+        healthSymptoms,
+        location,
+        reportedAt: userReport.reportedAt,
+      }).catch(err => {
+        console.error("[REPORT] Health alert escalation failed:", err.message);
+      });
+
+      // Also email reporter about health escalation
+      if (contact || reporterEmail) {
+        emailService.sendHealthAlertEmail(contact || reporterEmail, reporterName, codeValue, healthSymptoms).catch(err => {
+          console.error("[REPORT] Health alert email send failed:", err.message);
+        });
+      }
+    }
 
     res.status(201).json({
       message: "Report submitted successfully",
