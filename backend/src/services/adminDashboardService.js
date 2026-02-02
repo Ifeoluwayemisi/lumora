@@ -76,13 +76,42 @@ export async function getGlobalMetrics() {
     where: { status: "NEW" },
   });
 
+  // Calculate breakdown percentages
+  let genuineCount = 0;
+  let suspiciousCount = 0;
+  let counterfeitCount = 0;
+
+  verificationBreakdown.forEach((item) => {
+    if (item.verificationState === "GENUINE") {
+      genuineCount = item._count.id;
+    } else if (item.verificationState === "SUSPICIOUS") {
+      suspiciousCount = item._count.id;
+    } else if (
+      item.verificationState === "INVALID" ||
+      item.verificationState === "COUNTERFEIT"
+    ) {
+      counterfeitCount += item._count.id;
+    }
+  });
+
+  const suspiciousPercentage =
+    totalVerifications > 0 ? ((suspiciousCount / totalVerifications) * 100).toFixed(1) : 0;
+  const counterfeitPercentage =
+    totalVerifications > 0 ? ((counterfeitCount / totalVerifications) * 100).toFixed(1) : 0;
+  const genuinePercentage =
+    totalVerifications > 0 ? ((genuineCount / totalVerifications) * 100).toFixed(1) : 0;
+
   return {
-    verifications: {
-      today: todayVerifications,
-      sevenDays: sevenDayVerifications,
-      allTime: totalVerifications,
-      breakdown: verificationBreakdown,
-    },
+    totalVerifications,
+    todayVerifications,
+    sevenDayVerifications,
+    genuineCount,
+    suspiciousCount,
+    counterfeits: counterfeitCount,
+    suspiciousPercentage: parseFloat(suspiciousPercentage),
+    counterfeitPercentage: parseFloat(counterfeitPercentage),
+    genuinePercentage: parseFloat(genuinePercentage),
+    verificationBreakdown,
     manufacturers: {
       pending: manufacturersPending,
       approved: manufacturersApproved,
