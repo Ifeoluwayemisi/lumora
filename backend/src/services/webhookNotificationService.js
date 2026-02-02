@@ -6,7 +6,15 @@ import crypto from "crypto";
  */
 export async function sendWebhookNotification(flagData) {
   try {
-    const { agency, codeValue, reason, severity, manufacturerName, manufacturerId, productCategory } = flagData;
+    const {
+      agency,
+      codeValue,
+      reason,
+      severity,
+      manufacturerName,
+      manufacturerId,
+      productCategory,
+    } = flagData;
 
     // Check if webhook is configured and active for this agency
     const webhook = await prisma.regulatoryWebhook.findUnique({
@@ -14,7 +22,9 @@ export async function sendWebhookNotification(flagData) {
     });
 
     if (!webhook || !webhook.isActive) {
-      console.log(`[WEBHOOK] No active webhook for ${agency}, skipping notification`);
+      console.log(
+        `[WEBHOOK] No active webhook for ${agency}, skipping notification`,
+      );
       return { success: false, reason: "No webhook configured" };
     }
 
@@ -36,7 +46,13 @@ export async function sendWebhookNotification(flagData) {
     const signature = generateWebhookSignature(payload, webhook.secret);
 
     // Send webhook with retry logic
-    const result = await sendWebhookWithRetry(webhook, payload, signature, 1, webhook.retryAttempts || 3);
+    const result = await sendWebhookWithRetry(
+      webhook,
+      payload,
+      signature,
+      1,
+      webhook.retryAttempts || 3,
+    );
 
     return result;
   } catch (error) {
@@ -48,14 +64,20 @@ export async function sendWebhookNotification(flagData) {
 /**
  * Send webhook with exponential backoff retry
  */
-async function sendWebhookWithRetry(webhook, payload, signature, attemptNum = 1, maxAttempts = 3) {
+async function sendWebhookWithRetry(
+  webhook,
+  payload,
+  signature,
+  attemptNum = 1,
+  maxAttempts = 3,
+) {
   try {
     const timeout = webhook.timeoutSeconds || 30;
     const headers = {
       "Content-Type": "application/json",
       "X-Webhook-Signature": signature,
       "X-Webhook-Attempt": attemptNum.toString(),
-      ...( webhook.headers || {}),
+      ...(webhook.headers || {}),
     };
 
     const controller = new AbortController();
@@ -75,7 +97,9 @@ async function sendWebhookWithRetry(webhook, payload, signature, attemptNum = 1,
       status: response.ok ? "success" : "failed",
       responseStatus: response.status,
       attemptNumber: attemptNum,
-      message: response.ok ? "Delivered successfully" : `HTTP ${response.status}`,
+      message: response.ok
+        ? "Delivered successfully"
+        : `HTTP ${response.status}`,
     });
 
     if (response.ok) {
@@ -85,7 +109,9 @@ async function sendWebhookWithRetry(webhook, payload, signature, attemptNum = 1,
         data: { lastSuccessfulWebhook: new Date() },
       });
 
-      console.log(`[WEBHOOK] ✓ Delivered to ${webhook.agency} (attempt ${attemptNum})`);
+      console.log(
+        `[WEBHOOK] ✓ Delivered to ${webhook.agency} (attempt ${attemptNum})`,
+      );
       return { success: true, attempt: attemptNum };
     }
 
@@ -109,11 +135,18 @@ async function sendWebhookWithRetry(webhook, payload, signature, attemptNum = 1,
 
     // Retry with exponential backoff
     if (attemptNum < maxAttempts) {
-      const delaySeconds = Math.pow(2, attemptNum - 1) * (webhook.retryIntervalSeconds || 300);
+      const delaySeconds =
+        Math.pow(2, attemptNum - 1) * (webhook.retryIntervalSeconds || 300);
       console.log(`[WEBHOOK] Retrying in ${delaySeconds}s...`);
 
       await new Promise((resolve) => setTimeout(resolve, delaySeconds * 1000));
-      return sendWebhookWithRetry(webhook, payload, signature, attemptNum + 1, maxAttempts);
+      return sendWebhookWithRetry(
+        webhook,
+        payload,
+        signature,
+        attemptNum + 1,
+        maxAttempts,
+      );
     }
 
     return { success: false, attempt: attemptNum, error: error.message };

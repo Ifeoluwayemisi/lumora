@@ -57,8 +57,14 @@ export default function CodesPage() {
       ]);
 
       const codesData = codesRes.data?.data || [];
-      console.log("[CODES_PAGE] Received codes with states:", codesData.map(c => ({ code: c.code.substring(0, 10), state: c.verificationState })));
-      
+      console.log(
+        "[CODES_PAGE] Received codes with states:",
+        codesData.map((c) => ({
+          code: c.code.substring(0, 10),
+          state: c.verificationState,
+        })),
+      );
+
       setCodes(codesData);
       setProducts(productsRes.data?.data || []);
       setManufacturer(profileRes.data?.manufacturer);
@@ -340,7 +346,8 @@ export default function CodesPage() {
                                       code: log.code,
                                       latitude: log.latitude,
                                       longitude: log.longitude,
-                                      location: log.location || "Unknown Location",
+                                      location:
+                                        log.location || "Unknown Location",
                                     });
                                     setShowLocationModal(true);
                                   }}
@@ -351,7 +358,9 @@ export default function CodesPage() {
                               </div>
                             ) : (
                               <div>
-                                <span className="text-gray-400">No location data</span>
+                                <span className="text-gray-400">
+                                  No location data
+                                </span>
                                 <div className="mt-2">
                                   <a
                                     href={`https://www.google.com/maps/search/lumora/`}
@@ -562,21 +571,22 @@ export default function CodesPage() {
             </div>
           )}
 
-        {/* Location Details Modal */}
-        {showLocationModal && selectedLocation && (
-          <LocationDetailsModal
-            code={selectedLocation.code}
-            location={selectedLocation.location}
-            latitude={selectedLocation.latitude}
-            longitude={selectedLocation.longitude}
-            verificationHistory={[]}
-            manufacturerLocation={null}
-            onClose={() => {
-              setShowLocationModal(false);
-              setSelectedLocation(null);
-            }}
-          />
-        )}
+          {/* Location Details Modal */}
+          {showLocationModal && selectedLocation && (
+            <LocationDetailsModal
+              code={selectedLocation.code}
+              location={selectedLocation.location}
+              latitude={selectedLocation.latitude}
+              longitude={selectedLocation.longitude}
+              verificationHistory={[]}
+              manufacturerLocation={null}
+              onClose={() => {
+                setShowLocationModal(false);
+                setSelectedLocation(null);
+              }}
+            />
+          )}
+        </div>
       </div>
     </>
   );

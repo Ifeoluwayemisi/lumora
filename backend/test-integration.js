@@ -9,8 +9,10 @@ async function testIntegration() {
   // Test 1: Import all required modules
   console.log("✓ Test 1: Importing modules...");
   try {
-    const { sendWebhookNotification } = await import("./src/services/webhookNotificationService.js");
-    const { initializeAgencies, resetHourlyCounters, resetDailyCounters } = await import("./src/utils/initializeAgencies.js");
+    const { sendWebhookNotification } =
+      await import("./src/services/webhookNotificationService.js");
+    const { initializeAgencies, resetHourlyCounters, resetDailyCounters } =
+      await import("./src/utils/initializeAgencies.js");
     const { runAnalyticsJobs } = await import("./src/jobs/analyticsJobs.js");
     console.log("  ✓ All modules imported successfully\n");
   } catch (error) {
@@ -21,14 +23,19 @@ async function testIntegration() {
   // Test 2: Verify function signatures
   console.log("✓ Test 2: Verifying function signatures...");
   try {
-    const { sendWebhookNotification } = await import("./src/services/webhookNotificationService.js");
-    const { initializeAgencies } = await import("./src/utils/initializeAgencies.js");
+    const { sendWebhookNotification } =
+      await import("./src/services/webhookNotificationService.js");
+    const { initializeAgencies } =
+      await import("./src/utils/initializeAgencies.js");
     const { runAnalyticsJobs } = await import("./src/jobs/analyticsJobs.js");
 
-    if (typeof sendWebhookNotification !== "function") throw new Error("sendWebhookNotification is not a function");
-    if (typeof initializeAgencies !== "function") throw new Error("initializeAgencies is not a function");
-    if (typeof runAnalyticsJobs !== "function") throw new Error("runAnalyticsJobs is not a function");
-    
+    if (typeof sendWebhookNotification !== "function")
+      throw new Error("sendWebhookNotification is not a function");
+    if (typeof initializeAgencies !== "function")
+      throw new Error("initializeAgencies is not a function");
+    if (typeof runAnalyticsJobs !== "function")
+      throw new Error("runAnalyticsJobs is not a function");
+
     console.log("  ✓ All function signatures valid\n");
   } catch (error) {
     console.error("  ✗ Signature error:", error.message);
@@ -39,7 +46,8 @@ async function testIntegration() {
   console.log("✓ Test 3: Verifying codeController imports...");
   try {
     const codeController = await import("./src/controllers/codeController.js");
-    if (typeof codeController.flagCode !== "function") throw new Error("flagCode is not a function");
+    if (typeof codeController.flagCode !== "function")
+      throw new Error("flagCode is not a function");
     console.log("  ✓ codeController.flagCode is callable\n");
   } catch (error) {
     console.error("  ✗ codeController error:", error.message);

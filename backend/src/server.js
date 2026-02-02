@@ -3,7 +3,11 @@ import { execSync } from "child_process";
 import app from "./app.js";
 import prisma from "./models/prismaClient.js";
 import { setupSecurityJobs, cleanupSecurityJobs } from "./jobs/securityJobs.js";
-import { initializeAgencies, resetHourlyCounters, resetDailyCounters } from "./utils/initializeAgencies.js";
+import {
+  initializeAgencies,
+  resetHourlyCounters,
+  resetDailyCounters,
+} from "./utils/initializeAgencies.js";
 import { runAnalyticsJobs } from "./jobs/analyticsJobs.js";
 
 // Trigger redeploy - ESM fixes applied
@@ -91,15 +95,21 @@ async function startServer() {
       // Setup background jobs for rate limiting and analytics
       try {
         // Reset counters every hour
-        const hourlyResetInterval = setInterval(async () => {
-          await resetHourlyCounters();
-        }, 60 * 60 * 1000); // 1 hour
+        const hourlyResetInterval = setInterval(
+          async () => {
+            await resetHourlyCounters();
+          },
+          60 * 60 * 1000,
+        ); // 1 hour
         backgroundJobs.push(hourlyResetInterval);
 
         // Reset counters every day
-        const dailyResetInterval = setInterval(async () => {
-          await resetDailyCounters();
-        }, 24 * 60 * 60 * 1000); // 24 hours
+        const dailyResetInterval = setInterval(
+          async () => {
+            await resetDailyCounters();
+          },
+          24 * 60 * 60 * 1000,
+        ); // 24 hours
         backgroundJobs.push(dailyResetInterval);
 
         // Run analytics jobs daily at midnight
@@ -112,9 +122,12 @@ async function startServer() {
         runAnalyticsJobs();
 
         // Schedule for midnight daily
-        const analyticsInterval = setInterval(() => {
-          runAnalyticsJobs();
-        }, 24 * 60 * 60 * 1000); // 24 hours
+        const analyticsInterval = setInterval(
+          () => {
+            runAnalyticsJobs();
+          },
+          24 * 60 * 60 * 1000,
+        ); // 24 hours
         backgroundJobs.push(analyticsInterval);
 
         console.log("[JOBS] Background jobs initialized:");

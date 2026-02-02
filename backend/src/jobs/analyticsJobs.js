@@ -33,9 +33,10 @@ export async function createCategoryDistributionSnapshot() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const existingSnapshot = await prisma.categoryDistributionSnapshot.findUnique({
-      where: { snapshotDate: today },
-    });
+    const existingSnapshot =
+      await prisma.categoryDistributionSnapshot.findUnique({
+        where: { snapshotDate: today },
+      });
 
     if (existingSnapshot) {
       // Update existing snapshot
@@ -140,7 +141,10 @@ export async function createAgencyFlagAnalytics() {
 
     console.log("[ANALYTICS_JOB] Agency flag analytics created");
   } catch (error) {
-    console.error("[ANALYTICS_JOB] Error creating agency analytics:", error.message);
+    console.error(
+      "[ANALYTICS_JOB] Error creating agency analytics:",
+      error.message,
+    );
   }
 }
 

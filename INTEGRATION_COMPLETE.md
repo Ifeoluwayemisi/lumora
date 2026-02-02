@@ -13,6 +13,7 @@ Successfully integrated **webhook notifications**, **per-agency rate limiting**,
 **Purpose**: Securely deliver flagged code notifications to regulatory agencies via webhooks
 
 **Key Features**:
+
 - ✅ **HMAC-SHA256 Signatures**: All payloads signed for authenticity verification
 - ✅ **Exponential Backoff Retry**: Automatic retry up to 3 times with exponential delay
 - ✅ **Delivery Tracking**: Full logging of all webhook attempts with status and response codes
@@ -20,6 +21,7 @@ Successfully integrated **webhook notifications**, **per-agency rate limiting**,
 - ✅ **Timeout Management**: Configurable timeouts (default 30s) to prevent hanging
 
 **Functions**:
+
 ```javascript
 sendWebhookNotification(flagData)           // Main entry point
 sendWebhookWithRetry(webhook, payload...)  // Retry logic with exponential backoff
@@ -29,6 +31,7 @@ updateWebhookSuccessRate(webhookId)       // Calculate success metrics
 ```
 
 **Example Payload**:
+
 ```json
 {
   "timestamp": "2026-01-29T18:45:00.000Z",
@@ -49,20 +52,23 @@ updateWebhookSuccessRate(webhookId)       // Calculate success metrics
 **Purpose**: Prevent overwhelming agencies with too many alerts through per-agency limits
 
 **Limits Per Agency**:
+
 - **Hourly**: 100 alerts/hour
 - **Daily**: 1000 alerts/day
 - **Throttling**: When limits exceeded, agency throttled for 1 hour
 
 **Counter Reset**:
+
 - Automatic hourly reset at top of each hour
 - Automatic daily reset at midnight
 - Database tracks reset times for consistency
 
 **Functions**:
+
 ```javascript
-initializeAgencies()              // Create rate limit records on startup
-resetHourlyCounters()            // Reset hourly counters at hour boundaries
-resetDailyCounters()             // Reset daily counters at day boundaries
+initializeAgencies(); // Create rate limit records on startup
+resetHourlyCounters(); // Reset hourly counters at hour boundaries
+resetDailyCounters(); // Reset daily counters at day boundaries
 ```
 
 ### 3. **Analytics Jobs** (`analyticsJobs.js`)
@@ -72,20 +78,23 @@ resetDailyCounters()             // Reset daily counters at day boundaries
 **Data Collected**:
 
 **Category Distribution**:
+
 - Daily count of manufacturers by category (drugs, food, cosmetics, other)
 - Historical trend tracking for dashboard
 
 **Agency Flag Analytics**:
+
 - Total flagged codes per agency per day
 - Severity breakdown (critical/high/medium/low)
 - Reason breakdown (suspicious/counterfeit/blacklist)
 - Manufacturer breakdown
 
 **Functions**:
+
 ```javascript
-createCategoryDistributionSnapshot()    // Daily category counts
-createAgencyFlagAnalytics()            // Daily agency statistics
-runAnalyticsJobs()                     // Runs both jobs together
+createCategoryDistributionSnapshot(); // Daily category counts
+createAgencyFlagAnalytics(); // Daily agency statistics
+runAnalyticsJobs(); // Runs both jobs together
 ```
 
 ---
@@ -129,13 +138,14 @@ When a code is flagged via `/api/codes/{codeId}/flag`:
    - Analytics snapshot job (daily at midnight)
 
 **Initialization Code**:
+
 ```javascript
-await initializeAgencies();                    // Creates rate limit records
+await initializeAgencies(); // Creates rate limit records
 
 // Background jobs
-setInterval(resetHourlyCounters, 60*60*1000);           // Every hour
-setInterval(resetDailyCounters, 24*60*60*1000);        // Every day
-setInterval(runAnalyticsJobs, 24*60*60*1000);          // Every day
+setInterval(resetHourlyCounters, 60 * 60 * 1000); // Every hour
+setInterval(resetDailyCounters, 24 * 60 * 60 * 1000); // Every day
+setInterval(runAnalyticsJobs, 24 * 60 * 60 * 1000); // Every day
 ```
 
 ---
@@ -145,6 +155,7 @@ setInterval(runAnalyticsJobs, 24*60*60*1000);          // Every day
 ### New Models Added
 
 **RegulatoryWebhook**:
+
 ```prisma
 model RegulatoryWebhook {
   id                    String
@@ -163,6 +174,7 @@ model RegulatoryWebhook {
 ```
 
 **WebhookLog**:
+
 ```prisma
 model WebhookLog {
   id              String
@@ -177,6 +189,7 @@ model WebhookLog {
 ```
 
 **AgencyRateLimit**:
+
 ```prisma
 model AgencyRateLimit {
   id                String
@@ -193,6 +206,7 @@ model AgencyRateLimit {
 ```
 
 **AgencyFlagAnalytics**:
+
 ```prisma
 model AgencyFlagAnalytics {
   id                  String
@@ -201,12 +215,13 @@ model AgencyFlagAnalytics {
   totalFlaggedCodes   Int
   severityBreakdown   Json        // {"critical": 5, "high": 10, ...}
   reasonBreakdown     Json        // {"counterfeit": 8, "suspicious": 7, ...}
-  
+
   @@unique([agency, date])
 }
 ```
 
 **CategoryDistributionSnapshot**:
+
 ```prisma
 model CategoryDistributionSnapshot {
   id          String
@@ -227,6 +242,7 @@ model CategoryDistributionSnapshot {
 All endpoints require admin authentication and are under `/api/admin/`
 
 ### Analytics Endpoints
+
 - `GET /analytics/category-distribution` - Current manufacturer distribution
 - `GET /analytics/category-history?days=30` - Historical trends
 - `GET /analytics/manufacturers` - Breakdown by category
@@ -234,11 +250,13 @@ All endpoints require admin authentication and are under `/api/admin/`
 - `GET /analytics/agencies/:agency?days=30` - Specific agency report
 
 ### Rate Limit Management
+
 - `GET /management/rate-limits` - All agencies status
 - `GET /management/rate-limits/:agency` - Specific agency limits
 - `PUT /management/rate-limits/:agency` - Update limits
 
 ### Webhook Management
+
 - `GET /management/webhooks/:agency/config` - Get configuration
 - `POST /management/webhooks/:agency/register` - Register webhook
 - `GET /management/webhooks/:agency/logs` - Delivery logs
@@ -256,6 +274,7 @@ node test-integration.js
 ```
 
 Expected output:
+
 ```
 ✅ All integration tests passed!
 
@@ -278,6 +297,7 @@ All operations include detailed logging with prefixes:
 - **[FLAG_CODE]** - Code flagging operations
 
 Example logs:
+
 ```
 [INIT] Initializing agency records...
 [INIT] Created rate limit record for NAFDAC
@@ -330,13 +350,12 @@ Example logs:
 
 ## 📚 File Reference
 
-| File | Purpose | Lines |
-|------|---------|-------|
-| `webhookNotificationService.js` | Webhook delivery with retry | 165 |
-| `analyticsJobs.js` | Daily analytics collection | 145 |
-| `initializeAgencies.js` | Startup initialization | 115 |
-| `codeController.js` | Flag flow integration | 520 (updated) |
-| `server.js` | Background job setup | 121 (updated) |
-| `adminAnalyticsController.js` | Admin API handlers | 598 |
-| `adminAnalytics.js` | Route definitions | 137 |
-
+| File                            | Purpose                     | Lines         |
+| ------------------------------- | --------------------------- | ------------- |
+| `webhookNotificationService.js` | Webhook delivery with retry | 165           |
+| `analyticsJobs.js`              | Daily analytics collection  | 145           |
+| `initializeAgencies.js`         | Startup initialization      | 115           |
+| `codeController.js`             | Flag flow integration       | 520 (updated) |
+| `server.js`                     | Background job setup        | 121 (updated) |
+| `adminAnalyticsController.js`   | Admin API handlers          | 598           |
+| `adminAnalytics.js`             | Route definitions           | 137           |

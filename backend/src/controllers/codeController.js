@@ -189,7 +189,7 @@ export async function flagCode(req, res) {
 
       // Send webhook notifications to each agency (with rate limiting)
       const agenciesToNotify = regulatoryBody.agencies || [regulatoryBody.name];
-      
+
       for (const agency of agenciesToNotify) {
         try {
           // Check rate limit before sending webhook
