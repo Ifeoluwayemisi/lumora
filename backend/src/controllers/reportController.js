@@ -26,23 +26,42 @@ export async function submitReport(req, res) {
       });
     }
 
-    // Create the report
-    const report = await prisma.report.create({
-      data: {
-        codeValue: codeValue.trim(),
-        productName: productName || null,
-        reportType,
-        description,
-        location: location || null,
-        purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
-        purchaseLocation: purchaseLocation || null,
-        contact: contact || null,
-        latitude: latitude || null,
-        longitude: longitude || null,
-        userId: req.user?.id || null,
-        status: "OPEN",
-      },
-    });
+    // Create both the old report (for backward compatibility) and the new userReport
+    const [report, userReport] = await Promise.all([
+      prisma.report.create({
+        data: {
+          codeValue: codeValue.trim(),
+          productName: productName || null,
+          reportType,
+          description,
+          location: location || null,
+          purchaseDate: purchaseDate ? new Date(purchaseDate) : null,
+          purchaseLocation: purchaseLocation || null,
+          contact: contact || null,
+          latitude: latitude || null,
+          longitude: longitude || null,
+          userId: req.user?.id || null,
+          status: "OPEN",
+        },
+      }),
+      prisma.userReport.create({
+        data: {
+          reporterId: req.user?.id || null,
+          reporterEmail: contact || null,
+          productName: productName || null,
+          productCode: codeValue.trim(),
+          scanType: "MANUAL",
+          location: location || null,
+          latitude: latitude || null,
+          longitude: longitude || null,
+          reason: reportType,
+          description: description,
+          status: "NEW",
+          riskLevel: "PENDING",
+          reportedAt: new Date(),
+        },
+      }),
+    ]);
 
     res.status(201).json({
       message: "Report submitted successfully",
