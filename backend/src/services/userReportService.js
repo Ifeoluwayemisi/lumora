@@ -42,6 +42,31 @@ export async function getUserReports(status = null, limit = 50) {
 }
 
 /**
+ * Get user reports with pagination
+ */
+export async function getUserReportsPaginated(status = null, page = 1, limit = 10) {
+  const where = {};
+  if (status) where.status = status;
+
+  const skip = (page - 1) * limit;
+
+  const [reports, total] = await Promise.all([
+    prisma.userReport.findMany({
+      where,
+      orderBy: { reportedAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.userReport.count({ where }),
+  ]);
+
+  return {
+    reports,
+    total,
+  };
+}
+
+/**
  * Get single user report
  */
 export async function getUserReport(reportId) {
@@ -195,19 +220,20 @@ export async function getManufacturerReports(manufacturerId) {
  * Get report statistics
  */
 export async function getReportStats() {
-  const [newReports, totalReports, criticalReports, dismissedReports] =
+  const [newReports, underReviewReports, escalatedReports, closedReports, totalReports] =
     await Promise.all([
       prisma.userReport.count({ where: { status: "NEW" } }),
+      prisma.userReport.count({ where: { status: "UNDER_REVIEW" } }),
+      prisma.userReport.count({ where: { status: "ESCALATED" } }),
+      prisma.userReport.count({ where: { status: "CLOSED" } }),
       prisma.userReport.count(),
-      prisma.userReport.count({ where: { riskLevel: "CRITICAL" } }),
-      prisma.userReport.count({ where: { status: "DISMISSED" } }),
     ]);
 
   return {
     new: newReports,
+    underReview: underReviewReports,
+    escalated: escalatedReports,
+    closed: closedReports,
     total: totalReports,
-    critical: criticalReports,
-    dismissed: dismissedReports,
-    actionRequired: newReports + criticalReports,
   };
 }

@@ -6,15 +6,21 @@ import * as auditLogService from "../services/auditLogService.js";
  */
 export async function getUserReportsController(req, res) {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const status = req.query.status || null;
-    const limit = req.query.limit || 50;
 
-    const reports = await userReportService.getUserReports(status, limit);
+    const result = await userReportService.getUserReportsPaginated(status, page, limit);
 
     return res.status(200).json({
       success: true,
-      data: reports,
-      count: reports.length,
+      data: {
+        items: result.reports,
+        currentPage: page,
+        pageSize: limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / limit),
+      },
     });
   } catch (err) {
     console.error("[GET_REPORTS] Error:", err.message);
@@ -205,7 +211,13 @@ export async function getReportStatsController(req, res) {
 
     return res.status(200).json({
       success: true,
-      data: stats,
+      data: {
+        newCount: stats.new,
+        underReviewCount: stats.underReview,
+        escalatedCount: stats.escalated,
+        closedCount: stats.closed,
+        totalCount: stats.total,
+      },
     });
   } catch (err) {
     console.error("[GET_STATS] Error:", err.message);
