@@ -95,11 +95,17 @@ export async function getGlobalMetrics() {
   });
 
   const suspiciousPercentage =
-    totalVerifications > 0 ? ((suspiciousCount / totalVerifications) * 100).toFixed(1) : 0;
+    totalVerifications > 0
+      ? ((suspiciousCount / totalVerifications) * 100).toFixed(1)
+      : 0;
   const counterfeitPercentage =
-    totalVerifications > 0 ? ((counterfeitCount / totalVerifications) * 100).toFixed(1) : 0;
+    totalVerifications > 0
+      ? ((counterfeitCount / totalVerifications) * 100).toFixed(1)
+      : 0;
   const genuinePercentage =
-    totalVerifications > 0 ? ((genuineCount / totalVerifications) * 100).toFixed(1) : 0;
+    totalVerifications > 0
+      ? ((genuineCount / totalVerifications) * 100).toFixed(1)
+      : 0;
 
   return {
     totalVerifications,

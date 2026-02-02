@@ -6,6 +6,14 @@ import { checkAndSendProductRiskAlert } from "./riskAlertService.js";
  */
 async function reverseGeocode(latitude, longitude) {
   try {
+    // Validate coordinates
+    if (!latitude || !longitude || isNaN(latitude) || isNaN(longitude)) {
+      console.warn(
+        `[REVERSE_GEOCODE] Invalid coordinates: ${latitude}, ${longitude}`,
+      );
+      return null;
+    }
+
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
       {
@@ -16,20 +24,25 @@ async function reverseGeocode(latitude, longitude) {
     );
 
     if (!response.ok) {
+      console.warn(
+        `[REVERSE_GEOCODE] API error for ${latitude}, ${longitude}: ${response.status}`,
+      );
       return null;
     }
 
     const data = await response.json();
     const address = data.address || {};
 
-    // Extract city, state, country
+    // Extract city, state, country with better fallback logic
     const city =
       address.city ||
       address.town ||
       address.village ||
       address.county ||
+      address.municipality ||
       "Unknown";
-    const state = address.state || "Unknown";
+    const state =
+      address.state || address.province || address.region || "Unknown";
     const country = address.country || "Unknown";
 
     return {
@@ -106,21 +119,76 @@ async function getTopVerificationLocations(manufacturerId, limit = 10) {
       }
     });
 
-    // Convert to array, sort by total, and return top N
-    const topLocations = Object.values(locationMap)
-      .sort((a, b) => b.total - a.total)
-      .slice(0, limit)
-      .map((loc) => ({
-        ...loc,
-        authenticity:
-          loc.total > 0 ? Math.round((loc.genuine / loc.total) * 100) : 0,
-        riskScore: calculateRiskScore(
-          loc.genuine,
-          loc.suspicious,
-          loc.invalid,
-          loc.alreadyUsed,
-        ),
-      }));
+    // Convert to array, sort by total, and return top N with proper location names
+    const topLocations = await Promise.all(
+      Object.values(locationMap)
+        .sort((a, b) => b.total - a.total)
+        .slice(0, limit)
+        .map(async (loc) => {
+          let city = "Unknown",
+            state = "Unknown",
+            country = "Unknown";
+
+          // Check if location is coordinate format like "(6.4474, 3.3903)"
+          const coordinateMatch = loc.location
+            ? loc.location.match(/^\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)\s*$/)
+            : null;
+
+          if (coordinateMatch) {
+            // Try reverse geocoding
+            const geocoded = await reverseGeocode(loc.latitude, loc.longitude);
+            if (geocoded) {
+              city = geocoded.city;
+              state = geocoded.state;
+              country = geocoded.country;
+              loc.location = geocoded.location;
+            }
+          } else if (loc.location && loc.location.trim()) {
+            // Parse existing location string
+            const parts = loc.location
+              .split(",")
+              .map((p) => p.trim())
+              .filter((p) => p.length > 0);
+
+            if (parts.length >= 3) {
+              city = parts[0];
+              state = parts[1];
+              country = parts[2];
+            } else if (parts.length === 2) {
+              city = parts[0];
+              country = parts[1];
+            } else if (parts.length === 1) {
+              // Try reverse geocoding for single part
+              const geocoded = await reverseGeocode(
+                loc.latitude,
+                loc.longitude,
+              );
+              if (geocoded) {
+                city = geocoded.city;
+                state = geocoded.state;
+                country = geocoded.country;
+              } else {
+                city = parts[0];
+              }
+            }
+          }
+
+          return {
+            ...loc,
+            city: city || "Unknown",
+            state: state || "Unknown",
+            country: country || "Unknown",
+            authenticity:
+              loc.total > 0 ? Math.round((loc.genuine / loc.total) * 100) : 0,
+            riskScore: calculateRiskScore(
+              loc.genuine,
+              loc.suspicious,
+              loc.invalid,
+              loc.alreadyUsed,
+            ),
+          };
+        }),
+    );
 
     return topLocations;
   } catch (err) {
@@ -375,8 +443,28 @@ export async function getHotspotPredictions(manufacturerId) {
           country = "Unknown",
           location = spot.location;
 
-        // Try to parse existing location string
-        if (spot.location && spot.location.trim()) {
+        // Check if location is just coordinates in parentheses format like "(6.4474, 3.3903)"
+        const coordinateMatch = spot.location
+          ? spot.location.match(/^\s*\(\s*([-\d.]+)\s*,\s*([-\d.]+)\s*\)\s*$/)
+          : null;
+
+        if (coordinateMatch) {
+          // Location is just coordinates, try reverse geocoding
+          const geocoded = await reverseGeocode(spot.latitude, spot.longitude);
+          if (geocoded) {
+            city = geocoded.city;
+            state = geocoded.state;
+            country = geocoded.country;
+            location = geocoded.location;
+          } else {
+            // Reverse geocoding failed - use coordinates as fallback
+            city = `${spot.latitude.toFixed(4)}`;
+            state = `${spot.longitude.toFixed(4)}`;
+            country = "Coordinates";
+            location = `${spot.latitude.toFixed(4)}, ${spot.longitude.toFixed(4)}`;
+          }
+        } else if (spot.location && spot.location.trim()) {
+          // Try to parse existing location string
           const parts = spot.location
             .split(",")
             .map((p) => p.trim())
@@ -393,8 +481,19 @@ export async function getHotspotPredictions(manufacturerId) {
             city = parts[0];
             country = parts[1];
           } else if (parts.length === 1) {
-            // Just one part
-            city = parts[0];
+            // Just one part - try reverse geocoding to get full details
+            const geocoded = await reverseGeocode(
+              spot.latitude,
+              spot.longitude,
+            );
+            if (geocoded) {
+              city = geocoded.city;
+              state = geocoded.state;
+              country = geocoded.country;
+              location = geocoded.location;
+            } else {
+              city = parts[0];
+            }
           }
         } else {
           // Location is empty/null, try reverse geocoding from coordinates
@@ -406,9 +505,9 @@ export async function getHotspotPredictions(manufacturerId) {
             location = geocoded.location;
           } else {
             // Reverse geocoding failed - use coordinates as fallback
-            city = `Lat: ${spot.latitude.toFixed(4)}`;
-            state = `Lng: ${spot.longitude.toFixed(4)}`;
-            country = "GPS Coordinates";
+            city = `${spot.latitude.toFixed(4)}`;
+            state = `${spot.longitude.toFixed(4)}`;
+            country = "Coordinates";
             location = `${spot.latitude.toFixed(4)}, ${spot.longitude.toFixed(4)}`;
           }
         }

@@ -17,6 +17,12 @@ export async function submitReport(req, res) {
       contact,
       latitude,
       longitude,
+      // New fields
+      reporterName,
+      reporterPhone,
+      batchNumber,
+      healthImpact,
+      healthSymptoms,
     } = req.body;
 
     // Validate required fields
@@ -47,7 +53,7 @@ export async function submitReport(req, res) {
       prisma.userReport.create({
         data: {
           reporterId: req.user?.id || null,
-          reporterEmail: contact || null,
+          reporterEmail: contact || reporterName || null,
           productName: productName || null,
           productCode: codeValue.trim(),
           scanType: "MANUAL",
@@ -55,9 +61,18 @@ export async function submitReport(req, res) {
           latitude: latitude || null,
           longitude: longitude || null,
           reason: reportType,
-          description: description,
+          description: [
+            description,
+            reporterName ? `Reporter: ${reporterName}` : null,
+            reporterPhone ? `Phone: ${reporterPhone}` : null,
+            batchNumber ? `Batch/Lot: ${batchNumber}` : null,
+            healthImpact !== "no" ? `Health Impact: ${healthImpact}` : null,
+            healthSymptoms ? `Symptoms: ${healthSymptoms}` : null,
+          ]
+            .filter(Boolean)
+            .join("\n"),
           status: "NEW",
-          riskLevel: "PENDING",
+          riskLevel: healthImpact !== "no" ? "HIGH" : "PENDING",
           reportedAt: new Date(),
         },
       }),

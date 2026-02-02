@@ -10,7 +10,14 @@ export async function getUserReportsController(req, res) {
     const limit = parseInt(req.query.limit) || 10;
     const status = req.query.status || null;
 
-    console.log("[GET_REPORTS] Fetching reports - page:", page, "limit:", limit, "status:", status);
+    console.log(
+      "[GET_REPORTS] Fetching reports - page:",
+      page,
+      "limit:",
+      limit,
+      "status:",
+      status,
+    );
 
     const result = await userReportService.getUserReportsPaginated(
       status,
@@ -18,7 +25,12 @@ export async function getUserReportsController(req, res) {
       limit,
     );
 
-    console.log("[GET_REPORTS] Found", result.reports.length, "reports, total:", result.total);
+    console.log(
+      "[GET_REPORTS] Found",
+      result.reports.length,
+      "reports, total:",
+      result.total,
+    );
 
     return res.status(200).json({
       success: true,

@@ -24,6 +24,12 @@ function ReportContent() {
     contact: "",
     latitude: null,
     longitude: null,
+    // New fields for better data capture
+    reporterName: "",
+    reporterPhone: "",
+    batchNumber: "",
+    healthImpact: "no",
+    healthSymptoms: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -35,14 +41,20 @@ function ReportContent() {
   const reverseGeocode = async (latitude, longitude) => {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
       );
       const data = await response.json();
       if (data.address) {
-        const city = data.address.city || data.address.town || data.address.village || "Unknown";
+        const city =
+          data.address.city ||
+          data.address.town ||
+          data.address.village ||
+          "Unknown";
         const state = data.address.state || "";
         const country = data.address.country || "";
-        const displayLocation = [city, state, country].filter(Boolean).join(", ");
+        const displayLocation = [city, state, country]
+          .filter(Boolean)
+          .join(", ");
         return displayLocation;
       }
     } catch (err) {
@@ -58,28 +70,31 @@ function ReportContent() {
       const location = await getLocationPermission();
       if (location.latitude && location.longitude) {
         console.log("✅ Reporter location captured:", location);
-        
+
         // Get location name from coordinates
-        const locName = await reverseGeocode(location.latitude, location.longitude);
-        
+        const locName = await reverseGeocode(
+          location.latitude,
+          location.longitude,
+        );
+
         setFormData((prev) => ({
           ...prev,
           latitude: location.latitude,
           longitude: location.longitude,
           location: locName || "Current Location",
         }));
-        
+
         if (locName) {
           setLocationName(locName);
         }
-        
+
         setLocationStatus("captured");
         toast.success(`📍 Location recorded: ${locName || "Current Location"}`);
       } else {
         console.warn("⚠️  Reporter location not available");
         setLocationStatus("failed");
         toast.info(
-          "Location not available, but your report will still be processed"
+          "Location not available, but your report will still be processed",
         );
       }
     };
@@ -127,6 +142,12 @@ function ReportContent() {
         contact: formData.contact || null,
         latitude: formData.latitude, // Reporter's location
         longitude: formData.longitude, // Reporter's location
+        // New fields
+        reporterName: formData.reporterName || null,
+        reporterPhone: formData.reporterPhone || null,
+        batchNumber: formData.batchNumber || null,
+        healthImpact: formData.healthImpact,
+        healthSymptoms: formData.healthSymptoms || null,
       });
 
       setSubmitted(true);
@@ -140,7 +161,7 @@ function ReportContent() {
       toast.error(
         err.response?.data?.message ||
           err.message ||
-          "Failed to submit report. Please try again."
+          "Failed to submit report. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -206,7 +227,7 @@ function ReportContent() {
             Help us identify and prevent counterfeiting. Your information is
             valuable to us.
           </p>
-          
+
           {/* Location Status */}
           <div className="mt-6">
             {locationStatus === "requesting" && (
@@ -218,7 +239,10 @@ function ReportContent() {
             {locationStatus === "captured" && (
               <div className="inline-flex items-center gap-2 px-3 py-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-700 dark:text-green-300">
                 <span>✓</span>
-                Location captured: <span className="font-semibold">{locationName || "Current Location"}</span>
+                Location captured:{" "}
+                <span className="font-semibold">
+                  {locationName || "Current Location"}
+                </span>
               </div>
             )}
             {locationStatus === "failed" && (
@@ -258,6 +282,21 @@ function ReportContent() {
               value={formData.productName}
               onChange={handleChange}
               placeholder="What product is this?"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
+            />
+          </div>
+
+          {/* Batch/Lot Number */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+              Batch/Lot Number (Optional)
+            </label>
+            <input
+              type="text"
+              name="batchNumber"
+              value={formData.batchNumber}
+              onChange={handleChange}
+              placeholder="If visible on the packaging (e.g., B123456, LOT789)"
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
             />
           </div>
@@ -341,6 +380,70 @@ function ReportContent() {
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
             />
           </div>
+
+          {/* Reporter Name */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+              Your Name (Optional)
+            </label>
+            <input
+              type="text"
+              name="reporterName"
+              value={formData.reporterName}
+              onChange={handleChange}
+              placeholder="Your full name"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
+            />
+          </div>
+
+          {/* Reporter Phone */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+              Your Phone Number (Optional)
+            </label>
+            <input
+              type="tel"
+              name="reporterPhone"
+              value={formData.reporterPhone}
+              onChange={handleChange}
+              placeholder="For follow-up contact"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
+            />
+          </div>
+
+          {/* Health Impact */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+              Did this product cause any health issues?
+            </label>
+            <select
+              name="healthImpact"
+              value={formData.healthImpact}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400"
+            >
+              <option value="no">No</option>
+              <option value="yes">Yes, I experienced adverse effects</option>
+              <option value="others">Yes, others reported issues</option>
+            </select>
+          </div>
+
+          {/* Health Symptoms - conditional */}
+          {formData.healthImpact !== "no" && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                Please describe any symptoms or health issues:
+              </label>
+              <textarea
+                name="healthSymptoms"
+                value={formData.healthSymptoms}
+                onChange={handleChange}
+                placeholder="What symptoms or health effects did you or others experience?"
+                rows="3"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 resize-none"
+              />
+            </div>
+          )}
 
           {/* Info Box */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg">

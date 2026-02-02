@@ -42,9 +42,13 @@ export async function getUserReports(status = null, limit = 50) {
 }
 
 /**
- * Get user reports with pagination
+ * Get user reports with pagination and full data enrichment
  */
-export async function getUserReportsPaginated(status = null, page = 1, limit = 10) {
+export async function getUserReportsPaginated(
+  status = null,
+  page = 1,
+  limit = 10,
+) {
   const where = {};
   if (status) where.status = status;
 
@@ -53,6 +57,24 @@ export async function getUserReportsPaginated(status = null, page = 1, limit = 1
   const [reports, total] = await Promise.all([
     prisma.userReport.findMany({
       where,
+      include: {
+        // Get admin review info if reviewed
+        admin: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+        // Get linked case if exists
+        caseFile: {
+          select: {
+            id: true,
+            caseNumber: true,
+            status: true,
+            severity: true,
+          },
+        },
+      },
       orderBy: { reportedAt: "desc" },
       skip,
       take: limit,
@@ -60,8 +82,74 @@ export async function getUserReportsPaginated(status = null, page = 1, limit = 1
     prisma.userReport.count({ where }),
   ]);
 
+  // Now enrich with Code, Batch, Manufacturer, and User lookups
+  const enrichedReports = await Promise.all(
+    reports.map(async (report) => {
+      let codeData = null;
+      let userData = null;
+
+      // Lookup Code if productCode provided
+      if (report.productCode) {
+        codeData = await prisma.code.findUnique({
+          where: { codeValue: report.productCode },
+          include: {
+            batch: {
+              include: {
+                manufacturer: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    verified: true,
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // Lookup User if reporterId provided
+      if (report.reporterId) {
+        userData = await prisma.user.findUnique({
+          where: { id: report.reporterId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            verified: true,
+          },
+        });
+      }
+
+      // Enrich with resolved data
+      return {
+        ...report,
+        // Reporter info - prioritize authenticated user over reporterEmail
+        reporterName: userData?.name || report.reporterEmail || "Anonymous",
+        reporterEmail: userData?.email || report.reporterEmail,
+        reporterPhone: userData?.phone,
+        reporterVerified: userData?.verified || false,
+        // Product info - from code lookup or original capture
+        productNameResolved:
+          codeData?.batch?.name || report.productName || "Unknown Product",
+        batchId: codeData?.batchId,
+        batchNumber: codeData?.batch?.batchNumber,
+        // Manufacturer info - from code lookup
+        manufacturerResolved: codeData?.batch?.manufacturer?.name,
+        manufacturerVerified: codeData?.batch?.manufacturer?.verified,
+        // Reviewer info
+        reviewedByAdminEmail: report.admin?.email,
+        // Case linking
+        caseNumber: report.caseFile?.caseNumber,
+        caseStatus: report.caseFile?.status,
+      };
+    })
+  );
+
   return {
-    reports,
+    reports: enrichedReports,
     total,
   };
 }
@@ -220,14 +308,19 @@ export async function getManufacturerReports(manufacturerId) {
  * Get report statistics
  */
 export async function getReportStats() {
-  const [newReports, underReviewReports, escalatedReports, closedReports, totalReports] =
-    await Promise.all([
-      prisma.userReport.count({ where: { status: "NEW" } }),
-      prisma.userReport.count({ where: { status: "UNDER_REVIEW" } }),
-      prisma.userReport.count({ where: { status: "ESCALATED" } }),
-      prisma.userReport.count({ where: { status: "CLOSED" } }),
-      prisma.userReport.count(),
-    ]);
+  const [
+    newReports,
+    underReviewReports,
+    escalatedReports,
+    closedReports,
+    totalReports,
+  ] = await Promise.all([
+    prisma.userReport.count({ where: { status: "NEW" } }),
+    prisma.userReport.count({ where: { status: "UNDER_REVIEW" } }),
+    prisma.userReport.count({ where: { status: "ESCALATED" } }),
+    prisma.userReport.count({ where: { status: "CLOSED" } }),
+    prisma.userReport.count(),
+  ]);
 
   return {
     new: newReports,

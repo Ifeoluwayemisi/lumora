@@ -312,7 +312,7 @@ export default function ReportsPage() {
                         onClick={() => setSelectedReport(report)}
                       >
                         <td className="py-3 px-4 font-medium text-gray-900 dark:text-white max-w-xs truncate">
-                          {report.productName}
+                          {report.productNameResolved || report.productName || "Unknown"}
                         </td>
                         <td className="py-3 px-4 text-gray-600 dark:text-gray-400">
                           {report.reporterName || "Anonymous"}
