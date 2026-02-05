@@ -3,6 +3,7 @@
 ## 1. CURRENT STATE ANALYSIS
 
 ### Database Schema Review
+
 ```
 UserReport Table:
 ├── reporterId (String, nullable) → User.id
@@ -32,23 +33,21 @@ Linked Tables:
 ```
 
 ### Current Issues
+
 1. **Missing Product Information**
    - productName is null for old reports
    - No batch/lot information captured
    - No way to identify actual Product record in system
-   
 2. **Incomplete Reporter Information**
    - reporterEmail might be null for anonymous reports
    - No phone number for follow-up
    - No way to verify if reporter is valid user
    - No authentication method (verified user vs anonymous)
-   
 3. **Insufficient Context for Linking**
    - productCode captured but not linked to Code record
    - No batch information to identify production run
    - Cannot determine if product is in system or fake
    - No manufacturer information in report despite having manufacturerId field
-   
 4. **Admin Contact Challenges**
    - Anonymous reports have no contact info
    - Can't verify reporter legitimacy
@@ -58,7 +57,9 @@ Linked Tables:
 ## 2. DATA ENRICHMENT STRATEGY
 
 ### A. Automatic Enrichment (Backend Lookup)
+
 When a report is submitted with `productCode`:
+
 ```javascript
 // Look up in Code table
 Code → get batchId, manufacturerId, productId
@@ -74,26 +75,28 @@ User → get name, phone, email, verified status
 ```
 
 ### B. Form Enhancement (Capture More Info)
+
 **New Fields to Add:**
+
 ```
 1. Product Information
    - Batch/Lot Number (if visible on packaging)
    - Product Photo (image upload)
    - Manufacturer Name (auto-filled or manual)
    - Expiration Date (if applicable)
-   
+
 2. Reporter Information (Optional for anonymous, Required for authenticated)
    - Full Name
    - Email (auto-filled if authenticated)
    - Phone Number (for follow-up)
    - Proof of Purchase (optional - receipt photo)
-   
+
 3. Purchase Information
    - Store Name/Location
    - Purchase Date
    - Price Paid
    - Quantity Purchased
-   
+
 4. Health Impact (for drugs/food)
    - Any adverse effects? (Yes/No)
    - Symptoms (if yes)
@@ -101,7 +104,9 @@ User → get name, phone, email, verified status
 ```
 
 ### C. Admin Dashboard Enhancements
+
 **Report Detail View Should Show:**
+
 ```
 1. Product Information
    ├── Product Name (from Code → Batch → Product lookup)
@@ -143,9 +148,11 @@ User → get name, phone, email, verified status
 ## 3. IMPLEMENTATION ROADMAP
 
 ### Phase 1: Backend Enrichment (CRITICAL)
+
 1. Enhance `getUserReportsPaginated()` to include JOINs:
+
    ```sql
-   SELECT ur.*, 
+   SELECT ur.*,
           c.batchId, c.manufacturerId,
           b.productName, b.drugId,
           m.name as manufacturerName,
@@ -166,6 +173,7 @@ User → get name, phone, email, verified status
    ```
 
 ### Phase 2: Form Enhancement
+
 1. Add fields to report form:
    - Batch/Lot Number
    - Product photo upload
@@ -181,6 +189,7 @@ User → get name, phone, email, verified status
    - Require image for certain report types
 
 ### Phase 3: Admin Dashboard Improvements
+
 1. Report detail modal shows all linked data
 2. Contact buttons (Email, Phone) for follow-up
 3. Quick links to:
@@ -198,18 +207,21 @@ User → get name, phone, email, verified status
 ## 4. CONTACT STRATEGY FOR REPORTERS
 
 ### For Authenticated Users
+
 - Email on file (required)
 - Phone number (optional but requested)
 - In-app notifications
 - Easy "Contact Reporter" button
 
 ### For Anonymous Users
+
 - Email is REQUIRED for follow-up
 - Phone is optional but strongly encouraged
 - Send validation email to verify address
 - Use email as primary contact method
 
 ### For Health Issues
+
 - Escalate to NAFDAC if symptoms reported
 - Request additional medical documentation
 - Offer to connect with health authorities
@@ -217,12 +229,14 @@ User → get name, phone, email, verified status
 ## 5. IMPLEMENTATION PRIORITY
 
 **HIGH PRIORITY (Week 1):**
+
 - [ ] Enhance userReportService.getUserReportsPaginated() with JOINs
 - [ ] Create data enrichment migration script
 - [ ] Update admin dashboard detail view with linked data
 - [ ] Add email/phone contact fields to form
 
 **MEDIUM PRIORITY (Week 2):**
+
 - [ ] Add product photo upload
 - [ ] Add batch/lot number field
 - [ ] Add store name field
@@ -230,6 +244,7 @@ User → get name, phone, email, verified status
 - [ ] Add reporter reputation tracking
 
 **LOW PRIORITY (Week 3):**
+
 - [ ] Advanced analytics on reports
 - [ ] Reporter leaderboard/reputation
 - [ ] Automated health alert system

@@ -3,30 +3,35 @@
 ## Completed Features
 
 ### Phase 2: Product Photo Uploads ✅
+
 - **Frontend**: File input with validation (5MB max, image type check), preview before submission
 - **Backend**: UUID-based file storage in `/uploads/reports/`, path saved to database
 - **Integration**: FormData submission with multipart form support, error handling
 
 **Files Modified:**
+
 - `frontend/app/report/page.js` - Added image upload UI and handling
 - `backend/src/controllers/reportController.js` - Added file upload logic
 - `backend/src/services/emailService.js` - Enhanced with email functions
 
 ### Phase 2: Email Notification System ✅
+
 - **Email Service**: Nodemailer integration with HTML templates
 - **Templates**: 4 professional templates (confirmation, info request, investigation complete, health alert escalation)
 - **Triggers**: Automatic emails on report submission, health alert escalation to NAFDAC + reporter
-- **Features**: 
+- **Features**:
   - Report received confirmation with case reference
   - Health alert escalation with medical guidance
   - Authority notification to NAFDAC with tabular format
   - All templates responsive and styled
 
 **Files Created:**
+
 - `backend/src/services/emailTemplates.js` - Email template definitions
 - `backend/src/services/emailService.js` - Email sending logic
 
 ### Phase 3: Reporter Reputation Tracking ✅
+
 - **Reputation Calculation**: Score based on accuracy (%, reports count, responsiveness)
 - **Trust Levels**: NEW, CONTRIBUTOR, ACTIVE, VERIFIED, TRUSTED
 - **Features**:
@@ -42,16 +47,19 @@
   - Max: 100 points
 
 **Files Created:**
+
 - `backend/src/services/reporterReputationService.js` - Reputation calculation
 - `backend/src/routes/reputationRoutes.js` - API endpoints
 
 **API Endpoints:**
+
 - `GET /api/reputation/leaderboard?limit=10` - Top reporters
 - `GET /api/reputation/reporter/:reporterId` - Individual profile
 - `GET /api/reputation/me` - Authenticated user's reputation
 - `POST /api/reputation/update/:reporterId` - Update (admin only)
 
 ### Phase 3: Advanced Analytics Dashboard ✅
+
 - **Dashboard Overview**: KPI cards (total reports, counterfeit rate, resolution rate, etc.)
 - **Visualizations**:
   - Risk distribution (pie chart)
@@ -67,10 +75,12 @@
   - Multiple KPI cards (7 total)
 
 **Files Created:**
+
 - `backend/src/routes/analyticsRoutes.js` - Analytics API endpoints
 - `frontend/app/admin/analytics/page.js` - Analytics dashboard UI
 
 **Analytics Data Points:**
+
 - Total reports, counterfeit count, resolution %, pending count
 - Unique reporters, manufacturers, health alerts
 - Risk level distribution (CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN)
@@ -83,6 +93,7 @@
 ## System Architecture
 
 ### Data Flow: Report Submission
+
 ```
 User Form → FormData + Image → reportController
   ↓
@@ -100,6 +111,7 @@ Return success to frontend
 ```
 
 ### Reputation Calculation Flow
+
 ```
 Get all reports by reporterId
   ↓
@@ -115,6 +127,7 @@ Store/return reputation profile
 ```
 
 ### Analytics Data Aggregation
+
 ```
 UserReport joins → Code → Batch → Manufacturer
   ↓
@@ -134,6 +147,7 @@ Return to frontend for visualization
 ## Configuration Required
 
 ### Environment Variables (.env)
+
 ```
 # Email Configuration
 EMAIL_USER=your-email@gmail.com
@@ -148,33 +162,39 @@ UPLOAD_TYPES=image/jpeg,image/png,image/webp
 ```
 
 ### Middleware Setup (if using Multer)
+
 ```javascript
 // Add to app.js
-import multer from 'multer';
+import multer from "multer";
 
 const upload = multer({
   storage: multer.diskStorage({
-    destination: './uploads/reports/',
+    destination: "./uploads/reports/",
     filename: (req, file, cb) => {
       cb(null, `${Date.now()}-${file.originalname}`);
-    }
+    },
   }),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (file.mimetype.startsWith("image/")) {
       cb(null, true);
     } else {
-      cb(new Error('Only images allowed'));
+      cb(new Error("Only images allowed"));
     }
-  }
+  },
 });
 
-app.post('/api/reports/submit', upload.single('image'), reportController.submitReport);
+app.post(
+  "/api/reports/submit",
+  upload.single("image"),
+  reportController.submitReport,
+);
 ```
 
 ## Testing Endpoints
 
 ### Test Reputation System
+
 ```bash
 # Get leaderboard
 curl http://localhost:4000/api/reputation/leaderboard
@@ -187,6 +207,7 @@ curl -H "Authorization: Bearer {token}" http://localhost:4000/api/reputation/me
 ```
 
 ### Test Analytics System
+
 ```bash
 # Dashboard overview
 curl -H "Authorization: Bearer {token}" http://localhost:4000/api/analytics/dashboard
@@ -202,6 +223,7 @@ curl -H "Authorization: Bearer {token}" http://localhost:4000/api/analytics/tren
 ```
 
 ### Test Email System
+
 ```bash
 # Verify SMTP configuration
 curl -X POST http://localhost:4000/api/admin/verify-email
@@ -210,6 +232,7 @@ curl -X POST http://localhost:4000/api/admin/verify-email
 ## Frontend Components
 
 ### Analytics Dashboard (`/admin/analytics`)
+
 - KPI cards showing key metrics
 - Pie chart for risk distribution
 - Bar chart for status distribution
@@ -219,6 +242,7 @@ curl -X POST http://localhost:4000/api/admin/verify-email
 - Data table for counterfeit hotspots
 
 ### Reputation Badge (planned for reports table)
+
 - Reporter name with trust level badge
 - Color-coded by level: TRUSTED (green), VERIFIED (blue), ACTIVE (gray), etc.
 - Hover shows accuracy % and report count

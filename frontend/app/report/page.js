@@ -72,7 +72,7 @@ function ReportContent() {
       try {
         const location = await getLocationPermission();
         console.log("📍 Location response:", location);
-        
+
         if (location && location.latitude && location.longitude) {
           console.log("✅ Reporter location captured:", location);
 
@@ -98,7 +98,9 @@ function ReportContent() {
             toast.success("📍 Location recorded (coordinates captured)");
           }
         } else {
-          console.warn("⚠️  Reporter location not available - user may have denied permission");
+          console.warn(
+            "⚠️  Reporter location not available - user may have denied permission",
+          );
           setLocationStatus("failed");
           toast.info(
             "📍 Location permission denied or not available. You can still submit your report.",
@@ -182,7 +184,10 @@ function ReportContent() {
         uploadFormData.append("description", formData.description);
         uploadFormData.append("location", formData.location || "");
         uploadFormData.append("purchaseDate", formData.purchaseDate || "");
-        uploadFormData.append("purchaseLocation", formData.purchaseLocation || "");
+        uploadFormData.append(
+          "purchaseLocation",
+          formData.purchaseLocation || "",
+        );
         uploadFormData.append("contact", formData.contact || "");
         uploadFormData.append("latitude", formData.latitude || "");
         uploadFormData.append("longitude", formData.longitude || "");
@@ -226,10 +231,11 @@ function ReportContent() {
       }, 2000);
     } catch (err) {
       console.error("Error submitting report:", err);
-      const errorMsg = err.response?.data?.error || 
-                       err.response?.data?.message || 
-                       err.message || 
-                       "Failed to submit report. Please try again.";
+      const errorMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to submit report. Please try again.";
       toast.error(errorMsg);
     } finally {
       setLoading(false);

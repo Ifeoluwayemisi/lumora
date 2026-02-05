@@ -5,7 +5,7 @@
 Successfully implemented 4 major feature sets for the Lumora counterfeit detection platform:
 
 1. **Product Photo Uploads** - Users can now attach product images to reports
-2. **Email Notification System** - Automated emails to reporters and authorities  
+2. **Email Notification System** - Automated emails to reporters and authorities
 3. **Reporter Reputation Tracking** - Tracks reporter accuracy and reliability
 4. **Advanced Analytics Dashboard** - Real-time insights with 7+ KPI metrics and visualizations
 
@@ -18,6 +18,7 @@ Successfully implemented 4 major feature sets for the Lumora counterfeit detecti
 ### 1️⃣ Product Photo Uploads (Phase 2)
 
 **What it does:**
+
 - Users upload product photos when submitting reports
 - Photos validated (5MB max, image format check)
 - Images previewed before submission
@@ -25,6 +26,7 @@ Successfully implemented 4 major feature sets for the Lumora counterfeit detecti
 - Path saved to database for reference
 
 **Files:**
+
 ```
 ✅ frontend/app/report/page.js (UPDATED)
    - Added productImage state
@@ -43,6 +45,7 @@ Successfully implemented 4 major feature sets for the Lumora counterfeit detecti
 ```
 
 **How to Use:**
+
 1. User clicks "Upload Product Image" on report form
 2. Selects image file (< 5MB)
 3. Preview shows before submission
@@ -50,6 +53,7 @@ Successfully implemented 4 major feature sets for the Lumora counterfeit detecti
 5. Backend saves file and stores path in UserReport.imagePath
 
 **API Response:**
+
 ```json
 {
   "success": true,
@@ -65,6 +69,7 @@ Successfully implemented 4 major feature sets for the Lumora counterfeit detecti
 ### 2️⃣ Email Notification System (Phase 2)
 
 **What it does:**
+
 - Sends confirmation email when report submitted
 - Escalates health alerts to NAFDAC and reporter
 - Professional HTML templates with styling
@@ -72,14 +77,15 @@ Successfully implemented 4 major feature sets for the Lumora counterfeit detecti
 
 **Email Types:**
 
-| Email | Trigger | Recipient | Template |
-|-------|---------|-----------|----------|
-| Report Received | Any report submitted | Reporter | Green theme, case reference |
-| Health Alert | healthImpact != "no" | Reporter | Red URGENT, medical guidance |
-| Authority Alert | healthImpact != "no" | NAFDAC | Red URGENT, tabular format |
-| Info Requested | Admin action (future) | Reporter | Yellow theme, info checklist |
+| Email           | Trigger               | Recipient | Template                     |
+| --------------- | --------------------- | --------- | ---------------------------- |
+| Report Received | Any report submitted  | Reporter  | Green theme, case reference  |
+| Health Alert    | healthImpact != "no"  | Reporter  | Red URGENT, medical guidance |
+| Authority Alert | healthImpact != "no"  | NAFDAC    | Red URGENT, tabular format   |
+| Info Requested  | Admin action (future) | Reporter  | Yellow theme, info checklist |
 
 **Files:**
+
 ```
 ✅ backend/src/services/emailService.js (UPDATED)
    - sendEmailWithText() - Base email function
@@ -100,6 +106,7 @@ Successfully implemented 4 major feature sets for the Lumora counterfeit detecti
 ```
 
 **Configuration:**
+
 ```env
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
@@ -109,6 +116,7 @@ NAFDAC_REPORT_EMAIL=report@nafdac.gov.ng
 ```
 
 **Email Example:**
+
 ```
 From: Lumora System <your-email@gmail.com>
 To: reporter@email.com
@@ -116,7 +124,7 @@ Subject: Report Received - Case #LUMORA-20250115-12345
 
 Hi Reporter Name,
 
-Thank you for reporting a potentially counterfeit product. Your report has been 
+Thank you for reporting a potentially counterfeit product. Your report has been
 successfully received and assigned case reference LUMORA-20250115-12345.
 
 Our team will investigate your report and follow up within 48 hours.
@@ -143,12 +151,14 @@ Lumora Verification Team
 ### 3️⃣ Reporter Reputation System (Phase 3)
 
 **What it does:**
+
 - Tracks reporter accuracy and contribution
 - Calculates trust score (0-100)
 - Assigns trust level badges
 - Provides leaderboard of top reporters
 
 **Reputation Levels:**
+
 - 🟢 **TRUSTED**: 50+ reports, 80+ trust score
 - 🔵 **VERIFIED**: 20+ reports, 70+ trust score
 - ⚪ **ACTIVE**: 10+ reports
@@ -156,6 +166,7 @@ Lumora Verification Team
 - ⚫ **NEW**: No reports
 
 **Scoring Algorithm:**
+
 ```
 Base Score: 50
 
@@ -176,6 +187,7 @@ Base Score: 50
 ```
 
 **Files:**
+
 ```
 ✅ backend/src/services/reporterReputationService.js (NEW)
    - calculateReporterReputation() - Score calculation
@@ -194,6 +206,7 @@ Base Score: 50
 ```
 
 **API Examples:**
+
 ```bash
 # Get top 10 reporters
 GET /api/reputation/leaderboard
@@ -229,6 +242,7 @@ Response:
 ### 4️⃣ Advanced Analytics Dashboard (Phase 3)
 
 **What it does:**
+
 - Real-time dashboard with 7 KPI metrics
 - 6 data visualizations
 - Trends analysis, hotspot mapping, product rankings
@@ -248,6 +262,7 @@ Response:
 | Health Alerts | 23 | Safety tracking |
 
 **Visualizations:**
+
 1. **Risk Distribution** (Pie Chart) - CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN breakdown
 2. **Status Distribution** (Bar Chart) - PENDING, IN_REVIEW, RESOLVED
 3. **30-Day Trends** (Line Chart) - Daily counterfeit, genuine, suspicious
@@ -256,6 +271,7 @@ Response:
 6. **Counterfeit Hotspots** (Table) - Locations with coordinates
 
 **Files:**
+
 ```
 ✅ backend/src/routes/analyticsRoutes.js (NEW)
    - GET /dashboard - KPI metrics
@@ -276,6 +292,7 @@ Response:
 ```
 
 **API Example:**
+
 ```bash
 GET /api/analytics/dashboard
 
@@ -298,6 +315,7 @@ Response:
 ## File Structure
 
 ### New Files Created:
+
 ```
 backend/
 ├── src/
@@ -322,6 +340,7 @@ Root/
 ```
 
 ### Modified Files:
+
 ```
 backend/src/app.js
   - Added reputationRoutes import and registration
@@ -352,6 +371,7 @@ frontend/app/report/page.js
 ## Deployment Checklist
 
 ### Required Configuration:
+
 - [ ] Create `/backend/uploads/reports/` directory
 - [ ] Set EMAIL_USER in .env
 - [ ] Set EMAIL_PASS in .env
@@ -359,6 +379,7 @@ frontend/app/report/page.js
 - [ ] Set NAFDAC_REPORT_EMAIL in .env
 
 ### Verification:
+
 - [ ] Backend server starts without errors
 - [ ] Email verification passes: `GET /api/admin/verify-email`
 - [ ] Image upload works on report form
@@ -366,6 +387,7 @@ frontend/app/report/page.js
 - [ ] Reputation endpoints return data
 
 ### Testing:
+
 - [ ] Submit report with image
 - [ ] Receive confirmation email
 - [ ] Submit report with health impact
@@ -379,20 +401,23 @@ frontend/app/report/page.js
 ## Statistics
 
 ### Code Metrics:
+
 - **New Services**: 2 (reporterReputationService, emailService extensions)
-- **New Routes**: 2 (reputationRoutes, analyticsRoutes)  
+- **New Routes**: 2 (reputationRoutes, analyticsRoutes)
 - **New Frontend Pages**: 1 (analytics dashboard)
 - **Email Templates**: 4 professional HTML templates
 - **API Endpoints**: 11 new endpoints
 - **Lines of Code**: ~1,500 new lines
 
 ### Database Queries:
+
 - Reputation calculation: 1 query per reporter
 - Analytics dashboard: 7 parallel queries
 - Leaderboard: 1 query with aggregation
 - Email triggers: 2-3 queries per report
 
 ### Performance:
+
 - Photo upload: < 500ms (depends on file size)
 - Email sending: Async, non-blocking
 - Reputation calculation: < 100ms (cached)
@@ -405,22 +430,26 @@ frontend/app/report/page.js
 ### With Existing Systems:
 
 **UserReport Model:**
+
 - ✅ `imagePath` field for photo storage
 - ✅ `reporterId` field for reporter tracking
 - ✅ `riskLevel` field for analytics
 - ✅ `status` field for workflow tracking
 
 **User Model:**
+
 - ✅ Can have reputation profile
 - ✅ Can submit reports
 - ✅ Can be tracked in leaderboard
 
 **Batch/Code Models:**
+
 - ✅ Used for product analytics
 - ✅ Manufacturer linking for rankings
 - ✅ Product name resolution
 
 **Email System:**
+
 - ✅ Integrates with Nodemailer
 - ✅ Uses HTML templates
 - ✅ Non-blocking email service
@@ -430,6 +459,7 @@ frontend/app/report/page.js
 ## Security Considerations
 
 ### Photo Uploads:
+
 - ✅ File type validation (frontend + backend)
 - ✅ File size limit (5MB)
 - ✅ UUID-based filenames (no conflicts)
@@ -437,18 +467,21 @@ frontend/app/report/page.js
 - ✅ Path traversal prevention
 
 ### Email:
+
 - ✅ SMTP credentials in .env (not in code)
 - ✅ Validation of email addresses
 - ✅ HTML escaping in templates
 - ✅ NAFDAC email not exposed to frontend
 
 ### Reputation:
+
 - ✅ Accuracy-based (prevents gaming with fake reports)
 - ✅ Time-based (long history required)
 - ✅ Admin-controlled updates
 - ✅ Transparent scoring algorithm
 
 ### Analytics:
+
 - ✅ Admin-only access required
 - ✅ Authentication check on all endpoints
 - ✅ Role-based access control
@@ -458,25 +491,27 @@ frontend/app/report/page.js
 
 ## Documentation Provided
 
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| IMPLEMENTATION_SUMMARY.md | Architecture & design | Developers |
-| QUICK_START.md | Testing & deployment basics | Ops/Developers |
-| DEPLOYMENT_CHECKLIST.md | Step-by-step deployment | Ops engineers |
-| Code comments | Inline documentation | Developers |
-| This file | Project overview | Everyone |
+| Document                  | Purpose                     | Audience       |
+| ------------------------- | --------------------------- | -------------- |
+| IMPLEMENTATION_SUMMARY.md | Architecture & design       | Developers     |
+| QUICK_START.md            | Testing & deployment basics | Ops/Developers |
+| DEPLOYMENT_CHECKLIST.md   | Step-by-step deployment     | Ops engineers  |
+| Code comments             | Inline documentation        | Developers     |
+| This file                 | Project overview            | Everyone       |
 
 ---
 
 ## Known Limitations & Future Work
 
 ### Current Limitations:
+
 - Email sending is synchronous (consider Bull queue for scale)
 - Analytics data not cached (queries run on each request)
 - Reputation calculated on-demand (could be periodic)
 - No file cleanup for old uploads (add housekeeping job)
 
 ### Future Enhancements:
+
 1. **Webhooks** - Send data to external systems
 2. **ML Predictions** - AI-powered risk assessment
 3. **Map View** - Visual hotspot mapping with Mapbox
@@ -489,19 +524,23 @@ frontend/app/report/page.js
 ## Support & Maintenance
 
 ### Monitoring:
+
 - Monitor email service error rates
 - Check photo upload volume
 - Track analytics query performance
 - Monitor Prisma database logs
 
 ### Regular Tasks:
+
 - Clean old uploaded files (> 30 days)
 - Review reporter reputation distribution
 - Analyze email delivery rates
 - Optimize database indexes
 
 ### Troubleshooting:
+
 See DEPLOYMENT_CHECKLIST.md for detailed troubleshooting guide covering:
+
 - Photo upload issues
 - Email delivery problems
 - Analytics data missing
@@ -514,6 +553,7 @@ See DEPLOYMENT_CHECKLIST.md for detailed troubleshooting guide covering:
 Phase 2 & 3 implementation is **complete and production-ready**. All features are thoroughly documented, tested, and ready for deployment. Follow the DEPLOYMENT_CHECKLIST.md for activation steps.
 
 **Status Summary:**
+
 - ✅ Code: 100% Complete
 - ✅ Testing: Ready for QA
 - ✅ Documentation: Comprehensive

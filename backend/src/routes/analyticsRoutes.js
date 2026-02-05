@@ -96,29 +96,24 @@ router.get("/products", authenticateToken, adminOnly, async (req, res) => {
  * GET /analytics/manufacturers
  * Get counterfeit rate by manufacturer
  */
-router.get(
-  "/manufacturers",
-  authenticateToken,
-  adminOnly,
-  async (req, res) => {
-    try {
-      const limit = parseInt(req.query.limit) || 15;
-      const manufacturers = await getCounterfeitRateByManufacturer(limit);
+router.get("/manufacturers", authenticateToken, adminOnly, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 15;
+    const manufacturers = await getCounterfeitRateByManufacturer(limit);
 
-      res.json({
-        success: true,
-        data: manufacturers,
-        count: manufacturers.length,
-      });
-    } catch (err) {
-      console.error("[ANALYTICS] Manufacturers error:", err.message);
-      res.status(500).json({
-        success: false,
-        error: "Failed to fetch manufacturer analytics",
-      });
-    }
-  },
-);
+    res.json({
+      success: true,
+      data: manufacturers,
+      count: manufacturers.length,
+    });
+  } catch (err) {
+    console.error("[ANALYTICS] Manufacturers error:", err.message);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch manufacturer analytics",
+    });
+  }
+});
 
 /**
  * GET /analytics/trends

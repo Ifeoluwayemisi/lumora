@@ -145,7 +145,7 @@ export async function getUserReportsPaginated(
         caseNumber: report.caseFile?.caseNumber,
         caseStatus: report.caseFile?.status,
       };
-    })
+    }),
   );
 
   return {

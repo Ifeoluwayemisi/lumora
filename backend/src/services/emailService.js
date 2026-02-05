@@ -119,7 +119,12 @@ export async function verifyEmailConfiguration() {
 /**
  * Send report received confirmation email
  */
-export async function sendReportReceivedEmail(reporterEmail, reporterName, codeValue, caseNumber) {
+export async function sendReportReceivedEmail(
+  reporterEmail,
+  reporterName,
+  codeValue,
+  caseNumber,
+) {
   if (!reporterEmail) return false;
 
   const html = `
@@ -158,13 +163,20 @@ export async function sendReportReceivedEmail(reporterEmail, reporterName, codeV
     subject: "Your Report Has Been Received - Lumora",
     html,
     text,
-  }).then(() => true).catch(() => false);
+  })
+    .then(() => true)
+    .catch(() => false);
 }
 
 /**
  * Send health alert escalation email
  */
-export async function sendHealthAlertEmail(reporterEmail, reporterName, codeValue, healthSymptoms) {
+export async function sendHealthAlertEmail(
+  reporterEmail,
+  reporterName,
+  codeValue,
+  healthSymptoms,
+) {
   if (!reporterEmail) return false;
 
   const html = `
@@ -202,15 +214,18 @@ export async function sendHealthAlertEmail(reporterEmail, reporterName, codeValu
     subject: `URGENT: Health Concern - Product ${codeValue}`,
     html,
     text,
-  }).then(() => true).catch(() => false);
+  })
+    .then(() => true)
+    .catch(() => false);
 }
 
 /**
  * Notify authorities of health alert
  */
 export async function notifyAuthoritiesHealthAlert(reportData) {
-  const nafdacEmail = process.env.NAFDAC_REPORT_EMAIL || "reports@nafdac.gov.ng";
-  
+  const nafdacEmail =
+    process.env.NAFDAC_REPORT_EMAIL || "reports@nafdac.gov.ng";
+
   const html = `
     <div style="font-family: Arial, sans-serif;">
       <h2 style="color: #e74c3c;">URGENT HEALTH ALERT FROM LUMORA</h2>
@@ -225,11 +240,13 @@ export async function notifyAuthoritiesHealthAlert(reportData) {
       </table>
     </div>
   `;
-  
+
   return sendEmailWithText({
     to: nafdacEmail,
     subject: `[URGENT] Health Alert - Product Code ${reportData.codeValue}`,
     html,
     text: `Health alert for product ${reportData.codeValue}. Symptoms: ${reportData.healthSymptoms}`,
-  }).then(() => true).catch(() => false);
+  })
+    .then(() => true)
+    .catch(() => false);
 }

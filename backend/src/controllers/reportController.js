@@ -34,7 +34,12 @@ export async function submitReport(req, res) {
     // Handle file upload if present
     if (req.file) {
       try {
-        const uploadDir = path.join(process.cwd(), "backend", "uploads", "reports");
+        const uploadDir = path.join(
+          process.cwd(),
+          "backend",
+          "uploads",
+          "reports",
+        );
         await fs.mkdir(uploadDir, { recursive: true });
 
         const filename = `${uuidv4()}-${Date.now()}.jpg`;
@@ -111,31 +116,48 @@ export async function submitReport(req, res) {
     if (contact || reporterEmail) {
       const emailAddr = contact || reporterEmail;
       const caseName = `CASE-${userReport.id.substring(0, 8).toUpperCase()}`;
-      
-      emailService.sendReportReceivedEmail(emailAddr, reporterName, codeValue, caseName).catch(err => {
-        console.error("[REPORT] Email send failed:", err.message);
-      });
+
+      emailService
+        .sendReportReceivedEmail(emailAddr, reporterName, codeValue, caseName)
+        .catch((err) => {
+          console.error("[REPORT] Email send failed:", err.message);
+        });
     }
 
     // If health impact reported, escalate to authorities
     if (healthImpact !== "no") {
-      emailService.notifyAuthoritiesHealthAlert({
-        reportId: userReport.id,
-        codeValue,
-        reporterName,
-        healthImpact,
-        healthSymptoms,
-        location,
-        reportedAt: userReport.reportedAt,
-      }).catch(err => {
-        console.error("[REPORT] Health alert escalation failed:", err.message);
-      });
+      emailService
+        .notifyAuthoritiesHealthAlert({
+          reportId: userReport.id,
+          codeValue,
+          reporterName,
+          healthImpact,
+          healthSymptoms,
+          location,
+          reportedAt: userReport.reportedAt,
+        })
+        .catch((err) => {
+          console.error(
+            "[REPORT] Health alert escalation failed:",
+            err.message,
+          );
+        });
 
       // Also email reporter about health escalation
       if (contact || reporterEmail) {
-        emailService.sendHealthAlertEmail(contact || reporterEmail, reporterName, codeValue, healthSymptoms).catch(err => {
-          console.error("[REPORT] Health alert email send failed:", err.message);
-        });
+        emailService
+          .sendHealthAlertEmail(
+            contact || reporterEmail,
+            reporterName,
+            codeValue,
+            healthSymptoms,
+          )
+          .catch((err) => {
+            console.error(
+              "[REPORT] Health alert email send failed:",
+              err.message,
+            );
+          });
       }
     }
 
@@ -153,7 +175,10 @@ export async function submitReport(req, res) {
     res.status(500).json({
       success: false,
       message: "Failed to submit report",
-      error: process.env.NODE_ENV === "development" ? err.message : "Internal server error",
+      error:
+        process.env.NODE_ENV === "development"
+          ? err.message
+          : "Internal server error",
     });
   }
 }

@@ -39,9 +39,16 @@ export async function calculateReporterReputation(reporterId) {
     }
 
     const totalReports = reports.length;
-    const confirmedCounterfeits = reports.filter((r) => r.riskLevel === "HIGH" || r.riskLevel === "CRITICAL").length;
-    const resolvedReports = reports.filter((r) => r.status === "RESOLVED").length;
-    const accuracy = totalReports > 0 ? Math.round((confirmedCounterfeits / totalReports) * 100) : 0;
+    const confirmedCounterfeits = reports.filter(
+      (r) => r.riskLevel === "HIGH" || r.riskLevel === "CRITICAL",
+    ).length;
+    const resolvedReports = reports.filter(
+      (r) => r.status === "RESOLVED",
+    ).length;
+    const accuracy =
+      totalReports > 0
+        ? Math.round((confirmedCounterfeits / totalReports) * 100)
+        : 0;
 
     // Calculate trust score (0-100)
     let trustScore = 50; // Base score
@@ -89,19 +96,23 @@ export async function calculateReporterReputation(reporterId) {
  */
 export async function getOrCreateReporterProfile(reporterId, email) {
   try {
-    let profile = await prisma.reporterProfile?.findUnique({
-      where: { reporterId },
-    }).catch(() => null);
+    let profile = await prisma.reporterProfile
+      ?.findUnique({
+        where: { reporterId },
+      })
+      .catch(() => null);
 
     if (!profile) {
-      profile = await prisma.reporterProfile?.create({
-        data: {
-          reporterId,
-          email: email || null,
-          trustScore: 50,
-          level: "NEW",
-        },
-      }).catch(() => null);
+      profile = await prisma.reporterProfile
+        ?.create({
+          data: {
+            reporterId,
+            email: email || null,
+            trustScore: 50,
+            level: "NEW",
+          },
+        })
+        .catch(() => null);
     }
 
     return profile;
@@ -121,14 +132,16 @@ export async function updateReporterReputation(reporterId, reportAccuracy) {
 
     // Update in database if ReporterProfile exists
     if (prisma.reporterProfile) {
-      await prisma.reporterProfile.update({
-        where: { reporterId },
-        data: {
-          trustScore: reputation.trustScore,
-          level: reputation.level,
-          lastAssessment: new Date(),
-        },
-      }).catch(() => null);
+      await prisma.reporterProfile
+        .update({
+          where: { reporterId },
+          data: {
+            trustScore: reputation.trustScore,
+            level: reputation.level,
+            lastAssessment: new Date(),
+          },
+        })
+        .catch(() => null);
     }
 
     return reputation;
@@ -172,7 +185,10 @@ export async function getTopReporters(limit = 10) {
       if (report.riskLevel === "HIGH" || report.riskLevel === "CRITICAL") {
         reporterStats[id].confirmedCounterfeits++;
       }
-      if (!reporterStats[id].lastReportDate || new Date(report.reportedAt) > new Date(reporterStats[id].lastReportDate)) {
+      if (
+        !reporterStats[id].lastReportDate ||
+        new Date(report.reportedAt) > new Date(reporterStats[id].lastReportDate)
+      ) {
         reporterStats[id].lastReportDate = report.reportedAt;
       }
     });
@@ -186,7 +202,9 @@ export async function getTopReporters(limit = 10) {
             ? Math.round((stat.confirmedCounterfeits / stat.totalReports) * 100)
             : 0,
       }))
-      .sort((a, b) => b.accuracy - a.accuracy || b.totalReports - a.totalReports)
+      .sort(
+        (a, b) => b.accuracy - a.accuracy || b.totalReports - a.totalReports,
+      )
       .slice(0, limit);
   } catch (err) {
     console.error("[REPUTATION] Error getting top reporters:", err.message);

@@ -112,7 +112,9 @@ export default function AnalyticsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Analytics Dashboard
+          </h1>
           <p className="text-gray-600 mt-2">
             Real-time insights into counterfeit product detection
           </p>
@@ -188,9 +190,7 @@ export default function AnalyticsPage() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, value }) =>
-                      `${name}: ${value}`
-                    }
+                    label={({ name, value }) => `${name}: ${value}`}
                     outerRadius={100}
                     fill="#8884d8"
                     dataKey="value"
@@ -198,10 +198,7 @@ export default function AnalyticsPage() {
                     {Object.keys(riskDistribution)
                       .filter((k) => k !== "total")
                       .map((level) => (
-                        <Cell
-                          key={level}
-                          fill={COLORS[level] || "#6b7280"}
-                        />
+                        <Cell key={level} fill={COLORS[level] || "#6b7280"} />
                       ))}
                   </Pie>
                   <Tooltip />
@@ -394,7 +391,9 @@ function KpiCard({ icon, label, value, subtext, color }) {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
-      <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${colorClasses[color] || colorClasses.blue}`}>
+      <div
+        className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${colorClasses[color] || colorClasses.blue}`}
+      >
         <div className="text-2xl">{icon}</div>
       </div>
       <p className="text-gray-600 text-sm">{label}</p>

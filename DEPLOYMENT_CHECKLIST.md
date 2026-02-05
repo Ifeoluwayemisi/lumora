@@ -1,7 +1,9 @@
 # Phase 2 & 3 Features - Deployment Checklist
 
 ## Overview
+
 You've successfully implemented:
+
 - ✅ Product photo uploads (Phase 2)
 - ✅ Email notification system (Phase 2)
 - ✅ Reporter reputation tracking (Phase 3)
@@ -16,12 +18,14 @@ All code is complete and ready to deploy. Follow this checklist to activate the 
 ### 1. Backend Configuration
 
 - [ ] **Create uploads directory**
+
   ```bash
   mkdir -p backend/uploads/reports
   chmod 755 backend/uploads/reports
   ```
 
 - [ ] **Update .env file**
+
   ```env
   # Email/SMTP Configuration (Required for email features)
   EMAIL_USER=your-email@gmail.com          # Gmail or SMTP provider
@@ -44,19 +48,20 @@ Ensure these fields exist in your `UserReport` schema:
 ```prisma
 model UserReport {
   id              String      @id @default(cuid())
-  
+
   // ... existing fields ...
-  
+
   // New fields for Phase 2 & 3
   imagePath       String?     @db.Text      // Photo upload feature
   reporterId      String?                   // Reputation tracking
   riskLevel       String      @default("UNKNOWN")  // Analytics
-  
+
   // ... rest of model ...
 }
 ```
 
 If `imagePath` doesn't exist, add it:
+
 ```bash
 # Generate migration
 npx prisma migrate dev --name add_image_path
@@ -68,6 +73,7 @@ npx prisma db push
 ### 3. Frontend Dependencies
 
 Ensure these are installed in `package.json`:
+
 ```json
 {
   "dependencies": {
@@ -79,6 +85,7 @@ Ensure these are installed in `package.json`:
 ```
 
 Install if missing:
+
 ```bash
 npm install react-icons recharts react-toastify
 ```
@@ -90,6 +97,7 @@ npm install react-icons recharts react-toastify
 ### Phase 2A: Product Photo Uploads
 
 **Files Involved:**
+
 - `frontend/app/report/page.js` - Photo upload form
 - `backend/src/controllers/reportController.js` - File handling
 - `backend/src/app.js` - Static file serving
@@ -97,12 +105,14 @@ npm install react-icons recharts react-toastify
 **Status:** ✅ Code Complete
 
 **Activation:**
+
 1. [ ] Verify `/uploads` directory is served by Express
 2. [ ] Test upload by submitting form with image
 3. [ ] Verify file appears in `/backend/uploads/reports/`
 4. [ ] Check `imagePath` is saved in database
 
 **Test Steps:**
+
 ```bash
 # 1. Start backend server
 npm run dev
@@ -121,6 +131,7 @@ psql -c "SELECT id, imagePath FROM UserReport WHERE imagePath IS NOT NULL LIMIT 
 ### Phase 2B: Email Notification System
 
 **Files Involved:**
+
 - `backend/src/services/emailService.js` - Email sending
 - `backend/src/services/emailTemplates.js` - HTML templates
 - `backend/src/controllers/reportController.js` - Email triggers
@@ -128,12 +139,14 @@ psql -c "SELECT id, imagePath FROM UserReport WHERE imagePath IS NOT NULL LIMIT 
 **Status:** ✅ Code Complete (needs SMTP config)
 
 **Activation:**
+
 1. [ ] Set EMAIL_USER, EMAIL_PASS, SMTP_HOST, SMTP_PORT in .env
 2. [ ] Test SMTP connection
 3. [ ] Verify templates load correctly
 4. [ ] Enable email triggers in reportController
 
 **Test Steps:**
+
 ```bash
 # 1. Verify SMTP configuration
 curl -X POST http://localhost:4000/api/admin/verify-email
@@ -153,6 +166,7 @@ curl -X POST http://localhost:4000/api/admin/verify-email
 ```
 
 **Troubleshooting:**
+
 - Gmail users: Use [app-specific password](https://myaccount.google.com/apppasswords), not account password
 - Check email service logs: `tail -f logs/email.log`
 - Verify SMTP credentials are correct: `curl -v smtp://USER:PASS@smtp.gmail.com:587`
@@ -162,6 +176,7 @@ curl -X POST http://localhost:4000/api/admin/verify-email
 ### Phase 3A: Reporter Reputation System
 
 **Files Involved:**
+
 - `backend/src/services/reporterReputationService.js` - Reputation calculation
 - `backend/src/routes/reputationRoutes.js` - API endpoints
 - `backend/src/app.js` - Route registration
@@ -169,11 +184,13 @@ curl -X POST http://localhost:4000/api/admin/verify-email
 **Status:** ✅ Code Complete
 
 **Activation:**
+
 1. [ ] Ensure `reporterId` is set when creating reports
 2. [ ] Test reputation endpoints
 3. [ ] Verify calculations with sample data
 
 **API Endpoints:**
+
 ```bash
 # 1. Get leaderboard (top 10 reporters)
 curl http://localhost:4000/api/reputation/leaderboard
@@ -193,6 +210,7 @@ curl -X POST http://localhost:4000/api/reputation/update/{reporterId} \
 ```
 
 **Expected Response:**
+
 ```json
 {
   "success": true,
@@ -212,6 +230,7 @@ curl -X POST http://localhost:4000/api/reputation/update/{reporterId} \
 ### Phase 3B: Advanced Analytics Dashboard
 
 **Files Involved:**
+
 - `backend/src/routes/analyticsRoutes.js` - Analytics endpoints
 - `frontend/app/admin/analytics/page.js` - Dashboard UI
 - `backend/src/app.js` - Route registration
@@ -219,11 +238,13 @@ curl -X POST http://localhost:4000/api/reputation/update/{reporterId} \
 **Status:** ✅ Code Complete
 
 **Activation:**
+
 1. [ ] Navigate to `/admin/analytics` as admin user
 2. [ ] Verify all 7 KPI cards display values
 3. [ ] Verify charts populate with data
 
 **Dashboard Components:**
+
 - KPI Cards: Total reports, counterfeit %, resolution %, pending, reporters, manufacturers, health alerts
 - Risk Distribution Pie Chart
 - Status Distribution Bar Chart
@@ -233,6 +254,7 @@ curl -X POST http://localhost:4000/api/reputation/update/{reporterId} \
 - Counterfeit Hotspots Table
 
 **API Endpoints:**
+
 ```bash
 # Dashboard overview (7 KPI metrics)
 curl -H "Authorization: Bearer {token}" \
@@ -268,6 +290,7 @@ curl -H "Authorization: Bearer {token}" \
 ## Verification Checklist
 
 ### After Setup
+
 - [ ] Backend server starts without errors
 - [ ] `/uploads/reports/` directory exists and is writable
 - [ ] Email verification passes
@@ -275,6 +298,7 @@ curl -H "Authorization: Bearer {token}" \
 - [ ] Admin can access `/admin/analytics`
 
 ### After First Report Submission
+
 - [ ] Photo uploads without errors
 - [ ] Confirmation email arrives in inbox
 - [ ] If health impact selected, health alert email received
@@ -282,6 +306,7 @@ curl -H "Authorization: Bearer {token}" \
 - [ ] `imagePath` in database points to correct file
 
 ### After Sufficient Report Data
+
 - [ ] Reputation leaderboard shows top reporters
 - [ ] Analytics dashboard shows data in all charts
 - [ ] Risk distribution totals 100%
@@ -293,6 +318,7 @@ curl -H "Authorization: Bearer {token}" \
 ## Troubleshooting Guide
 
 ### Photos Not Uploading
+
 ```bash
 # Check directory permissions
 ls -ld backend/uploads/reports/
@@ -308,6 +334,7 @@ curl http://localhost:4000/uploads/reports/
 ```
 
 ### Emails Not Sending
+
 ```bash
 # Test SMTP connection
 npm run test:email
@@ -322,6 +349,7 @@ grep -i "email\|smtp" .env
 ```
 
 ### Analytics Shows No Data
+
 ```bash
 # Verify reports exist in database
 psql -c "SELECT COUNT(*) FROM UserReport;"
@@ -335,6 +363,7 @@ curl -H "Authorization: Bearer {token}" \
 ```
 
 ### Reputation Shows Zeros
+
 ```bash
 # Verify reports have reporterId
 psql -c "SELECT COUNT(*) FROM UserReport WHERE reporterId IS NOT NULL;"
@@ -353,6 +382,7 @@ psql -c "SELECT * FROM UserReport WHERE reporterId = '{reporterId}';"
 ### Recommended After Deployment
 
 1. **Add Database Indexes**
+
    ```sql
    CREATE INDEX idx_user_report_reporter ON UserReport(reporterId);
    CREATE INDEX idx_user_report_risk ON UserReport(riskLevel);
@@ -379,21 +409,25 @@ psql -c "SELECT * FROM UserReport WHERE reporterId = '{reporterId}';"
 If you need to disable features:
 
 ### Disable Photo Uploads
+
 1. Comment out image upload form in `frontend/app/report/page.js`
 2. Comment out file handling in `backend/src/controllers/reportController.js`
 3. Restart backend
 
 ### Disable Emails
+
 1. Set `EMAIL_USER=""` in .env to disable
 2. EmailService will skip sending automatically
 3. No code changes needed
 
 ### Disable Reputation
+
 1. Comment out reputation routes in `app.js`
 2. Remove reputation service calls from controllers
 3. Restart backend
 
 ### Disable Analytics
+
 1. Comment out analytics routes in `app.js`
 2. Remove `/admin/analytics` page from navigation
 3. Restart backend

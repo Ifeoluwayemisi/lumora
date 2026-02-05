@@ -87,7 +87,9 @@ export const emailTemplates = {
           <p>${result.details}</p>
         </div>
         
-        ${result.status === "confirmed" ? `
+        ${
+          result.status === "confirmed"
+            ? `
           <p>
             <strong>Actions Taken:</strong>
             <ul>
@@ -97,7 +99,9 @@ export const emailTemplates = {
               <li>Consumers advised to avoid this product</li>
             </ul>
           </p>
-        ` : ""}
+        `
+            : ""
+        }
         
         <p style="color: #666; font-size: 12px; margin-top: 30px;">
           Thank you for helping us protect Nigerian consumers.
