@@ -24,7 +24,7 @@ import {
   FiClock,
   FiActivity,
   FiUsers,
-  FiFactory,
+  FiBriefcase,
 } from "react-icons/fi";
 
 const COLORS = {
@@ -156,7 +156,7 @@ export default function AnalyticsPage() {
               color="purple"
             />
             <KpiCard
-              icon={<FiFactory />}
+              icon={<FiBriefcase />}
               label="Manufacturers"
               value={dashboard.uniqueManufacturers}
               color="indigo"

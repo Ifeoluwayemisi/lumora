@@ -9,7 +9,7 @@ import {
   getTopReporters,
   updateReporterReputation,
 } from "../services/reporterReputationService.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -70,7 +70,7 @@ router.get("/reporter/:reporterId", async (req, res) => {
  * GET /reputation/me
  * Get current authenticated user's reputation
  */
-router.get("/me", authenticateToken, async (req, res) => {
+router.get("/me", authMiddleware, async (req, res) => {
   try {
     const userId = req.user?.id;
 
@@ -100,7 +100,7 @@ router.get("/me", authenticateToken, async (req, res) => {
  * POST /reputation/update/:reporterId
  * Update reporter reputation (admin only)
  */
-router.post("/update/:reporterId", authenticateToken, async (req, res) => {
+router.post("/update/:reporterId", authMiddleware, async (req, res) => {
   try {
     const { reporterId } = req.params;
     const { accuracy } = req.body;

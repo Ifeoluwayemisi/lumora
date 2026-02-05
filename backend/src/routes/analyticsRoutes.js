@@ -12,9 +12,9 @@ import {
   getAnalyticsDashboard,
   getRiskDistribution,
   getStatusDistribution,
-} from "../services/analyticsService.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
-import { adminOnly } from "../middleware/roleMiddleware.js";
+} from "../services/globalAnalyticsService.js";
+import { authMiddleware } from "../middleware/authMiddleware.js";
+import { roleMiddleware } from "../middleware/roleMiddleware.js";
 
 const router = express.Router();
 
@@ -22,121 +22,146 @@ const router = express.Router();
  * GET /analytics/dashboard
  * Get overall analytics dashboard data
  */
-router.get("/dashboard", authenticateToken, adminOnly, async (req, res) => {
-  try {
-    const dashboard = await getAnalyticsDashboard();
+router.get(
+  "/dashboard",
+  authMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
+  async (req, res) => {
+    try {
+      const dashboard = await getAnalyticsDashboard();
 
-    if (!dashboard) {
-      return res.status(500).json({
+      if (!dashboard) {
+        return res.status(500).json({
+          success: false,
+          error: "Failed to fetch dashboard data",
+        });
+      }
+
+      res.json({
+        success: true,
+        data: dashboard,
+      });
+    } catch (err) {
+      console.error("[ANALYTICS] Dashboard error:", err.message);
+      res.status(500).json({
         success: false,
-        error: "Failed to fetch dashboard data",
+        error: "Failed to fetch dashboard",
       });
     }
-
-    res.json({
-      success: true,
-      data: dashboard,
-    });
-  } catch (err) {
-    console.error("[ANALYTICS] Dashboard error:", err.message);
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch dashboard",
-    });
-  }
-});
+  },
+);
 
 /**
  * GET /analytics/hotspots
  * Get counterfeit hotspots by location
  */
-router.get("/hotspots", authenticateToken, adminOnly, async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 10;
-    const hotspots = await getCounterfeitHotspots(limit);
+router.get(
+  "/hotspots",
+  authMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
+  async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit) || 10;
+      const hotspots = await getCounterfeitHotspots(limit);
 
-    res.json({
-      success: true,
-      data: hotspots,
-      count: hotspots.length,
-    });
-  } catch (err) {
-    console.error("[ANALYTICS] Hotspots error:", err.message);
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch hotspots",
-    });
-  }
-});
+      res.json({
+        success: true,
+        data: hotspots,
+        count: hotspots.length,
+      });
+    } catch (err) {
+      console.error("[ANALYTICS] Hotspots error:", err.message);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch hotspots",
+      });
+    }
+  },
+);
 
 /**
  * GET /analytics/products
  * Get counterfeit rate by product
  */
-router.get("/products", authenticateToken, adminOnly, async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 15;
-    const products = await getCounterfeitRateByProduct(limit);
+router.get(
+  "/products",
+  authMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
+  async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit) || 15;
+      const products = await getCounterfeitRateByProduct(limit);
 
-    res.json({
-      success: true,
-      data: products,
-      count: products.length,
-    });
-  } catch (err) {
-    console.error("[ANALYTICS] Products error:", err.message);
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch product analytics",
-    });
-  }
-});
+      res.json({
+        success: true,
+        data: products,
+        count: products.length,
+      });
+    } catch (err) {
+      console.error("[ANALYTICS] Products error:", err.message);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch product analytics",
+      });
+    }
+  },
+);
 
 /**
  * GET /analytics/manufacturers
  * Get counterfeit rate by manufacturer
  */
-router.get("/manufacturers", authenticateToken, adminOnly, async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 15;
-    const manufacturers = await getCounterfeitRateByManufacturer(limit);
+router.get(
+  "/manufacturers",
+  authMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
+  async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit) || 15;
+      const manufacturers = await getCounterfeitRateByManufacturer(limit);
 
-    res.json({
-      success: true,
-      data: manufacturers,
-      count: manufacturers.length,
-    });
-  } catch (err) {
-    console.error("[ANALYTICS] Manufacturers error:", err.message);
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch manufacturer analytics",
-    });
-  }
-});
+      res.json({
+        success: true,
+        data: manufacturers,
+        count: manufacturers.length,
+      });
+    } catch (err) {
+      console.error("[ANALYTICS] Manufacturers error:", err.message);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch manufacturer analytics",
+      });
+    }
+  },
+);
 
 /**
  * GET /analytics/trends
  * Get report trends over time
  */
-router.get("/trends", authenticateToken, adminOnly, async (req, res) => {
-  try {
-    const days = parseInt(req.query.days) || 30;
-    const trends = await getReportTrends(days);
+router.get(
+  "/trends",
+  authMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
+  async (req, res) => {
+    try {
+      const days = parseInt(req.query.days) || 30;
+      const trends = await getReportTrends(days);
 
-    res.json({
-      success: true,
-      data: trends,
-      count: trends.length,
-    });
-  } catch (err) {
-    console.error("[ANALYTICS] Trends error:", err.message);
-    res.status(500).json({
-      success: false,
-      error: "Failed to fetch trends",
-    });
-  }
-});
+      res.json({
+        success: true,
+        data: trends,
+        count: trends.length,
+      });
+    } catch (err) {
+      console.error("[ANALYTICS] Trends error:", err.message);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch trends",
+      });
+    }
+  },
+);
 
 /**
  * GET /analytics/risk-distribution
@@ -144,8 +169,8 @@ router.get("/trends", authenticateToken, adminOnly, async (req, res) => {
  */
 router.get(
   "/risk-distribution",
-  authenticateToken,
-  adminOnly,
+  authMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
   async (req, res) => {
     try {
       const distribution = await getRiskDistribution();
@@ -177,8 +202,8 @@ router.get(
  */
 router.get(
   "/status-distribution",
-  authenticateToken,
-  adminOnly,
+  authMiddleware,
+  roleMiddleware("SUPER_ADMIN", "MODERATOR", "ANALYST"),
   async (req, res) => {
     try {
       const distribution = await getStatusDistribution();
