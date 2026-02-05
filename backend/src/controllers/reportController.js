@@ -54,7 +54,9 @@ export async function submitReport(req, res) {
     // Validate required fields
     if (!codeValue || !reportType || !description) {
       return res.status(400).json({
+        success: false,
         message: "Code value, report type, and description are required",
+        error: "Code value, report type, and description are required",
       });
     }
 
@@ -138,6 +140,7 @@ export async function submitReport(req, res) {
     }
 
     res.status(201).json({
+      success: true,
       message: "Report submitted successfully",
       report: {
         id: report.id,
@@ -148,8 +151,9 @@ export async function submitReport(req, res) {
   } catch (err) {
     console.error("Error submitting report:", err);
     res.status(500).json({
+      success: false,
       message: "Failed to submit report",
-      error: process.env.NODE_ENV === "development" ? err.message : undefined,
+      error: process.env.NODE_ENV === "development" ? err.message : "Internal server error",
     });
   }
 }

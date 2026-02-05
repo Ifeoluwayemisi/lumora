@@ -3,6 +3,7 @@ import {
   authMiddleware,
   optionalAuthMiddleware,
 } from "../middleware/authMiddleware.js";
+import upload, { handleUploadError } from "../middleware/uploadMiddleware.js";
 import {
   submitReport,
   getReports,
@@ -14,7 +15,14 @@ import {
 const router = express.Router();
 
 // Submit a report (optional auth - allows guest reports)
-router.post("/submit", optionalAuthMiddleware, submitReport);
+// Handles file upload with error handling
+router.post(
+  "/submit",
+  upload.single("image"),
+  handleUploadError,
+  optionalAuthMiddleware,
+  submitReport,
+);
 
 // Get all reports (admin only)
 router.get("/", authMiddleware, getReports);

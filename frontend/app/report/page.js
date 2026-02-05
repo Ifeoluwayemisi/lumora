@@ -69,34 +69,46 @@ function ReportContent() {
   useEffect(() => {
     const captureLocation = async () => {
       console.log("📍 Capturing reporter location...");
-      const location = await getLocationPermission();
-      if (location.latitude && location.longitude) {
-        console.log("✅ Reporter location captured:", location);
+      try {
+        const location = await getLocationPermission();
+        console.log("📍 Location response:", location);
+        
+        if (location && location.latitude && location.longitude) {
+          console.log("✅ Reporter location captured:", location);
 
-        // Get location name from coordinates
-        const locName = await reverseGeocode(
-          location.latitude,
-          location.longitude,
-        );
+          // Get location name from coordinates
+          const locName = await reverseGeocode(
+            location.latitude,
+            location.longitude,
+          );
 
-        setFormData((prev) => ({
-          ...prev,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          location: locName || "Current Location",
-        }));
+          setFormData((prev) => ({
+            ...prev,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            location: locName || "Current Location",
+          }));
 
-        if (locName) {
-          setLocationName(locName);
+          if (locName) {
+            setLocationName(locName);
+            setLocationStatus("captured");
+            toast.success(`📍 Location recorded: ${locName}`);
+          } else {
+            setLocationStatus("captured");
+            toast.success("📍 Location recorded (coordinates captured)");
+          }
+        } else {
+          console.warn("⚠️  Reporter location not available - user may have denied permission");
+          setLocationStatus("failed");
+          toast.info(
+            "📍 Location permission denied or not available. You can still submit your report.",
+          );
         }
-
-        setLocationStatus("captured");
-        toast.success(`📍 Location recorded: ${locName || "Current Location"}`);
-      } else {
-        console.warn("⚠️  Reporter location not available");
+      } catch (error) {
+        console.error("❌ Location capture error:", error);
         setLocationStatus("failed");
         toast.info(
-          "Location not available, but your report will still be processed",
+          "📍 Unable to capture location, but your report will still be processed.",
         );
       }
     };
@@ -214,11 +226,11 @@ function ReportContent() {
       }, 2000);
     } catch (err) {
       console.error("Error submitting report:", err);
-      toast.error(
-        err.response?.data?.message ||
-          err.message ||
-          "Failed to submit report. Please try again.",
-      );
+      const errorMsg = err.response?.data?.error || 
+                       err.response?.data?.message || 
+                       err.message || 
+                       "Failed to submit report. Please try again.";
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
