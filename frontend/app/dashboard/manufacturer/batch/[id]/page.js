@@ -536,21 +536,36 @@ export default function BatchDetailPage() {
                       alt={`QR Code for ${selectedCode.codeValue}`}
                       className="w-64 h-64 object-contain"
                       onError={(e) => {
+                        const imgElement = e.target;
                         console.error(
                           "[QR_IMAGE_ERROR] Failed to load from:",
-                          e.target.src,
+                          imgElement.src,
                         );
                         console.error(
                           "[QR_IMAGE_ERROR] Code:",
                           selectedCode.codeValue,
                         );
                         console.error(
-                          "[QR_IMAGE_ERROR] Original path:",
+                          "[QR_IMAGE_ERROR] Original DB path:",
                           selectedCode.qrImagePath,
                         );
-                        console.error("[QR_IMAGE_ERROR] Status:", e.type);
-                        e.target.src =
-                          "https://via.placeholder.com/256?text=QR+Not+Available";
+                        console.error(
+                          "[QR_IMAGE_ERROR] Error type:",
+                          e.type,
+                        );
+                        console.error(
+                          "[QR_IMAGE_ERROR] Network status:",
+                          imgElement.complete ? "loaded but error" : "failed to fetch",
+                        );
+                        
+                        // Try alternative source if available
+                        if (selectedCode?.qrImagePath && !imgElement.src.includes("placeholder")) {
+                          console.log("[QR_IMAGE_ERROR] Attempting fallback...");
+                          // Show placeholder instead
+                          imgElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Crect fill='%23f0f0f0' width='256' height='256'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23666' font-size='14' font-family='Arial'%3EQR Code Unavailable%3C/text%3E%3C/svg%3E";
+                        } else {
+                          imgElement.src = "https://via.placeholder.com/256?text=QR+Not+Available";
+                        }
                       }}
                       onLoad={() => {
                         console.log(

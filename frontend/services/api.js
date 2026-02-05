@@ -133,14 +133,24 @@ api.interceptors.response.use(
  * @returns {string} Full URL to the static file
  */
 export function getStaticFileUrl(relativePath) {
-  if (!relativePath) return null;
+  if (!relativePath) {
+    console.warn("[getStaticFileUrl] No relative path provided");
+    return null;
+  }
 
-  // Remove /api suffix if present
-  const baseUrl = API_URL.endsWith("/api")
-    ? API_URL.slice(0, -4) // Remove last 4 characters (/api)
-    : API_URL;
+  // Remove /api suffix if present to get base URL
+  let baseUrl = API_URL;
+  if (API_URL.endsWith("/api")) {
+    baseUrl = API_URL.slice(0, -4); // Remove last 4 characters (/api)
+  }
 
-  return `${baseUrl}${relativePath}`;
+  const fullUrl = `${baseUrl}${relativePath}`;
+  console.log("[getStaticFileUrl] Input path:", relativePath);
+  console.log("[getStaticFileUrl] API_URL:", API_URL);
+  console.log("[getStaticFileUrl] Base URL:", baseUrl);
+  console.log("[getStaticFileUrl] Final URL:", fullUrl);
+
+  return fullUrl;
 }
 
 export default api;
