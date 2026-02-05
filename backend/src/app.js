@@ -101,22 +101,26 @@ app.use("/uploads", (req, res, next) => {
 });
 
 // Serve static files (uploads) with CORS headers and caching
-app.use("/uploads", (req, res, next) => {
-  // Allow cross-origin image requests
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  
-  // Enable caching for static files
-  res.setHeader("Cache-Control", "public, max-age=86400");
-  
-  // Prevent caching for development
-  if (NODE_ENV === "development") {
-    res.setHeader("Cache-Control", "public, max-age=0");
-  }
-  
-  next();
-}, express.static(uploadsPath));
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    // Allow cross-origin image requests
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+    // Enable caching for static files
+    res.setHeader("Cache-Control", "public, max-age=86400");
+
+    // Prevent caching for development
+    if (NODE_ENV === "development") {
+      res.setHeader("Cache-Control", "public, max-age=0");
+    }
+
+    next();
+  },
+  express.static(uploadsPath),
+);
 
 // Security headers
 app.use((req, res, next) => {

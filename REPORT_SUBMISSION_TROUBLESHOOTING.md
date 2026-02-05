@@ -3,7 +3,9 @@
 ## Errors You're Seeing
 
 ### Error 1: "Location not available"
+
 This is actually expected behavior if:
+
 - User hasn't granted location permission
 - Browser doesn't support Geolocation API
 - User is behind a proxy or firewall blocking geolocation
@@ -11,7 +13,9 @@ This is actually expected behavior if:
 **Solution:** Location is OPTIONAL. You can still submit reports without it.
 
 ### Error 2: "Error in submitting report"
+
 This indicates a backend error. The actual error message should appear in:
+
 1. Browser console (press F12 → Console tab)
 2. Backend logs
 
@@ -20,11 +24,13 @@ This indicates a backend error. The actual error message should appear in:
 ## Step-by-Step Troubleshooting
 
 ### 1. Check Browser Console
+
 ```
 F12 → Console Tab
 ```
 
 Look for messages like:
+
 - `📍 Location response: {latitude: null, longitude: null}` - Location denied/unavailable
 - `POST http://localhost:5000/api/reports/submit 400` - Bad request (missing fields)
 - `POST http://localhost:5000/api/reports/submit 500` - Server error
@@ -32,11 +38,13 @@ Look for messages like:
 **Action:** Screenshot the full error message
 
 ### 2. Verify Backend is Running
+
 ```bash
 curl http://localhost:5000/api
 ```
 
 Expected response:
+
 ```json
 {
   "message": "Welcome to Lumora API",
@@ -46,18 +54,22 @@ Expected response:
 ```
 
 If this fails, start the backend:
+
 ```bash
 cd backend
 npm run dev
 ```
 
 ### 3. Check Required Fields
+
 The report form requires:
+
 - ✅ **Product Code** - Required (codeValue)
 - ✅ **Report Type** - Required (reportType: "counterfeit" or "unregistered")
 - ✅ **Description** - Required (description: 10+ characters recommended)
 
 Optional fields:
+
 - Product Name
 - Location (auto-captured, but you can override)
 - Purchase Date
@@ -70,6 +82,7 @@ Optional fields:
 **Action:** Ensure you fill in all required fields
 
 ### 4. Test API Endpoint Directly
+
 ```bash
 curl -X POST http://localhost:5000/api/reports/submit \
   -H "Content-Type: application/json" \
@@ -83,6 +96,7 @@ curl -X POST http://localhost:5000/api/reports/submit \
 ```
 
 Expected response:
+
 ```json
 {
   "success": true,
@@ -96,6 +110,7 @@ Expected response:
 ```
 
 ### 5. Check Backend Logs
+
 ```bash
 # In backend terminal, you should see:
 [REPORT] Image saved: /uploads/reports/uuid-timestamp.jpg  (if image uploaded)
@@ -107,12 +122,15 @@ Expected response:
 ## Common Issues & Solutions
 
 ### Issue: "Failed to submit report. Please try again."
+
 **Causes:**
+
 1. Backend not running
 2. Wrong API URL (check NEXT_PUBLIC_API_URL in .env.local)
 3. Missing required fields
 
 **Fix:**
+
 ```bash
 # Check API is running
 curl http://localhost:5000/api
@@ -123,32 +141,40 @@ cat frontend/.env.local
 ```
 
 ### Issue: "Code value, report type, and description are required"
+
 **Cause:** One or more required fields are empty
 
 **Fix:**
+
 - Product Code: Enter a product code (e.g., "123456789")
 - Report Type: Select from dropdown
 - Description: Enter at least a few words
 
 ### Issue: Location shows "not available"
+
 **This is normal!** Possible causes:
+
 1. User denied location permission
 2. HTTPS not available (some browsers require HTTPS for geolocation)
 3. Browser doesn't support Geolocation API
 4. Network timeout when reverse geocoding
 
 **Fix:**
+
 - Click "Allow" if browser asks for location permission
 - Location is optional - report can be submitted without it
 - Manually enter location in "Purchase Location" field
 
 ### Issue: Image not uploading
+
 **Causes:**
+
 1. File larger than 5MB
 2. File is not an image (check file type)
 3. Multer middleware not installed
 
 **Fix:**
+
 ```bash
 # Check file size
 ls -lh image.jpg  # Should be < 5MB
@@ -162,6 +188,7 @@ npm install multer
 ```
 
 ### Issue: Email not sending
+
 **This feature requires SMTP configuration.** Check backend .env:
 
 ```env
@@ -175,6 +202,7 @@ NAFDAC_REPORT_EMAIL=report@nafdac.gov.ng
 Without proper SMTP config, emails will fail silently but reports still submit.
 
 **Fix:**
+
 ```bash
 # Test SMTP configuration
 curl -X POST http://localhost:5000/api/admin/verify-email
@@ -192,17 +220,20 @@ curl -X POST http://localhost:5000/api/admin/verify-email
 ### Enable Detailed Logging
 
 **Frontend (.env.local):**
+
 ```env
 NEXT_PUBLIC_DEBUG=true
 ```
 
 **Backend (.env):**
+
 ```env
 NODE_ENV=development
 LOG_LEVEL=debug
 ```
 
 Then you'll see in console/logs:
+
 ```
 📍 Location response: {...}
 [REPORT] Creating report with data: {...}
@@ -217,6 +248,7 @@ Then you'll see in console/logs:
 Use this to verify report submission works:
 
 ### ✅ Basic Form Submission (No Image)
+
 ```javascript
 // Minimal valid request
 {
@@ -227,6 +259,7 @@ Use this to verify report submission works:
 ```
 
 ### ✅ Form Submission With Location
+
 ```javascript
 {
   "codeValue": "TEST123",
@@ -239,6 +272,7 @@ Use this to verify report submission works:
 ```
 
 ### ✅ Form Submission With Contact Info
+
 ```javascript
 {
   "codeValue": "TEST123",
@@ -251,6 +285,7 @@ Use this to verify report submission works:
 ```
 
 ### ✅ Form Submission With Health Impact
+
 ```javascript
 {
   "codeValue": "TEST123",
@@ -262,6 +297,7 @@ Use this to verify report submission works:
 ```
 
 ### ✅ Form Submission With Image (Using FormData)
+
 ```javascript
 const formData = new FormData();
 formData.append("codeValue", "TEST123");
@@ -271,7 +307,7 @@ formData.append("image", file); // File object from input
 
 await fetch("http://localhost:5000/api/reports/submit", {
   method: "POST",
-  body: formData
+  body: formData,
 });
 ```
 
@@ -316,9 +352,11 @@ Redirect to /verify page
 ## Quick Fixes
 
 ### Issue: "Location not available" + "Error in submitting report"
+
 Try these in order:
 
 1. **Check browser console for actual error:**
+
    ```
    F12 → Console → Look for red errors
    ```
@@ -334,6 +372,7 @@ Try these in order:
    - Description: Required (minimum 10 words recommended)
 
 4. **Test with minimal data:**
+
    ```
    Code: TEST-001
    Type: Counterfeit

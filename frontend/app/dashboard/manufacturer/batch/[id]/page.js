@@ -549,22 +549,28 @@ export default function BatchDetailPage() {
                           "[QR_IMAGE_ERROR] Original DB path:",
                           selectedCode.qrImagePath,
                         );
-                        console.error(
-                          "[QR_IMAGE_ERROR] Error type:",
-                          e.type,
-                        );
+                        console.error("[QR_IMAGE_ERROR] Error type:", e.type);
                         console.error(
                           "[QR_IMAGE_ERROR] Network status:",
-                          imgElement.complete ? "loaded but error" : "failed to fetch",
+                          imgElement.complete
+                            ? "loaded but error"
+                            : "failed to fetch",
                         );
-                        
+
                         // Try alternative source if available
-                        if (selectedCode?.qrImagePath && !imgElement.src.includes("placeholder")) {
-                          console.log("[QR_IMAGE_ERROR] Attempting fallback...");
+                        if (
+                          selectedCode?.qrImagePath &&
+                          !imgElement.src.includes("placeholder")
+                        ) {
+                          console.log(
+                            "[QR_IMAGE_ERROR] Attempting fallback...",
+                          );
                           // Show placeholder instead
-                          imgElement.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Crect fill='%23f0f0f0' width='256' height='256'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23666' font-size='14' font-family='Arial'%3EQR Code Unavailable%3C/text%3E%3C/svg%3E";
+                          imgElement.src =
+                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Crect fill='%23f0f0f0' width='256' height='256'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23666' font-size='14' font-family='Arial'%3EQR Code Unavailable%3C/text%3E%3C/svg%3E";
                         } else {
-                          imgElement.src = "https://via.placeholder.com/256?text=QR+Not+Available";
+                          imgElement.src =
+                            "https://via.placeholder.com/256?text=QR+Not+Available";
                         }
                       }}
                       onLoad={() => {
