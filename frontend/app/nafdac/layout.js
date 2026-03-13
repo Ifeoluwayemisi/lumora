@@ -5,7 +5,15 @@ export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { FiHome, FiAlertCircle, FiFileText, FiSettings, FiLogOut, FiMenu, FiX } from "react-icons/fi";
+import {
+  FiHome,
+  FiAlertCircle,
+  FiFileText,
+  FiSettings,
+  FiLogOut,
+  FiMenu,
+  FiX,
+} from "react-icons/fi";
 
 export default function NAFDACLayout({ children }) {
   const router = useRouter();
@@ -75,12 +83,18 @@ export default function NAFDACLayout({ children }) {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
         <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-6 py-4 flex items-center justify-between md:hidden">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">NAFDAC</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            NAFDAC
+          </h2>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
           >
-            {sidebarOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
+            {sidebarOpen ? (
+              <FiX className="w-6 h-6" />
+            ) : (
+              <FiMenu className="w-6 h-6" />
+            )}
           </button>
         </div>
 

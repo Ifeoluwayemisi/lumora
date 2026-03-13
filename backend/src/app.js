@@ -28,7 +28,7 @@ const __dirname = path.dirname(__filename);
 const uploadsPath = path.join(__dirname, "../uploads");
 
 /**
- * Security & Performance Middleware
+ * security & performance Middleware
  */
 
 // CORS configuration - restrict in production
@@ -55,6 +55,25 @@ app.use(cors(corsOptions));
 // Add request logging middleware
 app.use(requestLogger);
 
+// Security Headers Middleware
+app.use((req, res, next) => {
+  // Prevent clickjacking
+  res.setHeader("X-Frame-Options", "DENY");
+  // Disable MIME type sniffing
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  // Enable XSS protection
+  res.setHeader("X-XSS-Protection", "1; mode=block");
+  // Disable referrer
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  // Content Security Policy
+  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'");
+  // HSTS for HTTPS enforcement
+  if (NODE_ENV === "production") {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  }
+  next();
+});
+
 // Body parsing middleware with size limits
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
@@ -78,12 +97,12 @@ if (fs.existsSync(uploadsPath)) {
     }
   } else {
     console.warn(
-      "[APP_INIT] ⚠️  QR codes directory does not exist:",
+      "[APP_INIT]  QR codes directory does not exist:",
       qrCodesDir,
     );
   }
 } else {
-  console.error("[APP_INIT] ❌ Uploads directory NOT FOUND:", uploadsPath);
+  console.error("[APP_INIT] Uploads directory NOT FOUND:", uploadsPath);
 }
 
 // Add diagnostic middleware for static file requests

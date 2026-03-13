@@ -4,6 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAdmin } from "@/hooks/useAdmin";
 import {
   FiAlertTriangle,
   FiCheckCircle,
@@ -16,9 +17,11 @@ import {
 
 export default function AlertsPage() {
   const router = useRouter();
+  const { adminUser, isHydrated } = useAdmin();
   const [incidents, setIncidents] = useState([]);
   const [filteredIncidents, setFilteredIncidents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [stats, setStats] = useState({
@@ -29,27 +32,24 @@ export default function AlertsPage() {
   });
 
   useEffect(() => {
-    const adminToken = localStorage.getItem("admin_token");
-    const adminUser = localStorage.getItem("admin_user");
-    
-    if (!adminToken || !adminUser) {
-      router.push("/admin/login");
+    if (!isHydrated) return;
+
+    if (!adminUser || adminUser.role !== "NAFDAC") {
+      router.push(adminUser ? "/admin/dashboard" : "/admin/login");
       return;
     }
 
     fetchIncidents();
     const interval = setInterval(fetchIncidents, 30000);
     return () => clearInterval(interval);
-  }, [router]);
-
-  useEffect(() => {
+  }, [isHydrated, adminUser, router]);
     let filtered = incidents;
 
     if (searchTerm) {
       filtered = filtered.filter(
         (i) =>
           i.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (i.type && i.type.toLowerCase().includes(searchTerm.toLowerCase()))
+          (i.type && i.type.toLowerCase().includes(searchTerm.toLowerCase())),
       );
     }
 
@@ -77,7 +77,7 @@ export default function AlertsPage() {
       const total = incidentsData.length;
       const open = incidentsData.filter((i) => i.status === "OPEN").length;
       const acknowledged = incidentsData.filter(
-        (i) => i.status === "ACKNOWLEDGED"
+        (i) => i.status === "ACKNOWLEDGED",
       ).length;
       const closed = incidentsData.filter((i) => i.status === "CLOSED").length;
 
@@ -291,7 +291,7 @@ export default function AlertsPage() {
                     <td className="px-6 py-4 text-sm">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBgColor(
-                          incident.status
+                          incident.status,
                         )}`}
                       >
                         {incident.status}

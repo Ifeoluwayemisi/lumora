@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAdmin } from "@/hooks/useAdmin";
 import {
   FiAlertTriangle,
   FiCheckCircle,
@@ -14,47 +15,52 @@ import {
   FiRefreshCw,
   FiArrowRight,
 } from "react-icons/fi";
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
 
 export default function NAFDACDashboard() {
   const router = useRouter();
+  const { adminUser, isHydrated } = useAdmin();
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [stats, setStats] = useState(null);
   const [incidents, setIncidents] = useState([]);
   const [hotspots, setHotspots] = useState([]);
   const [trend, setTrend] = useState([]);
 
+  // Check auth and fetch data on hydration
   useEffect(() => {
-    // Check authentication
-    const adminToken = localStorage.getItem("admin_token");
-    const adminUser = localStorage.getItem("admin_user");
-    
-    if (!adminToken || !adminUser) {
+    if (!isHydrated) return;
+
+    if (!adminUser) {
       router.push("/admin/login");
       return;
     }
 
-    // Check if user has NAFDAC role
-    try {
-      const user = JSON.parse(adminUser);
-      if (user.role !== "NAFDAC") {
-        router.push("/admin/dashboard");
-        return;
-      }
-    } catch (err) {
-      router.push("/admin/login");
+    if (adminUser.role !== "NAFDAC") {
+      router.push("/admin/dashboard");
       return;
     }
 
     fetchDashboardData();
     const interval = setInterval(fetchDashboardData, 30000); // Refresh every 30s
     return () => clearInterval(interval);
-  }, [router]);
+  }, [isHydrated, adminUser, router]);
 
   const fetchDashboardData = async () => {
     try {
       setError("");
+      setIsRefreshing(true);
       const adminToken = localStorage.getItem("admin_token");
 
       // Fetch incidents
@@ -92,10 +98,11 @@ export default function NAFDACDashboard() {
       });
 
       setTrend(mockTrend);
-      setIsLoading(false);
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
-      setError(err.message);
+      setError(err.message || "Failed to load dashboard");
+    } finally {
+      setIsRefreshing(false);
       setIsLoading(false);
     }
   };
@@ -105,7 +112,9 @@ export default function NAFDACDashboard() {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading dashboard...</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Loading dashboard...
+          </p>
         </div>
       </div>
     );
@@ -125,10 +134,11 @@ export default function NAFDACDashboard() {
         </div>
         <button
           onClick={fetchDashboardData}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          disabled={isRefreshing}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
         >
-          <FiRefreshCw className="w-4 h-4 mr-2" />
-          Refresh
+          <FiRefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing' : 'Refresh'}
         </button>
       </div>
 

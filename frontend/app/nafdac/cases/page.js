@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAdmin } from "@/hooks/useAdmin";
 import {
   FiChevronRight,
   FiFilter,
@@ -15,27 +16,26 @@ import {
 
 export default function CasesPage() {
   const router = useRouter();
+  const { adminUser, isHydrated } = useAdmin();
   const [cases, setCases] = useState([]);
   const [filteredCases, setFilteredCases] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
-    const adminToken = localStorage.getItem("admin_token");
-    const adminUser = localStorage.getItem("admin_user");
-    
-    if (!adminToken || !adminUser) {
-      router.push("/admin/login");
+    if (!isHydrated) return;
+
+    if (!adminUser || adminUser.role !== "NAFDAC") {
+      router.push(adminUser ? "/admin/dashboard" : "/admin/login");
       return;
     }
 
     fetchCases();
     const interval = setInterval(fetchCases, 30000);
     return () => clearInterval(interval);
-  }, [router]);
-
-  useEffect(() => {
+  }, [isHydrated, adminUser, router]);
     let filtered = cases;
 
     // Apply search filter
@@ -43,7 +43,7 @@ export default function CasesPage() {
       filtered = filtered.filter(
         (c) =>
           c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.manufacturerId.toLowerCase().includes(searchTerm.toLowerCase())
+          c.manufacturerId.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -79,7 +79,8 @@ export default function CasesPage() {
       escalated: "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200",
       acknowledged:
         "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
-      closed: "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
+      closed:
+        "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
     };
     return colors[status] || colors.escalated;
   };
@@ -191,12 +192,14 @@ export default function CasesPage() {
                       {caseItem.id.slice(0, 12)}...
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
-                      {caseItem.manufacturerId || caseItem.manufacturer || "N/A"}
+                      {caseItem.manufacturerId ||
+                        caseItem.manufacturer ||
+                        "N/A"}
                     </td>
                     <td className="px-6 py-4 text-sm">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          caseItem.status
+                          caseItem.status,
                         )}`}
                       >
                         {caseItem.status}
@@ -208,8 +211,8 @@ export default function CasesPage() {
                           caseItem.riskLevel === "HIGH"
                             ? "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
                             : caseItem.riskLevel === "MEDIUM"
-                            ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
-                            : "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                              ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
+                              : "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
                         }`}
                       >
                         {caseItem.riskLevel || "MEDIUM"}
