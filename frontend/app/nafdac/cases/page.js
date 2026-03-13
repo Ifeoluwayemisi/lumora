@@ -36,6 +36,8 @@ export default function CasesPage() {
     const interval = setInterval(fetchCases, 30000);
     return () => clearInterval(interval);
   }, [isHydrated, adminUser, router]);
+
+  useEffect(() => {
     let filtered = cases;
 
     // Apply search filter
@@ -54,6 +56,10 @@ export default function CasesPage() {
 
     setFilteredCases(filtered);
   }, [searchTerm, statusFilter, cases]);
+
+  useEffect(() => {
+    fetchCases();
+  }, [isHydrated, adminUser, router]);
 
   const fetchCases = async () => {
     try {

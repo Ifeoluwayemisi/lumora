@@ -43,6 +43,8 @@ export default function AlertsPage() {
     const interval = setInterval(fetchIncidents, 30000);
     return () => clearInterval(interval);
   }, [isHydrated, adminUser, router]);
+
+  useEffect(() => {
     let filtered = incidents;
 
     if (searchTerm) {
