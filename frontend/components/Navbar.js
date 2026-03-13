@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useTheme } from "next-themes";
@@ -65,16 +66,15 @@ export default function Navbar() {
         {/* Logo - Brand Identity */}
         <Link
           href="/"
-          className="font-heading text-xl font-bold text-genuine hover:text-green-300 transition-colors relative h-8 w-32 flex items-center"
+          className="font-heading text-xl font-bold text-genuine hover:text-green-300 transition-colors flex items-center"
         >
-          Lumora
-          {/* <Image
-            src="/logo2.png"
+          <Image
+            src="/image/logo.png"
             alt="Lumora Logo"
-            fill
-            className="object-contain"
+            width={180}
+            height={50}
             priority
-          /> */}
+          />
         </Link>
 
         {/* Desktop Navigation Links - Hidden on mobile */}

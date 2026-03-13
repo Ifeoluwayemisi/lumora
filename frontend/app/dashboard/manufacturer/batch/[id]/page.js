@@ -476,136 +476,60 @@ export default function BatchDetailPage() {
 
             <div className="flex flex-col items-center space-y-4">
               {/* QR Code Image */}
-              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+              <div className="w-80 h-80 p-4 bg-white dark:bg-gray-900 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center">
                 {selectedCode?.qrImagePath ? (
-                  <>
-                    {(() => {
+                  <img
+                    src={(() => {
                       const path = selectedCode.qrImagePath;
-                      console.log(
-                        "[QR_MODAL_OPEN] Code:",
-                        selectedCode.codeValue,
-                      );
-                      console.log("[QR_MODAL_OPEN] Raw path from DB:", path);
+                      console.log("[QR_MODAL] Raw path:", path);
 
-                      // Detect if path is absolute (from Render server)
-                      const isAbsolutePath =
-                        path?.includes("/opt/render/") ||
-                        path?.includes("uploads");
-                      console.log(
-                        "[QR_MODAL_OPEN] Is absolute path:",
-                        isAbsolutePath,
-                      );
-
-                      let finalUrl = path;
-                      if (isAbsolutePath && path?.includes("uploads")) {
-                        // Extract the /uploads/... part
-                        const uploadsIndex = path.indexOf("/uploads");
-                        if (uploadsIndex !== -1) {
-                          finalUrl = path.substring(uploadsIndex);
-                          console.log(
-                            "[QR_MODAL_OPEN] Extracted relative path:",
-                            finalUrl,
-                          );
-                        }
+                      // Extract relative path if absolute
+                      let relativePath = path;
+                      if (path?.includes("/uploads")) {
+                        const idx = path.indexOf("/uploads");
+                        relativePath = path.substring(idx);
                       }
 
-                      const staticUrl = getStaticFileUrl(finalUrl);
-                      console.log(
-                        "[QR_MODAL_OPEN] Final URL to use:",
-                        staticUrl,
-                      );
-                      window._lastQRUrl = staticUrl; // Store for debugging
-                      return null;
+                      const fullUrl = getStaticFileUrl(relativePath);
+                      console.log("[QR_MODAL] Final URL:", fullUrl);
+                      return fullUrl;
                     })()}
-                    <img
-                      src={(() => {
-                        const path = selectedCode.qrImagePath;
-                        const isAbsolutePath =
-                          path?.includes("/opt/render/") ||
-                          path?.includes("uploads");
-                        let finalPath = path;
-
-                        if (isAbsolutePath && path?.includes("uploads")) {
-                          const uploadsIndex = path.indexOf("/uploads");
-                          if (uploadsIndex !== -1) {
-                            finalPath = path.substring(uploadsIndex);
-                          }
-                        }
-                        return getStaticFileUrl(finalPath);
-                      })()}
-                      alt={`QR Code for ${selectedCode.codeValue}`}
-                      className="w-64 h-64 object-contain"
-                      onError={(e) => {
-                        const imgElement = e.target;
-                        console.error(
-                          "[QR_IMAGE_ERROR] Failed to load from:",
-                          imgElement.src,
-                        );
-                        console.error(
-                          "[QR_IMAGE_ERROR] Code:",
-                          selectedCode.codeValue,
-                        );
-                        console.error(
-                          "[QR_IMAGE_ERROR] Original DB path:",
-                          selectedCode.qrImagePath,
-                        );
-                        console.error("[QR_IMAGE_ERROR] Error type:", e.type);
-                        console.error(
-                          "[QR_IMAGE_ERROR] Network status:",
-                          imgElement.complete
-                            ? "loaded but error"
-                            : "failed to fetch",
-                        );
-
-                        // Try alternative source if available
-                        if (
-                          selectedCode?.qrImagePath &&
-                          !imgElement.src.includes("placeholder")
-                        ) {
-                          console.log(
-                            "[QR_IMAGE_ERROR] Attempting fallback...",
-                          );
-                          // Show placeholder instead
-                          imgElement.src =
-                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Crect fill='%23f0f0f0' width='256' height='256'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23666' font-size='14' font-family='Arial'%3EQR Code Unavailable%3C/text%3E%3C/svg%3E";
-                        } else {
-                          imgElement.src =
-                            "https://via.placeholder.com/256?text=QR+Not+Available";
-                        }
-                      }}
-                      onLoad={() => {
-                        console.log(
-                          "[QR_IMAGE_SUCCESS] QR loaded successfully",
-                        );
-                        console.log(
-                          "[QR_IMAGE_SUCCESS] URL:",
-                          window._lastQRUrl,
-                        );
-                        console.log(
-                          "[QR_IMAGE_SUCCESS] Code:",
-                          selectedCode.codeValue,
-                        );
-                      }}
-                    />
-                  </>
-                ) : (
-                  <>
-                    {console.log(
-                      "[QR_MODAL] qrImagePath is null/undefined:",
-                      selectedCode?.qrImagePath,
-                    )}
-                    <img
-                      src="https://via.placeholder.com/256?text=QR+Not+Available"
-                      alt="QR Not Available"
-                      className="w-64 h-64 object-contain"
-                    />
-                    <p className="text-sm text-red-600">
-                      QR code not available
-                    </p>
-                  </>
+                    alt={`QR Code for ${selectedCode.codeValue}`}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      console.error(
+                        "[QR_ERROR] Failed to load QR from:",
+                        e.target.src,
+                      );
+                      console.error("[QR_ERROR] Code:", selectedCode.codeValue);
+                      console.error(
+                        "[QR_ERROR] Original path:",
+                        selectedCode.qrImagePath,
+                      );
+                      e.target.style.display = "none";
+                      e.target.nextSibling?.style.setProperty(
+                        "display",
+                        "flex",
+                        "important",
+                      );
+                    }}
+                    onLoad={() => {
+                      console.log(
+                        "[QR_SUCCESS] QR loaded for:",
+                        selectedCode.codeValue,
+                      );
+                    }}
+                  />
+                ) : null}
+                {!selectedCode?.qrImagePath && (
+                  <div className="text-center text-gray-500 dark:text-gray-400">
+                    <p className="text-sm">No QR code available</p>
+                  </div>
                 )}
               </div>
+            </div>
 
+            <div className="flex flex-col items-center space-y-4 w-full max-w-md">
               {/* Code Value */}
               <div className="w-full">
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">

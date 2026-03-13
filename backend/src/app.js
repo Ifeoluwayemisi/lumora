@@ -66,10 +66,16 @@ app.use((req, res, next) => {
   // Disable referrer
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   // Content Security Policy
-  res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'");
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'",
+  );
   // HSTS for HTTPS enforcement
   if (NODE_ENV === "production") {
-    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains",
+    );
   }
   next();
 });
@@ -96,10 +102,7 @@ if (fs.existsSync(uploadsPath)) {
       console.error("[APP_INIT] Error reading QR directory:", err.message);
     }
   } else {
-    console.warn(
-      "[APP_INIT]  QR codes directory does not exist:",
-      qrCodesDir,
-    );
+    console.warn("[APP_INIT]  QR codes directory does not exist:", qrCodesDir);
   }
 } else {
   console.error("[APP_INIT] Uploads directory NOT FOUND:", uploadsPath);

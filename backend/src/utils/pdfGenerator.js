@@ -161,57 +161,55 @@ async function drawCodeBox(page, code, x, y, width, height, pdfDoc) {
       `${code.codeValue}.png`,
     );
 
-    console.log("[PDF_EMBED_QR] Attempting to embed QR from:", qrFilePath);
+    console.log("[PDF_EMBED_QR] Looking for QR at:", qrFilePath);
+    console.log("[PDF_EMBED_QR] File exists:", fs.existsSync(qrFilePath));
 
     if (fs.existsSync(qrFilePath)) {
-      const qrImageBytes = fs.readFileSync(qrFilePath);
-      const qrImage = await pdfDoc.embedPng(qrImageBytes);
+      try {
+        const qrImageBytes = fs.readFileSync(qrFilePath);
+        const qrImage = await pdfDoc.embedPng(qrImageBytes);
 
-      // Calculate QR size to fit in the box (leaving space for code and status)
-      const qrBoxSize = height - 50; // Leave space for code value and status
-      const qrSize = Math.min(qrBoxSize, 60); // Max 60 points
+        // Calculate QR size to fit in the box (leaving space for code and status)
+        const qrBoxSize = height - 50; // Leave space for code value and status
+        const qrSize = Math.min(qrBoxSize, 80); // Max 80 points
 
-      // Center QR in the box
-      const qrX = x + (width - qrSize) / 2;
-      const qrY = y + height / 2 - qrSize / 2;
+        // Center QR in the box
+        const qrX = x + (width - qrSize) / 2;
+        const qrY = y + height / 2 - qrSize / 2;
 
-      page.drawImage(qrImage, {
-        x: qrX,
-        y: qrY,
-        width: qrSize,
-        height: qrSize,
-      });
+        page.drawImage(qrImage, {
+          x: qrX,
+          y: qrY,
+          width: qrSize,
+          height: qrSize,
+        });
 
-      console.log(
-        `[PDF_EMBED_QR] Successfully embedded QR for ${code.codeValue}`,
-      );
+        console.log(
+          `[PDF_EMBED_QR] ✓ Successfully embedded QR for ${code.codeValue}`,
+        );
+      } catch (embedError) {
+        console.warn(
+          `[PDF_EMBED_QR] Failed to embed QR for ${code.codeValue}: ${embedError.message}`,
+        );
+        // Fall through to placeholder
+        drawQRPlaceholder(page, x, y, width, height);
+      }
     } else {
-      console.warn(
-        `[PDF_EMBED_QR] QR file not found: ${qrFilePath}, using placeholder`,
-      );
+      console.warn(`[PDF_EMBED_QR] QR file not found at: ${qrFilePath}`);
       // Draw placeholder if file doesn't exist
-      page.drawText("(QR Code)", {
-        x: x + width / 2 - 15,
-        y: y + height / 2 - 5,
-        size: 8,
-        color: rgb(150 / 255, 150 / 255, 150 / 255),
-      });
+      drawQRPlaceholder(page, x, y, width, height);
     }
   } catch (error) {
-    console.error(
-      `[PDF_EMBED_QR] Error embedding QR for ${code.codeValue}:`,
-      error.message,
-    );
-    // Draw placeholder on error
-    page.drawText("(QR Code)", {
-      x: x + width / 2 - 15,
-      y: y + height / 2 - 5,
-      size: 8,
-      color: rgb(150 / 255, 150 / 255, 150 / 255),
-    });
+    console.error("[PDF_EMBED_QR] Error:", error.message);
+    // Still draw placeholder as fallback
+    try {
+      drawQRPlaceholder(page, x, y, width, height);
+    } catch (err) {
+      console.error("[PDF_QR_FALLBACK] Fallback also failed:", err.message);
+    }
   }
 
-  // Status
+  // Status badge at bottom
   const status = code.isUsed ? "USED" : "UNUSED";
   const statusColor = code.isUsed ? rgb(200 / 255, 0, 0) : rgb(0, 150 / 255, 0);
 
@@ -230,6 +228,20 @@ async function drawCodeBox(page, code, x, y, width, height, pdfDoc) {
     color: rgb(150 / 255, 150 / 255, 150 / 255),
   });
 }
+
+/**
+ * Draw placeholder text for missing QR codes
+ */
+function drawQRPlaceholder(page, x, y, width, height) {
+  page.drawText("(QR Code)", {
+    x: x + width / 2 - 20,
+    y: y + height / 2 - 5,
+    size: 8,
+    color: rgb(150 / 255, 150 / 255, 150 / 255),
+  });
+}
+
+// Note: Status drawing is handled within the main drawing loop of drawCodeBox
 
 /**
  * Generate a simple CSV for backup

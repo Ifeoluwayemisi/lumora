@@ -22,12 +22,14 @@ Lumora is a **product authentication & regulatory monitoring platform** with thr
 ### **1. User Ecosystem**
 
 **User Types** (Role enum):
+
 - `CONSUMER` - General users verifying products, filing reports
 - `MANUFACTURER` - Companies registering products & managing batches
 - `ADMIN` - Platform administrators (review queue management)
 - `NAFDAC` - Regulatory officials (escalated case monitoring)
 
 **Key User Tables**:
+
 - `User` - Base user account (email, password, role)
 - `Manufacturer` - Extended profile for manufacturing users
   - trustScore: Calculated AI trust metric (0-100)
@@ -39,6 +41,7 @@ Lumora is a **product authentication & regulatory monitoring platform** with thr
 ### **2. Product Verification Flow**
 
 #### **Step 1: Manufacturer Registration**
+
 ```
 Manufacturer.signup()
   ↓
@@ -51,6 +54,7 @@ If rejected → Manufacturer.status = rejected
 ```
 
 **Data Model**: `ManufacturerReview`
+
 - manufacturerId: Link to manufacturer
 - status: pending | approved | rejected | needs_docs
 - trustScore: AI-calculated trust metric
@@ -58,6 +62,7 @@ If rejected → Manufacturer.status = rejected
 - documentVerification: Document verification status (JSON)
 
 #### **Step 2: Product Registration**
+
 ```
 Manufacturer.registerProduct()
   → Creates Batch records
@@ -66,11 +71,13 @@ Manufacturer.registerProduct()
 ```
 
 **Data Models**:
+
 - `Drug` - Product information
 - `Batch` - Production batches (batch number, prod date, expiry)
 - `Code` - Individual QR codes (unique codeValue)
 
 #### **Step 3: Consumer Verification**
+
 ```
 Consumer.verifyCode(qrCode)
   ↓
@@ -82,6 +89,7 @@ Returns → { riskScore, riskLevel, advisory, safetyTips }
 ```
 
 **Data Model**: `VerificationLog`
+
 - codeValue: The scanned QR code
 - userId: Consumer performing verification
 - verificationState: GENUINE | CODE_ALREADY_USED | INVALID | UNREGISTERED_PRODUCT | SUSPICIOUS_PATTERN
@@ -93,6 +101,7 @@ Returns → { riskScore, riskLevel, advisory, safetyTips }
 ### **3. Reporting & Case Management**
 
 #### **Step 1: Consumer Reports Counterfeit**
+
 ```
 Consumer.reportProduct({
   codeValue,
@@ -107,6 +116,7 @@ Creates → UserReport (status: NEW)
 ```
 
 **Data Model**: `UserReport`
+
 - reporterId: Consumer ID
 - codeValue: Product code being reported
 - reason: Quality issue | Counterfeit | Wrong packaging | Expired | Other
@@ -115,12 +125,13 @@ Creates → UserReport (status: NEW)
 - riskLevel: PENDING | LOW | MEDIUM | HIGH | CRITICAL
 
 #### **Step 2: Admin Reviews & Escalates**
+
 ```
 Admin.openDashboard()
   → Views CaseFile list
   → Sees related UserReports
   → Can escalate with nafdacReported=true
-  
+
 If escalated:
   CaseFile.nafdacReported = true
   CaseFile.nafdacStatus = "pending"
@@ -128,6 +139,7 @@ If escalated:
 ```
 
 **Data Model**: `CaseFile`
+
 - caseNumber: Unique case ID
 - status: open | under_review | escalated | closed
 - severity: low | medium | high | critical
@@ -141,6 +153,7 @@ If escalated:
 ### **4. NAFDAC Regulatory Monitoring**
 
 #### **Incident Tracking**
+
 ```
 When CaseFile escalated (nafdacReported=true)
   ↓
@@ -154,6 +167,7 @@ NAFDAC.dashboard displays:
 ```
 
 **Data Model**: `Incident`
+
 - codeValue: Product code in question
 - riskScore: Risk severity (0-100)
 - status: OPEN | ACKNOWLEDGED | ESCALATED | CLOSED
@@ -161,6 +175,7 @@ NAFDAC.dashboard displays:
 - createdAt: When incident created
 
 #### **Hotspot Detection**
+
 ```
 NAFDAC.getHotspots()
   → Groups VerificationLogs by location
@@ -172,6 +187,7 @@ NAFDAC.getHotspots()
 ```
 
 **AI Predicted Hotspots** (Coming Soon):
+
 - Uses historical data + machine learning
 - Predicts future high-risk areas
 - Helps preventive enforcement
@@ -227,18 +243,21 @@ NAFDAC.getHotspots()
 Both dashboards follow these patterns:
 
 1. **Authentication**:
+
    ```javascript
    // useAdmin hook provides:
    const { adminUser, isHydrated, logout, hasRole } = useAdmin();
    ```
 
 2. **Role-Based Redirect** (in login):
+
    ```javascript
    if (user.role === "NAFDAC") router.push("/nafdac");
    else router.push("/admin/dashboard");
    ```
 
 3. **Component Protection**:
+
    ```javascript
    if (!adminUser || adminUser.role !== "NAFDAC") {
      router.push("/admin/dashboard");
@@ -247,10 +266,11 @@ Both dashboards follow these patterns:
    ```
 
 4. **Error Handling**:
+
    ```javascript
    try {
-     const res = await fetch(url, { 
-       headers: { Authorization: `Bearer ${adminToken}` }
+     const res = await fetch(url, {
+       headers: { Authorization: `Bearer ${adminToken}` },
      });
      if (!res.ok) throw new Error("Request failed");
    } catch (err) {
@@ -269,6 +289,7 @@ Both dashboards follow these patterns:
 ## 🔐 Security Layers
 
 ### **Backend Security** (app.js):
+
 - **Security Headers**: X-Frame-Options, CSP, HSTS
 - **CORS**: Restricted to frontend origin
 - **Rate Limiting**: Via middleware
@@ -276,6 +297,7 @@ Both dashboards follow these patterns:
 - **Error Handling**: Masked errors in production
 
 ### **Frontend Security**:
+
 - **Auth Middleware**: Token validation in useAdmin
 - **Role-Based Access**: Checked before rendering
 - **SSR Hydration**: isHydrated checks prevent flash
@@ -287,7 +309,9 @@ Both dashboards follow these patterns:
 ## 📈 AI & Risk Scoring
 
 ### **Trust Score Calculation** (Dynamic)
+
 Combines:
+
 - Document verification (NAFDAC license, CAC)
 - Website legitimacy check
 - Document authenticity check
@@ -296,18 +320,20 @@ Combines:
 - Geographic anomalies
 
 **Score Range**: 0-100
+
 - 0-30: HIGH RISK (red)
 - 31-70: MEDIUM RISK (yellow)
 - 71-100: LOW RISK (green)
 
 ### **Risk Assessment** (Verification-time):
+
 ```javascript
 calculateRisk({
   code: codeValue,
   verificationState,
   userLocation,
-  previousVerifications
-})
+  previousVerifications,
+});
 // Returns: { riskScore, riskLevel, advisory, safetyTips }
 ```
 
@@ -316,18 +342,21 @@ calculateRisk({
 ## 🚀 Deployment Architecture
 
 ### **Backend** (Fastify + PostgreSQL):
+
 - API: `https://api.lumora.ng/api/`
 - Database: Neon PostgreSQL (connection pooling)
 - Authentication: JWT tokens (admin_token, or token for users)
 - Background Jobs: Hourly/daily analytics, security checks
 
 ### **Frontend** (Next.js 16):
+
 - Main: `https://lumora.ng/`
 - Routes: /auth, /admin, /nafdac, /dashboard
 - Static: Vercel CDN
 - API calls: Auto-retry with exponential backoff
 
 ### **Data Synchronization**:
+
 - Real-time: WebSocket for live incident updates (future)
 - Polling: 30-second dashboard refresh
 - Batch: Hourly analytics aggregation
@@ -337,17 +366,20 @@ calculateRisk({
 ## 📋 Complete API Endpoint Map
 
 ### **Public Endpoints** (Consumer verification):
+
 - `POST /api/verify/code` - Verify QR code
 - `POST /api/reports` - File counterfeit report
 - `GET /api/analytics/public` - Public statistics
 
 ### **Admin Endpoints** (Authentication required):
+
 - `GET /api/admin/manufacturers/review-queue` - Pending reviews
 - `PATCH /api/admin/manufacturers/:id/approve` - Approve manufacturer
 - `GET /api/admin/cases` - Case list
 - `PATCH /api/admin/cases/:id/escalate-nafdac` - Escalate case
 
 ### **NAFDAC Endpoints** (NAFDAC role required):
+
 - `GET /api/nafdac/incidents` - List incidents
 - `PATCH /api/nafdac/incidents/:id/status` - Update incident status
 - `GET /api/nafdac/hotspots` - Geographic hotspots
@@ -373,21 +405,24 @@ calculateRisk({
 ## 🔧 Quick Troubleshooting
 
 **"NAFDAC can't see cases"**:
+
 - Check: Admin escalated case (`nafdacReported=true`)
 - Check: NAFDAC user has correct role in database
 - Check: Case has valid status (escalated, not rejected)
 
 **"Trust scores showing NULL"**:
+
 - Already fixed! Scores calculated on list/detail fetch
 - If still null: Check `calculateDynamicTrustScore()` running
 
 **"AI risk not showing in verification"**:
+
 - Check: OPENAI_API_KEY configured
 - Check: ENABLE_AI_RISK=true env var
 - Check: verificationService calling calculateRisk()
 
 **"Cases not auto-creating from reports"**:
+
 - Check: UserReport creation triggering CaseFile creation
 - Check: Database cascade rules intact
 - Check: Admin configured to auto-create on report
-

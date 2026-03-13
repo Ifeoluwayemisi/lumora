@@ -2,7 +2,7 @@
 
 **Date**: March 13, 2026  
 **Status**: Critical Issues Found  
-**Priority**: HIGH - Judging Preparation Required  
+**Priority**: HIGH - Judging Preparation Required
 
 ---
 
@@ -12,7 +12,7 @@
 **Missing Features**: 3+ Major (Regulatory Dashboard, Full AI, etc.)  
 **Broken Endpoints**: ~5  
 **Incomplete Pages**: ~8  
-**AI Features**: Partially working but not integrated  
+**AI Features**: Partially working but not integrated
 
 **Ready for Judges**: ❌ **NOT READY** - Needs fixes before demo
 
@@ -24,6 +24,7 @@
 
 **Issue**: No dedicated NAFDAC/Regulatory dashboard exists  
 **Current State**:
+
 - ✓ Backend routes exist: `GET /api/nafdac/*`
 - ✓ NAFDAC escalation functions exist
 - ❌ **NO FRONTEND PAGE FOR NAFDAC USERS**
@@ -32,6 +33,7 @@
 - ❌ Cannot manage regulatory alerts
 
 **Files Needed**:
+
 ```
 frontend/app/nafdac/
 ├── layout.js
@@ -56,6 +58,7 @@ frontend/app/nafdac/
 
 **Issue**: AI functions defined but not properly integrated or tested  
 **Current State**:
+
 - ✓ `aiRiskService.js` exists
 - ✓ `dynamicTrustScoreService.js` exists
 - ❌ **NOT CALLED DURING VERIFICATION**
@@ -65,6 +68,7 @@ frontend/app/nafdac/
 - ❌ Trust scores always show NULL
 
 **Broken Endpoints**:
+
 ```
 GET /api/admin/manufacturers/review-queue
 ├─ Expected: includes trustScore, riskAssessment
@@ -91,10 +95,11 @@ GET /api/admin/manufacturers/:id/review
 **Issue**: Manufacturer approval tries to call non-existent functions  
 **File**: `backend/src/controllers/manufacturerReviewController.js` (Line 120+)
 **Problem**:
+
 ```javascript
-const { calculateDynamicTrustScore } = 
+const { calculateDynamicTrustScore } =
   await import("../services/dynamicTrustScoreService.js");
-const { recalculateManufacturerRiskScore } = 
+const { recalculateManufacturerRiskScore } =
   await import("../services/aiRiskService.js");
 
 // These functions are called but:
@@ -104,6 +109,7 @@ const { recalculateManufacturerRiskScore } =
 ```
 
 **Error**: When approving manufacturer, likely throws:
+
 ```
 TypeError: calculateDynamicTrustScore is not a function
 ```
@@ -116,11 +122,13 @@ TypeError: calculateDynamicTrustScore is not a function
 
 **Issue**: Recent code changes may have reintroduced stale Prisma client  
 **Status**:
+
 - ✓ Previously fixed (Commit 95996ec)
 - ❌ **May be stale again** if not regenerated after recent schema changes
 - ❌ Queries referencing new relations will fail
 
 **Verification Needed**:
+
 ```bash
 # Check if Prisma client is current
 npx prisma generate
@@ -139,12 +147,14 @@ npx prisma validate
 
 **Issue**: Some role combinations don't have proper access  
 **Problem**:
+
 - ✓ SUPER_ADMIN works
 - ✓ ADMIN works
 - ⚠️ NAFDAC role exists but no dashboard
 - ❌ Cannot differentiate routes for NAFDAC vs ADMIN
 
 **Files Affected**:
+
 ```
 frontend/middleware.js (or route protection)
 frontend/app/admin/layout.js
@@ -156,6 +166,7 @@ frontend/app/admin/layout.js
 
 **Issue**: Frontend error boundaries incomplete  
 **Problem**:
+
 - ✓ `error.js` exists (app root)
 - ✓ `not-found.js` exists
 - ❌ No error handling in nested routes
@@ -163,6 +174,7 @@ frontend/app/admin/layout.js
 - ❌ 404s return plain text, not formatted pages
 
 **Example**: When manufacturer detail fails to load:
+
 ```
 ❌ Shows: "Manufacturer not found"
 ✅ Should: Show friendly error with retry button
@@ -174,6 +186,7 @@ frontend/app/admin/layout.js
 
 **Issue**: 2FA implementation has gaps  
 **Problems**:
+
 - ✓ Basic flow works
 - ❌ No SMS integration (mentions email, but uses "any 6 digits" in dev)
 - ❌ No TOTP support
@@ -186,6 +199,7 @@ frontend/app/admin/layout.js
 
 **Issue**: `/api/verify` endpoint missing data  
 **Current Response**:
+
 ```json
 {
   "valid": true,
@@ -196,6 +210,7 @@ frontend/app/admin/layout.js
 ```
 
 **Missing**:
+
 ```json
 {
   "riskScore": null,        ❌ AI feature not working
@@ -216,10 +231,11 @@ frontend/app/admin/layout.js
 **Issue**: Manufacturer products page has functionality gaps  
 **File**: `frontend/app/dashboard/manufacturer/products/page.js`
 **Problems**:
+
 - ✓ Lists products
 - ❌ Cannot add new product
 - ❌ Cannot edit product
-- ❌ Cannot delete product  
+- ❌ Cannot delete product
 - ❌ No batch management UI
 - ❌ QR generation may not work
 
@@ -230,6 +246,7 @@ frontend/app/admin/layout.js
 **Issue**: QR generation endpoint exists but integration unclear  
 **File**: `POST /api/codes/generate`
 **Problems**:
+
 - ✓ Backend route exists
 - ❌ Frontend UI not clearly calling it
 - ❌ No feedback loop
@@ -242,6 +259,7 @@ frontend/app/admin/layout.js
 
 **Issue**: Photo upload/evidence handling incomplete  
 **Problems**:
+
 - ✓ Upload endpoint exists
 - ❌ No validation of file size
 - ❌ No virus scanning
@@ -255,6 +273,7 @@ frontend/app/admin/layout.js
 **Issue**: Analytics dashboard may show demo data  
 **File**: `frontend/app/dashboard/admin/analytics/page.js`
 **Problems**:
+
 - ✓ Charts implemented with Recharts
 - ❌ May use hardcoded sample data
 - ❌ Real data aggregation not tested
@@ -266,6 +285,7 @@ frontend/app/admin/layout.js
 
 **Issue**: Reporter leaderboard ranking logic  
 **Problems**:
+
 - ✓ Leaderboard page exists
 - ❌ Ranking algorithm unknown
 - ❌ Update frequency unknown
@@ -277,6 +297,7 @@ frontend/app/admin/layout.js
 
 **Issue**: Email sending endpoints exist but not tested  
 **Problems**:
+
 - ✓ `notificationService.js` exists
 - ❌ `SMTP_HOST`, `SMTP_PORT` undefined
 - ❌ `EMAIL_USER`, `EMAIL_PASS` undefined
@@ -289,6 +310,7 @@ frontend/app/admin/layout.js
 
 **Issue**: Location tracking partial  
 **Problems**:
+
 - ✓ Frontend requests geolocation
 - ✓ Backend stores latitude/longitude
 - ❌ Reverse geocoding (coordinates → address) not working
@@ -303,6 +325,7 @@ frontend/app/admin/layout.js
 
 **Issue**: Case status transitions not well defined  
 **Problems**:
+
 - ✓ Case creation works
 - ❌ Status state machine not clear
 - ❌ Invalid status transitions not prevented
@@ -326,22 +349,22 @@ frontend/app/admin/layout.js
 
 ## ❌ BROKEN FEATURES CHECKLIST
 
-| Feature | Status | Issue |
-|---------|--------|-------|
-| **NAFDAC Dashboard** | ❌ Missing | No frontend page |
-| **AI Risk Scoring** | ❌ Broken | Not called/integrated |
-| **Trust Score Calc** | ❌ Broken | Functions not working |
-| **Admin Approval** | ❌ Broken | Function import fails |
-| **Email Notifications** | ❌ Not Configured | SMTP not set |
-| **Geolocation Mapping** | ⚠️ Partial | No reverse geocoding |
-| **QR Generation** | ⚠️ Unclear | Integration untested |
-| **File Upload** | ⚠️ Partial | No validation |
-| **Analytics** | ⚠️ Unclear | May be demo data |
-| **2FA SMS** | ❌ Missing | Only email/any 6 digits |
-| **Case Workflow** | ⚠️ Unclear | State machine undefined |
-| **Rate Limiting** | ❌ Missing | No protection |
-| **Pagination** | ⚠️ Partial | Some pages missing |
-| **Error Handling** | ⚠️ Incomplete | Unformatted errors |
+| Feature                 | Status            | Issue                   |
+| ----------------------- | ----------------- | ----------------------- |
+| **NAFDAC Dashboard**    | ❌ Missing        | No frontend page        |
+| **AI Risk Scoring**     | ❌ Broken         | Not called/integrated   |
+| **Trust Score Calc**    | ❌ Broken         | Functions not working   |
+| **Admin Approval**      | ❌ Broken         | Function import fails   |
+| **Email Notifications** | ❌ Not Configured | SMTP not set            |
+| **Geolocation Mapping** | ⚠️ Partial        | No reverse geocoding    |
+| **QR Generation**       | ⚠️ Unclear        | Integration untested    |
+| **File Upload**         | ⚠️ Partial        | No validation           |
+| **Analytics**           | ⚠️ Unclear        | May be demo data        |
+| **2FA SMS**             | ❌ Missing        | Only email/any 6 digits |
+| **Case Workflow**       | ⚠️ Unclear        | State machine undefined |
+| **Rate Limiting**       | ❌ Missing        | No protection           |
+| **Pagination**          | ⚠️ Partial        | Some pages missing      |
+| **Error Handling**      | ⚠️ Incomplete     | Unformatted errors      |
 
 ---
 
@@ -349,55 +372,55 @@ frontend/app/admin/layout.js
 
 ### Admin Section (`/admin`)
 
-| Page | Status | Issues |
-|------|--------|--------|
-| `/admin/login` | ✅ Working | 2FA has gaps |
-| `/admin/manufacturers` | ✅ Mostly | Data sync fixed |
-| `/admin/manufacturers/[id]` | ⚠️ Partial | Trust  score NULL |
-| `/admin/reports` | ✅ Mostly | NAFDAC escalation not fully tested |
-| `/admin/cases` | ✅ Mostly | Workflow unclear |
-| `/admin/overview` | ⚠️ Partial | Analytics may be demo |
-| `/admin/users` | ✓ Assumed | Not tested |
-| `/admin/profile` | ✓ Assumed | Not tested |
-| `/admin/settings` | ❌ Missing | Not found |
+| Page                        | Status     | Issues                             |
+| --------------------------- | ---------- | ---------------------------------- |
+| `/admin/login`              | ✅ Working | 2FA has gaps                       |
+| `/admin/manufacturers`      | ✅ Mostly  | Data sync fixed                    |
+| `/admin/manufacturers/[id]` | ⚠️ Partial | Trust score NULL                   |
+| `/admin/reports`            | ✅ Mostly  | NAFDAC escalation not fully tested |
+| `/admin/cases`              | ✅ Mostly  | Workflow unclear                   |
+| `/admin/overview`           | ⚠️ Partial | Analytics may be demo              |
+| `/admin/users`              | ✓ Assumed  | Not tested                         |
+| `/admin/profile`            | ✓ Assumed  | Not tested                         |
+| `/admin/settings`           | ❌ Missing | Not found                          |
 
 ### Consumer Dashboard (`/dashboard`)
 
-| Page | Status | Issues |
-|------|--------|--------|
-| `/dashboard` | ✓ Home | Not tested |
-| `/dashboard/verify` | ⚠️ Partial | Risk scores missing |
-| `/dashboard/reports` | ✓ Works | Not fully tested |
-| `/dashboard/profile` | ✓ Works | Not tested |
+| Page                 | Status     | Issues              |
+| -------------------- | ---------- | ------------------- |
+| `/dashboard`         | ✓ Home     | Not tested          |
+| `/dashboard/verify`  | ⚠️ Partial | Risk scores missing |
+| `/dashboard/reports` | ✓ Works    | Not fully tested    |
+| `/dashboard/profile` | ✓ Works    | Not tested          |
 
 ### Manufacturer Dashboard (`/dashboard/manufacturer`)
 
-| Page | Status | Issues |
-|------|--------|--------|
-| `/dashboard/manufacturer` | ✓ Home | Not tested |
-| `/dashboard/manufacturer/products` | ❌ Broken | No CRUD operations |
-| `/dashboard/manufacturer/batches` | ❌ Broken | No management UI |
-| `/dashboard/manufacturer/codes` | ⚠️ Partial | QR gen unclear |
-| `/dashboard/manufacturer/analytics` | ⚠️ Partial | Demo data likely |
-| `/dashboard/manufacturer/profile` | ✓ Works | Not tested |
+| Page                                | Status     | Issues             |
+| ----------------------------------- | ---------- | ------------------ |
+| `/dashboard/manufacturer`           | ✓ Home     | Not tested         |
+| `/dashboard/manufacturer/products`  | ❌ Broken  | No CRUD operations |
+| `/dashboard/manufacturer/batches`   | ❌ Broken  | No management UI   |
+| `/dashboard/manufacturer/codes`     | ⚠️ Partial | QR gen unclear     |
+| `/dashboard/manufacturer/analytics` | ⚠️ Partial | Demo data likely   |
+| `/dashboard/manufacturer/profile`   | ✓ Works    | Not tested         |
 
 ### **Regulatory/NAFDAC** (`/nafdac` or `/dashboard/nafdac`)
 
-| Page | Status | Issues |
-|------|--------|--------|
+| Page                 | Status         | Issues                       |
+| -------------------- | -------------- | ---------------------------- |
 | `/nafdac` (or equiv) | ❌ **MISSING** | **ENTIRE DASHBOARD MISSING** |
-| `/nafdac/cases` | ❌ **MISSING** | Not implemented |
-| `/nafdac/alerts` | ❌ **MISSING** | Not implemented |
-| `/nafdac/reports` | ❌ **MISSING** | Not implemented |
+| `/nafdac/cases`      | ❌ **MISSING** | Not implemented              |
+| `/nafdac/alerts`     | ❌ **MISSING** | Not implemented              |
+| `/nafdac/reports`    | ❌ **MISSING** | Not implemented              |
 
 ### Public Pages
 
-| Page | Status | Issues |
-|------|--------|--------|
-| `/` (home) | ✓ Works | Marketing page |
-| `/auth/login` | ✓ Works | Not fully tested |
-| `/auth/register` | ✓ Works | Consumer/Mfg paths OK |
-| `/verify` (public verify) | ⚠️ Partial | AI features missing |
+| Page                      | Status     | Issues                |
+| ------------------------- | ---------- | --------------------- |
+| `/` (home)                | ✓ Works    | Marketing page        |
+| `/auth/login`             | ✓ Works    | Not fully tested      |
+| `/auth/register`          | ✓ Works    | Consumer/Mfg paths OK |
+| `/verify` (public verify) | ⚠️ Partial | AI features missing   |
 
 ---
 
@@ -444,12 +467,13 @@ POST /api/notifications/email/*
 ## 📊 CODE ISSUES BY SERVICE
 
 ### `manufacturerReviewController.js` (Line 120+)
+
 ```javascript
-❌ const { calculateDynamicTrustScore } = 
+❌ const { calculateDynamicTrustScore } =
     await import("../services/dynamicTrustScoreService.js");
 // ERROR: Function not exported / doesn't exist
 
-❌ const { recalculateManufacturerRiskScore } = 
+❌ const { recalculateManufacturerRiskScore } =
     await import("../services/aiRiskService.js");
 // ERROR: May throw if service not ready or API key missing
 ```
@@ -459,6 +483,7 @@ POST /api/notifications/email/*
 ---
 
 ### `aiRiskService.js`
+
 ```javascript
 ❌ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,  // Likely undefined
@@ -473,6 +498,7 @@ POST /api/notifications/email/*
 ---
 
 ### `notificationService.js`
+
 ```javascript
 ❌ const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,    // Undefined
@@ -522,6 +548,7 @@ JWT_EXPIRES_IN=              ⚠️ Should verify
 ## 📋 WHAT NEEDS TO BE FIXED BEFORE JUDGING
 
 ### Priority 1 (Must Fix)
+
 - [ ] Create NAFDAC regulatory dashboard (`/nafdac`)
 - [ ] Fix AI risk assessment integration
 - [ ] Fix manufacturer approval function imports
@@ -529,6 +556,7 @@ JWT_EXPIRES_IN=              ⚠️ Should verify
 - [ ] Fix database sync (regenerate Prisma client if needed)
 
 ### Priority 2 (Should Fix)
+
 - [ ] Add product CRUD operations
 - [ ] Fix geolocation reverse geocoding
 - [ ] Implement proper error pages
@@ -536,6 +564,7 @@ JWT_EXPIRES_IN=              ⚠️ Should verify
 - [ ] Implement rate limiting
 
 ### Priority 3 (Nice to Have)
+
 - [ ] Add SMS 2FA
 - [ ] Add analytics data validation
 - [ ] Add case workflow state machine
@@ -553,7 +582,7 @@ JWT_EXPIRES_IN=              ⚠️ Should verify
 ✅ **Database** - Queries mostly work (after recent fix)  
 ✅ **Frontend Routing** - Pages load  
 ✅ **QR Display** - Can show QR codes  
-✅ **Deployment** - Sites are live  
+✅ **Deployment** - Sites are live
 
 ---
 
@@ -566,20 +595,21 @@ JWT_EXPIRES_IN=              ⚠️ Should verify
 ❌ **File Uploads** - No validation  
 ❌ **Manufacturer CRUD** - No edit/delete  
 ❌ **Batch Management** - No UI  
-❌ **Geolocation Maps** - Incomplete  
+❌ **Geolocation Maps** - Incomplete
 
 ---
 
 ## 💡 RECOMMENDATIONS
 
 ### For Next 24 Hours:
+
 1. **Set environment variables** (30 min)
    - OPENAI_API_KEY
    - SMTP credentials
    - JWT secrets (verify)
 
 2. **Build NAFDAC dashboard** (2-3 hours)
-   - Create `/nafdac` route  
+   - Create `/nafdac` route
    - List escalated cases
    - Show alerts dashboard
    - Basic case review UI
@@ -597,6 +627,7 @@ JWT_EXPIRES_IN=              ⚠️ Should verify
    - NAFDAC: View escalated cases
 
 ### For Demo:
+
 - If OPENAI_API_KEY not available: Use mock scoring
 - If SMTP not configured: Use console.log for email alerts
 - If geolocation fails: Use hardcoded demo location

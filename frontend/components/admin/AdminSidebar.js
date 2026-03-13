@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAdmin } from "@/hooks/useAdmin";
 import {
@@ -101,14 +102,14 @@ export default function AdminSidebar({ isOpen = false, onClose = () => {} }) {
       >
         {/* Logo */}
         <div className="h-20 flex items-center justify-center border-b border-gray-200 dark:border-gray-800">
-          <Link
-            href="/admin/dashboard"
-            className="font-bold text-xl text-blue-600 dark:text-blue-400 text-center"
-          >
-            LUMORA
-            <span className="text-xs block text-gray-500 dark:text-gray-400">
-              Admin
-            </span>
+          <Link href="/admin/dashboard">
+            <Image
+              src="/image/logo.png"
+              alt="Lumora Logo"
+              width={120}
+              height={40}
+              priority
+            />
           </Link>
         </div>
 
@@ -166,14 +167,6 @@ export default function AdminSidebar({ isOpen = false, onClose = () => {} }) {
           </button>
         </div>
       </aside>
-
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
-          onClick={onClose}
-        />
-      )}
     </>
   );
 }

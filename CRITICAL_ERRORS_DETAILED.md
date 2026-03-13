@@ -1,22 +1,24 @@
 # LUMORA ERROR AUDIT - DETAILED FINDINGS
 
 **Generated**: March 13, 2026  
-**Severity**: CRITICAL - Multiple showstoppers for demo  
+**Severity**: CRITICAL - Multiple showstoppers for demo
 
 ---
 
-## 🔴 CONFIRMED BROKEN FEATURES
+##  CONFIRMED BROKEN FEATURES
 
-### 1. ❌ REGULATORY DASHBOARD - MISSING (NOT BUILT)
+### 1. REGULATORY DASHBOARD - MISSING (NOT BUILT)
 
 **Issue**: Zero pages exist for NAFDAC/regulatory users
 
 **Current**:
+
 - Backend routes exist: ✅ `/api/nafdac/*`
 - Services exist: ✅ `nafdacIntegrationService.js`, `caseManagementService.js`
 - **Frontend**: ❌ **NO PAGES CREATED**
 
 **What's Missing**:
+
 ```
 frontend/app/nafdac/
   ├── page.js          ← Dashboard
@@ -31,6 +33,7 @@ frontend/app/nafdac/
 ```
 
 **Impact**: ⚠️ **CRITICAL**
+
 - Judges expect "Regulatory dashboard" per README
 - NAFDAC users cannot access platform
 - Escalation flow incomplete
@@ -43,8 +46,9 @@ frontend/app/nafdac/
 **Issue**: Trust score and risk scoring functions exist but not called during normal verification flow
 
 #### **Function Status**:
+
 - ✅ `calculateDynamicTrustScore()` - **EXISTS** and **EXPORTED**
-- ✅ `recalculateManufacturerRiskScore()` - **EXISTS** and **EXPORTED**  
+- ✅ `recalculateManufacturerRiskScore()` - **EXISTS** and **EXPORTED**
 - ✅ Called during manufacturer approval (**Good!**)
 - ❌ **NOT called during product verification**
 - ❌ **Results not shown in verify endpoint**
@@ -52,6 +56,7 @@ frontend/app/nafdac/
 #### **Where They're Broken**:
 
 **Endpoint**: `POST /api/verify`
+
 ```javascript
 // Current response:
 {
@@ -71,6 +76,7 @@ frontend/app/nafdac/
 ```
 
 **Endpoint**: `GET /api/admin/manufacturers/review-queue`
+
 ```javascript
 // Current response:
 {
@@ -82,11 +88,13 @@ frontend/app/nafdac/
 ```
 
 **Why It's Broken**:
+
 1. `POST /api/verify` endpoint doesn't import/call `calculateRisk()`
-2. `GET /api/admin/manufacturers/review-queue` returns static trustScore field  
+2. `GET /api/admin/manufacturers/review-queue` returns static trustScore field
 3. AI context (batch history, location patterns) never analyzed
 
 **Impact**: 🔴 **CRITICAL**
+
 - Core feature (AI) not working
 - Demo shows static data, not real analysis
 - Trust scores always NULL
@@ -99,13 +107,14 @@ frontend/app/nafdac/
 **Issue**: Critical environment variables not set
 
 **Verified Missing**:
+
 ```bash
 # AI Features - BROKEN
 OPENAI_API_KEY=              ❌ Not set → OpenAI calls will fail
 GPT_MODEL=gpt-4              ❌ Not set → Wrong model used
 OPENAI_MODEL_VERSION=        ❌ Not set
 
-# Email Notifications - BROKEN  
+# Email Notifications - BROKEN
 SMTP_HOST=                   ❌ Not set → Emails won't send
 SMTP_PORT=                   ❌ Not set → Connection fails
 EMAIL_USER=                  ❌ Not set → Auth fails
@@ -117,6 +126,7 @@ NAFDAC_EMAIL=                ❌ Not set → Escalations can't notify
 ```
 
 **Impact**: 🔴 **CRITICAL**
+
 - All AI functions will fail silently
 - All email notifications fail silently
 - NAFDAC escalations don't trigger alerts
@@ -131,6 +141,7 @@ NAFDAC_EMAIL=                ❌ Not set → Escalations can't notify
 **Issue**: Risk calculation not called
 
 **Problem Code**:
+
 ```javascript
 ❌ // Risk assessment is not performed
 // Should call:
@@ -139,13 +150,14 @@ NAFDAC_EMAIL=                ❌ Not set → Escalations can't notify
 
 // Response missing:
 ❌ riskScore
-❌ riskLevel  
+❌ riskLevel
 ❌ lastReportedDate
 ❌ recentReports count
 ❌ healthAlerts
 ```
 
 **Impact**: 🟠 **HIGH**
+
 - Consumers see incomplete verification result
 - No risk information provided
 - Feature incomplete
@@ -159,6 +171,7 @@ NAFDAC_EMAIL=                ❌ Not set → Escalations can't notify
 **Status**: ✅ **MOSTLY WORKING**
 
 **Code**: `manufacturerReviewController.js` line 140-210
+
 ```javascript
 ✅ Calls calculateDynamicTrustScore()
 ✅ Calls recalculateManufacturerRiskScore()
@@ -168,6 +181,7 @@ NAFDAC_EMAIL=                ❌ Not set → Escalations can't notify
 ```
 
 **Result**: When you approve a manufacturer:
+
 - ✅ Trust score calculated
 - ✅ Risk score calculated
 - ✅ Scores saved to database
@@ -182,17 +196,20 @@ NAFDAC_EMAIL=                ❌ Not set → Escalations can't notify
 **Status**: ⚠️ **FRONTEND WORKS, BACKEND INCOMPLETE**
 
 **What Works**:
+
 - ✅ Frontend requests user geolocation: `navigator.geolocation.getCurrentPosition()`
 - ✅ Latitude/longitude captured
 - ✅ Sent to backend
 
 **What's Broken**:
+
 - ❌ No reverse geocoding (coordinates → address)
 - ❌ Hotspot detection logic unclear
 - ❌ Map visualization missing
 - ❌ Geographic alerts not implemented
 
 **Impact**: 🟠 **MEDIUM**
+
 - Can't show "Counterfeits in Lagos" on map
 - Can't show "Product verified in 5 different cities" alert
 - Demo can show coordinates but not meaningful location info
@@ -204,12 +221,14 @@ NAFDAC_EMAIL=                ❌ Not set → Escalations can't notify
 **Status**: ✅ **FUNCTIONAL**
 
 **What Works**:
+
 - ✅ Login with email/password
 - ✅ 2FA with "any 6 digits" in dev/test
 - ✅ JWT token generation
 - ✅ Token validation
 
 **What's Missing**:
+
 - ⚠️ SMS 2FA (mentions email)
 - ⚠️ Recovery codes
 - ⚠️ TOTP support
@@ -220,13 +239,13 @@ NAFDAC_EMAIL=                ❌ Not set → Escalations can't notify
 
 ## 📋 BROKEN PAGES CHECKLIST
 
-| Page | Status | Issue |
-|------|--------|-------|
-| `/nafdac` (or similar) | ❌ Missing | Entire dashboard missing |
+| Page                               | Status     | Issue                    |
+| ---------------------------------- | ---------- | ------------------------ |
+| `/nafdac` (or similar)             | ❌ Missing | Entire dashboard missing |
 | `/dashboard/manufacturer/products` | ⚠️ Partial | Can list, no edit/delete |
-| `/dashboard/manufacturer/batches` | ⚠️ Partial | No management UI |
-| `/verify` (public) | ⚠️ Partial | Missing risk scores |
-| `/dashboard/admin/analytics` | ⚠️ Unclear | May be demo data |
+| `/dashboard/manufacturer/batches`  | ⚠️ Partial | No management UI         |
+| `/verify` (public)                 | ⚠️ Partial | Missing risk scores      |
+| `/dashboard/admin/analytics`       | ⚠️ Unclear | May be demo data         |
 
 ---
 
@@ -235,6 +254,7 @@ NAFDAC_EMAIL=                ❌ Not set → Escalations can't notify
 ### **MUST FIX (Blocker for Demo)**
 
 #### 1. Set Environment Variables (⏱️ 10 minutes)
+
 ```bash
 # At minimum (to not break):
 OPENAI_API_KEY=sk-...                    # Get from OpenAI or use mock
@@ -246,6 +266,7 @@ SMTP_SECURE=true
 ```
 
 **Or**: Mock the functions if keys unavailable:
+
 ```javascript
 if (!process.env.OPENAI_API_KEY) {
   console.warn("⚠️ OpenAI not configured, using mock risk scores");
@@ -256,6 +277,7 @@ if (!process.env.OPENAI_API_KEY) {
 #### 2. Build NAFDAC Dashboard (⏱️ 2 hours)
 
 Minimum pages:
+
 ```
 /nafdac/
 ├── page.js
@@ -275,18 +297,19 @@ Minimum pages:
 #### 3. Call AI on Verification (⏱️ 30 mins)
 
 Edit verification endpoint to call `calculateRisk()`:
+
 ```javascript
 // In verification endpoint:
 const risk = await calculateRisk(codeValue, {
   batchId: product.batchId,
-  manufacturerId: product.manufacturerId
+  manufacturerId: product.manufacturerId,
 });
 
 return {
   ...existing,
   riskScore: risk.riskScore,
   riskLevel: risk.suspiciousPattern ? "HIGH" : "LOW",
-  advisory: risk.advisory
+  advisory: risk.advisory,
 };
 ```
 
@@ -295,16 +318,19 @@ return {
 ### **SHOULD FIX (Better for Demo)**
 
 #### 4. Verify Prisma Client is Current (⏱️ 5 mins)
+
 ```bash
 npx prisma generate
 ```
 
 #### 5. Add Error Handling to Pages (⏱️ 30 mins)
+
 - Wrap pages in try-catch
 - Show friendly error messages
 - Add retry buttons
 
 #### 6. Implement File Upload Validation (⏱️ 30 mins)
+
 - Check file size (< 5MB)
 - Check file type (image only)
 - Show upload progress
@@ -324,6 +350,7 @@ npx prisma generate
 ## 🚨 SPECIFIC ERROR MESSAGES YOU'LL SEE
 
 ### If OPENAI_API_KEY not set:
+
 ```
 ERR_MISSING_CREDENTIALS
 Error: The API key is not set
@@ -333,6 +360,7 @@ Error: The API key is not set
 ```
 
 ### If SMTP not configured:
+
 ```
 Error: getaddrinfo ENOTFOUND undefined
   at TCPConnectWrap.afterConnect [as oncomplete] (net.js:...)
@@ -340,6 +368,7 @@ Error: getaddrinfo ENOTFOUND undefined
 ```
 
 ### If NAFDAC dashboard not built:
+
 ```
 Module not found: Can't resolve './nafdac' in 'frontend/app'
 ```
@@ -351,6 +380,7 @@ Module not found: Can't resolve './nafdac' in 'frontend/app'
 ### Current State: ❌ **NOT READY**
 
 **Must Fix Before Demo**:
+
 - [ ] Build NAFDAC dashboard (minimum)
 - [ ] Set environment variables (or mock)
 - [ ] Call AI on verification
@@ -387,12 +417,14 @@ Module not found: Can't resolve './nafdac' in 'frontend/app'
 ## 💡 WORKAROUNDS IF TIME IS SHORT
 
 ### Don't Have Time to Build NAFDAC Dashboard?
+
 ```
 ✅ Option: Show NAFDAC in admin interface
 ❌ Option: Tell judges it's being built
 ```
 
 ### Don't Have OpenAI Key?
+
 ```
 ✅ Option: Use mock scoring (random 0-100 scores)
 ✅ Option: Use hardcoded risk analysis rules
@@ -400,6 +432,7 @@ Module not found: Can't resolve './nafdac' in 'frontend/app'
 ```
 
 ### Don't Have Email Configured?
+
 ```
 ✅ Option: Log notifications to console instead
 ✅ Option: Show notification queue without sending

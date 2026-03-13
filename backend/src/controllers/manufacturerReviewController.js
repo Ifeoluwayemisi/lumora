@@ -27,45 +27,57 @@ export async function getReviewQueueController(req, res) {
     );
 
     // Flatten the response + calculate AI scores for pending manufacturers
-    const items = await Promise.all(reviews.map(async (review) => {
-      let trustScore = review.trustScore;
-      let riskAssessment = review.riskAssessment;
-      
-      // For pending/unreviewed manufacturers, calculate trust score on-the-fly
-      if (!trustScore && status === "pending") {
-        try {
-          const trustData = await calculateDynamicTrustScore(review.manufacturerId);
-          trustScore = trustData.trustScore || 0;
-        } catch (err) {
-          console.warn(`[QUEUE] Failed to calculate trust score for ${review.manufacturerId}:`, err.message);
-          trustScore = 60; // Default neutral score
+    const items = await Promise.all(
+      reviews.map(async (review) => {
+        let trustScore = review.trustScore;
+        let riskAssessment = review.riskAssessment;
+
+        // For pending/unreviewed manufacturers, calculate trust score on-the-fly
+        if (!trustScore && status === "pending") {
+          try {
+            const trustData = await calculateDynamicTrustScore(
+              review.manufacturerId,
+            );
+            trustScore = trustData.trustScore || 0;
+          } catch (err) {
+            console.warn(
+              `[QUEUE] Failed to calculate trust score for ${review.manufacturerId}:`,
+              err.message,
+            );
+            trustScore = 60; // Default neutral score
+          }
         }
-      }
-      
-      // Calculate risk assessment for pending manufacturers
-      if (!riskAssessment && status === "pending") {
-        try {
-          const riskData = await recalculateManufacturerRiskScore(review.manufacturerId);
-          riskAssessment = riskData.riskLevel || "MEDIUM";
-        } catch (err) {
-          console.warn(`[QUEUE] Failed to calculate risk for ${review.manufacturerId}:`, err.message);
-          riskAssessment = "MEDIUM"; // Default neutral risk
+
+        // Calculate risk assessment for pending manufacturers
+        if (!riskAssessment && status === "pending") {
+          try {
+            const riskData = await recalculateManufacturerRiskScore(
+              review.manufacturerId,
+            );
+            riskAssessment = riskData.riskLevel || "MEDIUM";
+          } catch (err) {
+            console.warn(
+              `[QUEUE] Failed to calculate risk for ${review.manufacturerId}:`,
+              err.message,
+            );
+            riskAssessment = "MEDIUM"; // Default neutral risk
+          }
         }
-      }
-      
-      return {
-        id: review.manufacturerId,
-        manufacturerId: review.manufacturerId,
-        companyName: review.manufacturer.name,
-        email: review.manufacturer.email,
-        country: review.manufacturer.country,
-        status: review.status,
-        createdAt: review.createdAt,
-        trustScore: trustScore || 0,
-        riskAssessment: riskAssessment || "MEDIUM",
-        adminId: review.adminId,
-      };
-    }));
+
+        return {
+          id: review.manufacturerId,
+          manufacturerId: review.manufacturerId,
+          companyName: review.manufacturer.name,
+          email: review.manufacturer.email,
+          country: review.manufacturer.country,
+          status: review.status,
+          createdAt: review.createdAt,
+          trustScore: trustScore || 0,
+          riskAssessment: riskAssessment || "MEDIUM",
+          adminId: review.adminId,
+        };
+      }),
+    );
 
     return res.status(200).json({
       success: true,

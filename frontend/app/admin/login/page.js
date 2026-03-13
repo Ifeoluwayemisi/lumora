@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { FiMail, FiLock, FiShield, FiAlertCircle } from "react-icons/fi";
 import { adminAuthApi } from "@/services/adminApi";
 
@@ -63,7 +64,7 @@ export default function AdminLoginPage() {
       // Route based on user role
       const userRole = response.data.admin?.role;
       console.log("User role:", userRole);
-      
+
       if (userRole === "NAFDAC") {
         router.push("/nafdac");
       } else if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
@@ -88,8 +89,14 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl mb-4">
-            <FiShield className="w-8 h-8 text-white" />
+          <div className="mb-4 flex justify-center">
+            <Image
+              src="/image/logo.png"
+              alt="Lumora Logo"
+              width={120}
+              height={120}
+              priority
+            />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Lumora Admin</h1>
           <p className="text-slate-400">Secure Access Portal</p>
