@@ -22,9 +22,11 @@ export default function CasesPage() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/auth/login");
+    const adminToken = localStorage.getItem("admin_token");
+    const adminUser = localStorage.getItem("admin_user");
+    
+    if (!adminToken || !adminUser) {
+      router.push("/admin/login");
       return;
     }
 
@@ -55,10 +57,10 @@ export default function CasesPage() {
 
   const fetchCases = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const adminToken = localStorage.getItem("admin_token");
       // Since there's no specific endpoint for cases yet, we'll fetch from admin
       const res = await fetch("/api/admin/cases?status=escalated", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${adminToken}` },
       });
 
       if (!res.ok) throw new Error("Failed to fetch cases");

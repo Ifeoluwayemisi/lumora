@@ -27,9 +27,23 @@ export default function NAFDACDashboard() {
 
   useEffect(() => {
     // Check authentication
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/auth/login");
+    const adminToken = localStorage.getItem("admin_token");
+    const adminUser = localStorage.getItem("admin_user");
+    
+    if (!adminToken || !adminUser) {
+      router.push("/admin/login");
+      return;
+    }
+
+    // Check if user has NAFDAC role
+    try {
+      const user = JSON.parse(adminUser);
+      if (user.role !== "NAFDAC") {
+        router.push("/admin/dashboard");
+        return;
+      }
+    } catch (err) {
+      router.push("/admin/login");
       return;
     }
 
@@ -41,11 +55,11 @@ export default function NAFDACDashboard() {
   const fetchDashboardData = async () => {
     try {
       setError("");
-      const token = localStorage.getItem("token");
+      const adminToken = localStorage.getItem("admin_token");
 
       // Fetch incidents
       const incidentRes = await fetch("/api/nafdac/incidents?status=OPEN", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${adminToken}` },
       });
 
       if (!incidentRes.ok) throw new Error("Failed to fetch incidents");
@@ -55,7 +69,7 @@ export default function NAFDACDashboard() {
 
       // Fetch hotspots
       const hotspotsRes = await fetch("/api/nafdac/hotspots", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${adminToken}` },
       });
       const hotspotsData = await hotspotsRes.json();
       setHotspots(hotspotsData.data || []);

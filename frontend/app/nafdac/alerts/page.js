@@ -29,9 +29,11 @@ export default function AlertsPage() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/auth/login");
+    const adminToken = localStorage.getItem("admin_token");
+    const adminUser = localStorage.getItem("admin_user");
+    
+    if (!adminToken || !adminUser) {
+      router.push("/admin/login");
       return;
     }
 
@@ -60,9 +62,9 @@ export default function AlertsPage() {
 
   const fetchIncidents = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const adminToken = localStorage.getItem("admin_token");
       const res = await fetch("/api/nafdac/incidents?status=OPEN", {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${adminToken}` },
       });
 
       if (!res.ok) throw new Error("Failed to fetch incidents");
@@ -89,11 +91,11 @@ export default function AlertsPage() {
 
   const updateIncidentStatus = async (incidentId, newStatus) => {
     try {
-      const token = localStorage.getItem("token");
+      const adminToken = localStorage.getItem("admin_token");
       const res = await fetch(`/api/nafdac/incidents/${incidentId}/status`, {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${adminToken}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ status: newStatus }),

@@ -60,7 +60,17 @@ export default function AdminLoginPage() {
       localStorage.setItem("admin_user", JSON.stringify(response.data.admin));
       localStorage.setItem("admin_token", response.data.token);
 
-      router.push("/admin/dashboard");
+      // Route based on user role
+      const userRole = response.data.admin?.role;
+      console.log("User role:", userRole);
+      
+      if (userRole === "NAFDAC") {
+        router.push("/nafdac");
+      } else if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/admin/dashboard");
+      }
     } catch (err) {
       console.error("2FA error:", err);
       setError(

@@ -13,9 +13,9 @@ export default function NAFDACLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    router.push("/auth/login");
+    localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_user");
+    router.push("/admin/login");
   };
 
   const navItems = [
