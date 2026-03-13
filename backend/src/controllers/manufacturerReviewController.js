@@ -1,5 +1,7 @@
 import * as manufacturerReviewService from "../services/manufacturerReviewService.js";
 import * as auditLogService from "../services/auditLogService.js";
+import { calculateDynamicTrustScore } from "../services/dynamicTrustScoreService.js";
+import { recalculateManufacturerRiskScore } from "../services/aiRiskService.js";
 import prisma from "../models/prismaClient.js";
 
 /**
@@ -24,18 +26,45 @@ export async function getReviewQueueController(req, res) {
       limit,
     );
 
-    // Flatten the response to include manufacturer details at top level
-    const items = reviews.map((review) => ({
-      id: review.manufacturerId,
-      manufacturerId: review.manufacturerId,
-      companyName: review.manufacturer.name,
-      email: review.manufacturer.email,
-      country: review.manufacturer.country,
-      status: review.status,
-      createdAt: review.createdAt,
-      trustScore: review.trustScore,
-      riskAssessment: review.riskAssessment,
-      adminId: review.adminId,
+    // Flatten the response + calculate AI scores for pending manufacturers
+    const items = await Promise.all(reviews.map(async (review) => {
+      let trustScore = review.trustScore;
+      let riskAssessment = review.riskAssessment;
+      
+      // For pending/unreviewed manufacturers, calculate trust score on-the-fly
+      if (!trustScore && status === "pending") {
+        try {
+          const trustData = await calculateDynamicTrustScore(review.manufacturerId);
+          trustScore = trustData.trustScore || 0;
+        } catch (err) {
+          console.warn(`[QUEUE] Failed to calculate trust score for ${review.manufacturerId}:`, err.message);
+          trustScore = 60; // Default neutral score
+        }
+      }
+      
+      // Calculate risk assessment for pending manufacturers
+      if (!riskAssessment && status === "pending") {
+        try {
+          const riskData = await recalculateManufacturerRiskScore(review.manufacturerId);
+          riskAssessment = riskData.riskLevel || "MEDIUM";
+        } catch (err) {
+          console.warn(`[QUEUE] Failed to calculate risk for ${review.manufacturerId}:`, err.message);
+          riskAssessment = "MEDIUM"; // Default neutral risk
+        }
+      }
+      
+      return {
+        id: review.manufacturerId,
+        manufacturerId: review.manufacturerId,
+        companyName: review.manufacturer.name,
+        email: review.manufacturer.email,
+        country: review.manufacturer.country,
+        status: review.status,
+        createdAt: review.createdAt,
+        trustScore: trustScore || 0,
+        riskAssessment: riskAssessment || "MEDIUM",
+        adminId: review.adminId,
+      };
     }));
 
     return res.status(200).json({
@@ -113,6 +142,30 @@ export async function getManufacturerApplication(req, res) {
           status: "pending",
         },
       });
+    }
+
+    // Calculate trust score if not already set
+    if (!review.trustScore || review.trustScore === 0) {
+      try {
+        const trustData = await calculateDynamicTrustScore(manufacturerId);
+        console.log(`[DETAIL] Calculated trust score: ${trustData.trustScore}`);
+        review.trustScore = trustData.trustScore || 60;
+      } catch (err) {
+        console.warn(`[DETAIL] Failed to calculate trust score:`, err.message);
+        review.trustScore = review.trustScore || 60;
+      }
+    }
+
+    // Calculate risk assessment if not already set
+    if (!review.riskAssessment) {
+      try {
+        const riskData = await recalculateManufacturerRiskScore(manufacturerId);
+        console.log(`[DETAIL] Calculated risk level: ${riskData.riskLevel}`);
+        review.riskAssessment = riskData.riskLevel || "MEDIUM";
+      } catch (err) {
+        console.warn(`[DETAIL] Failed to calculate risk:`, err.message);
+        review.riskAssessment = review.riskAssessment || "MEDIUM";
+      }
     }
 
     // Combine manufacturer and review data
