@@ -243,9 +243,13 @@ export async function googleCallback(req, res) {
     redirectUrl.searchParams.set("user", JSON.stringify(minimalUser));
 
     const finalUrl = redirectUrl.toString();
-    console.log("[GOOGLE_CALLBACK] Redirect URL length:", finalUrl.length, "chars");
+    console.log(
+      "[GOOGLE_CALLBACK] Redirect URL length:",
+      finalUrl.length,
+      "chars",
+    );
     console.log("[GOOGLE_CALLBACK] Redirecting to:", finalUrl);
-    
+
     res.redirect(finalUrl);
   } catch (err) {
     console.error("[GOOGLE_CALLBACK] Error:", err.message);
