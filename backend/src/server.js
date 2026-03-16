@@ -68,7 +68,9 @@ async function testDatabaseConnection() {
     console.warn(
       "⚠️  WARNING: Database is unavailable. Server continuing for testing purposes.",
     );
-    console.warn("        OAuth endpoints may work, but other features will fail.");
+    console.warn(
+      "        OAuth endpoints may work, but other features will fail.",
+    );
     return false;
   }
 }

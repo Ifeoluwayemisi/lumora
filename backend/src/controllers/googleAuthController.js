@@ -40,12 +40,12 @@ export async function getGoogleAuthUrl(req, res) {
   try {
     console.log("[GOOGLE_AUTH_URL] Received request");
     console.log("[GOOGLE_AUTH_URL] CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
-    console.log("[GOOGLE_AUTH_URL] CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET);
+    console.log(
+      "[GOOGLE_AUTH_URL] CLIENT_SECRET:",
+      process.env.GOOGLE_CLIENT_SECRET,
+    );
 
-    if (
-      !process.env.GOOGLE_CLIENT_ID ||
-      !process.env.GOOGLE_CLIENT_SECRET
-    ) {
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
       console.error("[GOOGLE_AUTH_URL] Missing credentials!");
       return res.status(503).json({
         error: "Google OAuth not configured",
