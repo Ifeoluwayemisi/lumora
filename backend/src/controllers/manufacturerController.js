@@ -108,7 +108,11 @@ export async function getDashboard(req, res) {
       manufacturer = {
         id: manufacturerData?.id,
         name: manufacturerData?.name,
-        email: manufacturerData?.email || "", // Will be populated once migration runs
+        email: manufacturerData?.email || "",
+        phone: manufacturerData?.phone || "",
+        country: manufacturerData?.country || "",
+        website: manufacturerData?.website || "",
+        productCategory: manufacturerData?.productCategory || "other",
         verified: manufacturerData?.verified || false,
         accountStatus:
           manufacturerData?.accountStatus || "pending_verification",

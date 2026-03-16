@@ -115,7 +115,7 @@ export default function LandingPage() {
         ></div>
 
         {/* Overlay - Ensures text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/60 to-white/70 dark:from-gray-950/80 dark:via-gray-950/75 dark:to-gray-950/80"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/70 to-white/80 dark:from-gray-950/85 dark:via-gray-950/80 dark:to-gray-950/85"></div>
 
         {/* Mesh gradient accent layer */}
         <div
@@ -136,7 +136,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: -40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-heading font-bold mb-4 text-gray-900 dark:text-gray-100"
+            className="text-4xl md:text-6xl font-heading font-bold mb-4 text-gray-900 dark:text-white drop-shadow-md"
           >
             Verify Medicines. Save Lives.
           </motion.h1>
@@ -146,7 +146,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-lg md:text-xl text-gray-700 dark:text-gray-300 mb-8 max-w-2xl"
+            className="text-lg md:text-xl text-gray-800 dark:text-gray-100 mb-8 max-w-2xl drop-shadow"
           >
             Lumora protects Nigerians from counterfeit drugs with instant
             verification, AI risk scoring, and geo-analysis.
@@ -175,7 +175,7 @@ export default function LandingPage() {
             <button
               onClick={handleVerify}
               disabled={loading || verified}
-              className="px-6 py-3 rounded-md bg-genuine text-white font-semibold hover:bg-green-600 active:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-3 rounded-lg bg-genuine text-white font-bold hover:bg-green-700 active:bg-green-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl hover:scale-105"
               aria-busy={loading}
             >
               {loading ? "Verifying..." : verified ? "Verified!" : "Verify"}
@@ -188,16 +188,22 @@ export default function LandingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="mt-2 text-gray-600 dark:text-gray-400 text-sm"
+              className="mt-4 text-gray-700 dark:text-gray-300 text-sm font-medium"
             >
-              Only manual verification available for unregistered users.{" "}
+              Need an account?{" "}
               <a
                 href="/auth/register/select-role"
-                className="underline hover:text-genuine transition-colors font-semibold"
+                className="underline hover:text-genuine transition-colors font-bold text-genuine"
               >
                 Register
               </a>{" "}
-              for dashboard, history & QR scanning.
+              for dashboard, history & QR scanning. Or{" "}
+              <a
+                href="/auth/login"
+                className="underline hover:text-genuine transition-colors font-bold text-genuine"
+              >
+                sign in with Google
+              </a>
             </motion.p>
           )}
 
