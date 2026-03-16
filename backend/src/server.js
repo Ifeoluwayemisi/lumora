@@ -62,9 +62,14 @@ async function testDatabaseConnection() {
   try {
     await prisma.$queryRaw`SELECT 1`;
     console.log(" Database connection successful");
+    return true;
   } catch (error) {
     console.error(" Database connection failed:", error.message);
-    process.exit(1);
+    console.warn(
+      "⚠️  WARNING: Database is unavailable. Server continuing for testing purposes.",
+    );
+    console.warn("        OAuth endpoints may work, but other features will fail.");
+    return false;
   }
 }
 
@@ -79,10 +84,14 @@ async function startServer() {
     // Ensure Prisma client is up to date BEFORE using it
     ensurePrismaClient();
 
-    await testDatabaseConnection();
+    const dbConnected = await testDatabaseConnection();
 
-    // Initialize agencies on startup
-    await initializeAgencies();
+    // Only initialize agencies if database is connected
+    if (dbConnected) {
+      await initializeAgencies();
+    } else {
+      console.warn("⚠️  Skipping agency initialization - database unavailable");
+    }
 
     let securityJobs = undefined;
     let backgroundJobs = [];
