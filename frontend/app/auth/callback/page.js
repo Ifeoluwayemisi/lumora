@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useContext } from "react";
+import { useEffect, useContext, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AuthContext } from "@/context/AuthContext";
+import { toast } from "react-toastify";
 
 /**
  * Google OAuth Callback Handler
@@ -11,7 +12,7 @@ import { AuthContext } from "@/context/AuthContext";
  * It reads the token and user data from URL parameters,
  * stores them in localStorage, and redirects to the dashboard.
  */
-export default function CallbackPage() {
+function CallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useContext(AuthContext);
@@ -20,57 +21,86 @@ export default function CallbackPage() {
     const token = searchParams.get("token");
     const userJson = searchParams.get("user");
     const error = searchParams.get("error");
+    const message = searchParams.get("message");
 
-    console.log("[CALLBACK PAGE] Processing OAuth callback");
-    console.log("[CALLBACK PAGE] Token:", token ? "✓" : "✗");
-    console.log("[CALLBACK PAGE] User data:", userJson ? "✓" : "✗");
-    console.log("[CALLBACK PAGE] Error:", error || "none");
+    console.log("[CALLBACK] Token exists:", !!token);
+    console.log("[CALLBACK] User data exists:", !!userJson);
+    console.log("[CALLBACK] Error:", error);
+    console.log("[CALLBACK] Message:", message);
+    console.log("[CALLBACK] Search params keys:", Array.from(searchParams.keys()));
 
+    // Handle errors from backend
     if (error) {
-      console.error("[CALLBACK PAGE] OAuth error:", error);
-      const message = searchParams.get("message") || "Authentication failed";
+      console.error("[CALLBACK] OAuth error detected:", error, message);
+      toast.error(message || "Authentication failed");
       
-      // Redirect to login with error message
-      router.push(`/auth/login?error=${encodeURIComponent(message)}`);
+      // Wait a moment then redirect to login
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 1500);
       return;
     }
 
-    if (!token || !userJson) {
-      console.error("[CALLBACK PAGE] Missing token or user data");
-      router.push("/auth/login?error=Invalid callback data");
+    // Check for token and user
+    if (!token) {
+      console.error("[CALLBACK] ❌ No token in URL");
+      toast.error("No authentication token received");
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 1500);
+      return;
+    }
+
+    if (!userJson) {
+      console.error("[CALLBACK] ❌ No user data in URL");
+      toast.error("No user data received");
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 1500);
       return;
     }
 
     try {
-      // Parse user data
+      // Parse user data (searchParams already decodes URL encoding)
       const user = JSON.parse(userJson);
-      console.log("[CALLBACK PAGE] Parsed user:", user.email, "Role:", user.role);
+      console.log("[CALLBACK] ✓ User parsed:", {
+        email: user.email,
+        id: user.id,
+        role: user.role,
+        firstName: user.firstName,
+      });
 
       // Store token and user via AuthContext
-      login(user, token)
-        .then(() => {
-          console.log("[CALLBACK PAGE] Login successful, redirecting...");
+      login(user, token).then(() => {
+        console.log("[CALLBACK] ✓ Login via AuthContext successful");
+        console.log("[CALLBACK] User role:", user.role);
 
-          // Redirect based on role
-          switch (user.role) {
-            case "manufacturer":
-              router.push("/dashboard/manufacturer");
-              break;
-            case "admin":
-              router.push("/dashboard/admin");
-              break;
-            default:
-              router.push("/dashboard/user");
-              break;
-          }
-        })
-        .catch((err) => {
-          console.error("[CALLBACK PAGE] Login failed:", err);
-          router.push("/auth/login?error=Failed to login");
-        });
+        // Redirect based on role
+        const role = user.role || "user";
+        let dashboardUrl = "/dashboard/user";
+
+        if (role === "manufacturer") {
+          dashboardUrl = "/dashboard/manufacturer";
+        } else if (role === "admin") {
+          dashboardUrl = "/dashboard/admin";
+        }
+
+        console.log("[CALLBACK] → Redirecting to:", dashboardUrl);
+        toast.success("Sign in successful! Redirecting...");
+        
+        // Small delay to ensure auth state is set
+        setTimeout(() => {
+          router.push(dashboardUrl);
+        }, 500);
+      });
     } catch (err) {
-      console.error("[CALLBACK PAGE] Error parsing user data:", err);
-      router.push("/auth/login?error=Invalid user data");
+      console.error("[CALLBACK] ❌ Error during callback processing:", err.message);
+      console.error("[CALLBACK] Stack:", err.stack);
+      toast.error("Error processing sign-in");
+      
+      setTimeout(() => {
+        router.push("/auth/login");
+      }, 1500);
     }
   }, [searchParams, router, login]);
 
@@ -83,5 +113,22 @@ export default function CallbackPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function CallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-green-50 dark:bg-gray-900">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-genuine"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+          </div>
+        </div>
+      }
+    >
+      <CallbackContent />
+    </Suspense>
   );
 }
