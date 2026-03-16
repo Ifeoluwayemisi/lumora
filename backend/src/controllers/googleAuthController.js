@@ -38,11 +38,15 @@ const oauth2Client = new OAuth2Client(
  */
 export async function getGoogleAuthUrl(req, res) {
   try {
+    console.log("[GOOGLE_AUTH_URL] Received request");
+    console.log("[GOOGLE_AUTH_URL] CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+    console.log("[GOOGLE_AUTH_URL] CLIENT_SECRET:", process.env.GOOGLE_CLIENT_SECRET);
+
     if (
       !process.env.GOOGLE_CLIENT_ID ||
-      !process.env.GOOGLE_CLIENT_SECRET ||
-      process.env.GOOGLE_CLIENT_ID === "your_google_client_id_here"
+      !process.env.GOOGLE_CLIENT_SECRET
     ) {
+      console.error("[GOOGLE_AUTH_URL] Missing credentials!");
       return res.status(503).json({
         error: "Google OAuth not configured",
         message:
@@ -53,6 +57,8 @@ export async function getGoogleAuthUrl(req, res) {
     const { intent } = req.query;
     const validIntents = ["signin", "signup"];
     const finalIntent = validIntents.includes(intent) ? intent : "signin";
+
+    console.log("[GOOGLE_AUTH_URL] Intent:", finalIntent);
 
     const scopes = [
       "https://www.googleapis.com/auth/userinfo.profile",
@@ -66,6 +72,7 @@ export async function getGoogleAuthUrl(req, res) {
       state: finalIntent, // Pass intent as state for callback
     });
 
+    console.log("[GOOGLE_AUTH_URL] Generated auth URL");
     res.json({ authUrl, intent: finalIntent });
   } catch (err) {
     console.error("[GOOGLE_AUTH_URL] Error:", err.message);
