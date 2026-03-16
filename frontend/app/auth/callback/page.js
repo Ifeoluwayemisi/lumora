@@ -16,10 +16,15 @@ function CallbackContent() {
   const router = useRouter();
   const { login } = useContext(AuthContext);
 
+  // Log immediately when component renders
+  console.warn("🔴🔴🔴 CALLBACK PAGE COMPONENT RENDERING 🔴🔴🔴");
+  console.log("URL:", typeof window !== "undefined" ? window.location.href : "SSR");
+
   useEffect(() => {
     // Use window.location to reliably get URL params
     if (typeof window === "undefined") return;
 
+    console.log("🟢 CALLBACK useEffect running");
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     const userJson = params.get("user");
