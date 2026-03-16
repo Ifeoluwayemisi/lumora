@@ -227,15 +227,26 @@ export async function googleCallback(req, res) {
 
     console.log("[GOOGLE_CALLBACK] JWT token generated for:", user.email);
 
-    // Redirect to frontend with token and user data
-    // Frontend will store these in localStorage
+    // Redirect to frontend with token and minimal user data
+    // Keep URL short to avoid browser length limits
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const redirectUrl = new URL(`${frontendUrl}/auth/callback`);
     redirectUrl.searchParams.set("token", token);
-    redirectUrl.searchParams.set("user", JSON.stringify(user));
+    // Send only essential user data to keep URL short
+    const minimalUser = {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+    };
+    redirectUrl.searchParams.set("user", JSON.stringify(minimalUser));
 
-    console.log("[GOOGLE_CALLBACK] Redirecting to:", redirectUrl.toString());
-    res.redirect(redirectUrl.toString());
+    const finalUrl = redirectUrl.toString();
+    console.log("[GOOGLE_CALLBACK] Redirect URL length:", finalUrl.length, "chars");
+    console.log("[GOOGLE_CALLBACK] Redirecting to:", finalUrl);
+    
+    res.redirect(finalUrl);
   } catch (err) {
     console.error("[GOOGLE_CALLBACK] Error:", err.message);
     console.error("[GOOGLE_CALLBACK] Stack:", err.stack);
