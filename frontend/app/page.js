@@ -175,7 +175,7 @@ export default function LandingPage() {
             <button
               onClick={handleVerify}
               disabled={loading || verified}
-              className="px-6 py-3 rounded-md bg-genuine text-white font-semibold hover:bg-green-600 active:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-3 rounded-lg bg-genuine text-white font-bold shadow-lg bg-green-400 hover:bg-green-700 hover:shadow-xl hover:scale-105 active:bg-green-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-busy={loading}
             >
               {loading ? "Verifying..." : verified ? "Verified!" : "Verify"}
