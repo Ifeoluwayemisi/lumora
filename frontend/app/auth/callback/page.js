@@ -42,7 +42,12 @@ function CallbackContent() {
     }
 
     if (!token || !userJson) {
-      console.error("[CALLBACK] ❌ Missing data - Token:", !!token, "User:", !!userJson);
+      console.error(
+        "[CALLBACK] ❌ Missing data - Token:",
+        !!token,
+        "User:",
+        !!userJson,
+      );
       toast.error("Missing authentication data from server");
       setTimeout(() => {
         router.push("/auth/login");
@@ -57,7 +62,7 @@ function CallbackContent() {
       login(user, token)
         .then(() => {
           console.log("[CALLBACK] ✓ AuthContext login successful");
-          
+
           let dashUrl = "/dashboard/user";
           if (user.role === "manufacturer") dashUrl = "/dashboard/manufacturer";
           else if (user.role === "admin") dashUrl = "/dashboard/admin";
@@ -77,18 +82,6 @@ function CallbackContent() {
       setTimeout(() => router.push("/auth/login"), 1500);
     }
   }, [router, login]);
-
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-green-50 dark:bg-gray-900">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-genuine"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">
-          Completing sign-in...
-        </p>
-      </div>
-    </div>
-  );
-}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-green-50 dark:bg-gray-900">
