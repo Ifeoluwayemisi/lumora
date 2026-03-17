@@ -61,6 +61,16 @@ export async function getGoogleAuthUrl(req, res) {
 
     console.log("[GOOGLE_AUTH_URL] Intent:", finalIntent);
 
+    // Get optional role parameter for signup flow
+    const { role } = req.query;
+    const validRoles = ["CONSUMER", "MANUFACTURER"];
+    const finalRole = validRoles.includes(role?.toUpperCase()) 
+      ? role.toUpperCase() 
+      : "CONSUMER";
+
+    // Encode state as JSON to pass both intent and role
+    const state = JSON.stringify({ intent: finalIntent, role: finalRole });
+
     const scopes = [
       "https://www.googleapis.com/auth/userinfo.profile",
       "https://www.googleapis.com/auth/userinfo.email",
@@ -70,11 +80,11 @@ export async function getGoogleAuthUrl(req, res) {
       access_type: "online",
       scope: scopes,
       prompt: "consent", // Force consent dialog
-      state: finalIntent, // Pass intent as state for callback
+      state: state, // Pass intent and role as encoded state
     });
 
     console.log("[GOOGLE_AUTH_URL] Generated auth URL");
-    res.json({ authUrl, intent: finalIntent });
+    res.json({ authUrl, intent: finalIntent, role: finalRole });
   } catch (err) {
     console.error("[GOOGLE_AUTH_URL] Error:", err.message);
     res.status(500).json({
@@ -104,9 +114,23 @@ export async function googleCallback(req, res) {
   
   try {
     const { code, state } = req.query;
-    const intent = state || "signin";
+    
+    // Parse state which contains both intent and role as JSON
+    let intent = "signin";
+    let role = "CONSUMER";
+    
+    if (state) {
+      try {
+        const parsedState = JSON.parse(state);
+        intent = parsedState.intent || "signin";
+        role = parsedState.role || "CONSUMER";
+      } catch (e) {
+        // If state is not valid JSON, try treating it as intent directly (backward compatibility)
+        intent = state;
+      }
+    }
 
-    // Validate code
+    console.log("[GOOGLE_CALLBACK] Parsed state - Intent:", intent, "Role:", role);
     if (!code) {
       return res.status(400).json({ error: "Authorization code not provided" });
     }
@@ -209,7 +233,7 @@ export async function googleCallback(req, res) {
             name: given_name || name?.split(" ")[0] || "User",
             fullName: family_name || name?.split(" ").slice(1).join(" ") || "",
             password: "",
-            role: "CONSUMER",
+            role: role, // Use role from OAuth state
             verified: true,
             profilePicture: picture || null,
           },
@@ -222,7 +246,7 @@ export async function googleCallback(req, res) {
             verified: true,
           },
         });
-        console.log("[GOOGLE_CALLBACK] ✓ New user created:", user.id);
+        console.log("[GOOGLE_CALLBACK] ✓ New user created:", user.id, "Role:", role);
       } catch (createErr) {
         console.error("[GOOGLE_CALLBACK] Failed to create user:", createErr.message);
         capturedError = "Failed to create user account";
