@@ -64,8 +64,8 @@ export async function getGoogleAuthUrl(req, res) {
     // Get optional role parameter for signup flow
     const { role } = req.query;
     const validRoles = ["CONSUMER", "MANUFACTURER"];
-    const finalRole = validRoles.includes(role?.toUpperCase()) 
-      ? role.toUpperCase() 
+    const finalRole = validRoles.includes(role?.toUpperCase())
+      ? role.toUpperCase()
       : "CONSUMER";
 
     // Encode state as JSON to pass both intent and role
@@ -111,14 +111,14 @@ export async function getGoogleAuthUrl(req, res) {
  */
 export async function googleCallback(req, res) {
   let capturedError = null;
-  
+
   try {
     const { code, state } = req.query;
-    
+
     // Parse state which contains both intent and role as JSON
     let intent = "signin";
     let role = "CONSUMER";
-    
+
     if (state) {
       try {
         const parsedState = JSON.parse(state);
@@ -130,7 +130,12 @@ export async function googleCallback(req, res) {
       }
     }
 
-    console.log("[GOOGLE_CALLBACK] Parsed state - Intent:", intent, "Role:", role);
+    console.log(
+      "[GOOGLE_CALLBACK] Parsed state - Intent:",
+      intent,
+      "Role:",
+      role,
+    );
     if (!code) {
       return res.status(400).json({ error: "Authorization code not provided" });
     }
@@ -162,7 +167,10 @@ export async function googleCallback(req, res) {
       tokens = response.tokens;
       console.log("[GOOGLE_CALLBACK] ✓ Tokens obtained from Google");
     } catch (tokenErr) {
-      console.error("[GOOGLE_CALLBACK] Failed to exchange code:", tokenErr.message);
+      console.error(
+        "[GOOGLE_CALLBACK] Failed to exchange code:",
+        tokenErr.message,
+      );
       capturedError = "Failed to verify Google authentication code";
       throw tokenErr;
     }
@@ -177,7 +185,10 @@ export async function googleCallback(req, res) {
       userInfo = response.data;
       console.log("[GOOGLE_CALLBACK] ✓ User info retrieved:", userInfo.email);
     } catch (userErr) {
-      console.error("[GOOGLE_CALLBACK] Failed to fetch user info:", userErr.message);
+      console.error(
+        "[GOOGLE_CALLBACK] Failed to fetch user info:",
+        userErr.message,
+      );
       capturedError = "Failed to retrieve Google user information";
       throw userErr;
     }
@@ -206,7 +217,10 @@ export async function googleCallback(req, res) {
       });
       console.log("[GOOGLE_CALLBACK] ✓ User lookup complete");
     } catch (dbErr) {
-      console.error("[GOOGLE_CALLBACK] Database error (user lookup):", dbErr.message);
+      console.error(
+        "[GOOGLE_CALLBACK] Database error (user lookup):",
+        dbErr.message,
+      );
       capturedError = "Database error while checking user";
       throw dbErr;
     }
@@ -219,7 +233,7 @@ export async function googleCallback(req, res) {
       errorUrl.searchParams.set("error", "account_exists");
       errorUrl.searchParams.set(
         "message",
-        `Account with ${email} already exists. Please sign in instead.`
+        `Account with ${email} already exists. Please sign in instead.`,
       );
       return res.redirect(errorUrl.toString());
     }
@@ -246,9 +260,44 @@ export async function googleCallback(req, res) {
             verified: true,
           },
         });
-        console.log("[GOOGLE_CALLBACK] ✓ New user created:", user.id, "Role:", role);
+        console.log(
+          "[GOOGLE_CALLBACK] ✓ New user created:",
+          user.id,
+          "Role:",
+          role,
+        );
+
+        // If user is manufacturer, create manufacturer profile
+        if (role === "MANUFACTURER") {
+          try {
+            await prisma.manufacturer.create({
+              data: {
+                userId: user.id,
+                name: user.fullName || user.name || "Manufacturer",
+                email: user.email,
+                country: "NG", // Default to Nigeria
+                accountStatus: "pending_verification",
+                trustScore: 0,
+                riskLevel: "MEDIUM",
+              },
+            });
+            console.log(
+              "[GOOGLE_CALLBACK] ✓ Manufacturer profile created for user:",
+              user.id,
+            );
+          } catch (manufacturerErr) {
+            console.error(
+              "[GOOGLE_CALLBACK] Failed to create manufacturer profile:",
+              manufacturerErr.message,
+            );
+            // Don't fail the whole OAuth flow, but log it
+          }
+        }
       } catch (createErr) {
-        console.error("[GOOGLE_CALLBACK] Failed to create user:", createErr.message);
+        console.error(
+          "[GOOGLE_CALLBACK] Failed to create user:",
+          createErr.message,
+        );
         capturedError = "Failed to create user account";
         throw createErr;
       }
@@ -259,7 +308,9 @@ export async function googleCallback(req, res) {
           data: {
             name: given_name || name?.split(" ")[0] || user.name,
             fullName:
-              family_name || name?.split(" ").slice(1).join(" ") || user.fullName,
+              family_name ||
+              name?.split(" ").slice(1).join(" ") ||
+              user.fullName,
             profilePicture: picture || user.profilePicture,
             verified: true,
           },
@@ -273,8 +324,44 @@ export async function googleCallback(req, res) {
           },
         });
         console.log("[GOOGLE_CALLBACK] ✓ Existing user updated:", user.id);
+
+        // If user is manufacturer, ensure manufacturer profile exists
+        if (user.role === "MANUFACTURER") {
+          try {
+            const existingManufacturer = await prisma.manufacturer.findUnique({
+              where: { userId: user.id },
+            });
+
+            if (!existingManufacturer) {
+              await prisma.manufacturer.create({
+                data: {
+                  userId: user.id,
+                  name: user.fullName || user.name || "Manufacturer",
+                  email: user.email,
+                  country: "NG", // Default to Nigeria
+                  accountStatus: "pending_verification",
+                  trustScore: 0,
+                  riskLevel: "MEDIUM",
+                },
+              });
+              console.log(
+                "[GOOGLE_CALLBACK] ✓ Manufacturer profile created for existing user:",
+                user.id,
+              );
+            }
+          } catch (manufacturerErr) {
+            console.error(
+              "[GOOGLE_CALLBACK] Failed to ensure manufacturer profile:",
+              manufacturerErr.message,
+            );
+            // Don't fail the whole OAuth flow
+          }
+        }
       } catch (updateErr) {
-        console.error("[GOOGLE_CALLBACK] Failed to update user:", updateErr.message);
+        console.error(
+          "[GOOGLE_CALLBACK] Failed to update user:",
+          updateErr.message,
+        );
         capturedError = "Failed to update user profile";
         throw updateErr;
       }
@@ -282,7 +369,11 @@ export async function googleCallback(req, res) {
 
     // Generate JWT
     if (!user.id || !user.email || !user.role) {
-      console.error("[GOOGLE_CALLBACK] Invalid user data:", { id: user.id, email: user.email, role: user.role });
+      console.error("[GOOGLE_CALLBACK] Invalid user data:", {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      });
       capturedError = "Invalid user data after creation/update";
       throw new Error(capturedError);
     }
@@ -296,11 +387,14 @@ export async function googleCallback(req, res) {
           role: user.role,
         },
         process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
       );
       console.log("[GOOGLE_CALLBACK] ✓ JWT token generated");
     } catch (jwtErr) {
-      console.error("[GOOGLE_CALLBACK] Failed to generate JWT:", jwtErr.message);
+      console.error(
+        "[GOOGLE_CALLBACK] Failed to generate JWT:",
+        jwtErr.message,
+      );
       capturedError = "Failed to generate authentication token";
       throw jwtErr;
     }
@@ -317,11 +411,15 @@ export async function googleCallback(req, res) {
         name: user.name,
         fullName: user.fullName,
         role: user.role,
-      })
+      }),
     );
 
     const finalUrl = redirectUrl.toString();
-    console.log("[GOOGLE_CALLBACK] ✓ Redirect URL size:", finalUrl.length, "chars");
+    console.log(
+      "[GOOGLE_CALLBACK] ✓ Redirect URL size:",
+      finalUrl.length,
+      "chars",
+    );
     console.log("[GOOGLE_CALLBACK] ✓ Redirecting to dashboard callback");
 
     res.redirect(finalUrl);
@@ -334,10 +432,13 @@ export async function googleCallback(req, res) {
     errorUrl.searchParams.set("error", "google_auth_failed");
     errorUrl.searchParams.set(
       "message",
-      capturedError || err.message || "Authentication failed"
+      capturedError || err.message || "Authentication failed",
     );
 
-    console.log("[GOOGLE_CALLBACK] Redirecting to error page:", errorUrl.toString());
+    console.log(
+      "[GOOGLE_CALLBACK] Redirecting to error page:",
+      errorUrl.toString(),
+    );
     res.redirect(errorUrl.toString());
   }
 }
