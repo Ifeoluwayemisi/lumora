@@ -67,7 +67,7 @@ export default function FavoritesPage() {
 
   if (!favorites || favorites.length === 0)
     return (
-      <AuthGuard allowedRoles={["consumer"]}>
+      <AuthGuard allowedRoles={["CONSUMER"]}>
         <DashboardSidebar userRole="consumer" />
 
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">
@@ -110,7 +110,7 @@ export default function FavoritesPage() {
     );
 
   return (
-    <AuthGuard allowedRoles={["consumer"]}>
+    <AuthGuard allowedRoles={[\"CONSUMER\"]}>
       <DashboardSidebar userRole="consumer" />
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">

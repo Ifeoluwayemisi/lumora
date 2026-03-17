@@ -64,7 +64,7 @@ function ManufacturerHistoryContent() {
   };
 
   return (
-    <AuthGuard allowedRoles={["manufacturer"]}>
+    <AuthGuard allowedRoles={["MANUFACTURER"]}>
       <DashboardSidebar userRole="manufacturer" />
       <MobileBottomNav userRole="manufacturer" />
 

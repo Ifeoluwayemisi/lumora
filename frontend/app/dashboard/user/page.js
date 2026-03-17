@@ -85,7 +85,7 @@ export default function UserDashboardPage() {
   }, []);
 
   return (
-    <AuthGuard allowedRoles={["consumer"]}>
+    <AuthGuard allowedRoles={["CONSUMER"]}>
       <DashboardSidebar userRole="consumer" />
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64 pb-20 md:pb-0">

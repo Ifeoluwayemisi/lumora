@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <AuthGuard allowedRoles={["admin", "nafdac"]}>
+    <AuthGuard allowedRoles={["ADMIN", "NAFDAC"]}>
       <DashboardSidebar userRole="admin" />
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64">
