@@ -176,7 +176,7 @@ export async function googleCallback(req, res) {
           name: given_name || name?.split(" ")[0] || "User",
           fullName: family_name || name?.split(" ").slice(1).join(" ") || "",
           password: "", // OAuth users don't have password (empty string, not null)
-          role: "user", // Default role
+          role: "CONSUMER", // Default role
           verified: true, // Google accounts are pre-verified
           profilePicture: picture || null,
         },
