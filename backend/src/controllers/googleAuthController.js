@@ -100,168 +100,220 @@ export async function getGoogleAuthUrl(req, res) {
  * - Sign-up (intent=signup): New users created, existing users shown error asking to sign in with email
  */
 export async function googleCallback(req, res) {
+  let capturedError = null;
+  
   try {
     const { code, state } = req.query;
-    const intent = state || "signin"; // Default to signin if not provided
+    const intent = state || "signin";
 
+    // Validate code
     if (!code) {
       return res.status(400).json({ error: "Authorization code not provided" });
     }
 
-    if (
-      !process.env.GOOGLE_CLIENT_ID ||
-      !process.env.GOOGLE_CLIENT_SECRET ||
-      process.env.GOOGLE_CLIENT_ID === "your_google_client_id_here"
-    ) {
+    // Validate credentials
+    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+      console.error("[GOOGLE_CALLBACK] Missing Google OAuth credentials");
       return res.status(503).json({
         error: "Google OAuth not configured",
+        message: "Server is missing Google OAuth credentials",
       });
     }
 
-    console.log("[GOOGLE_CALLBACK] Intent:", intent);
-    console.log("[GOOGLE_CALLBACK] Exchanging code for tokens...");
+    if (!process.env.JWT_SECRET) {
+      console.error("[GOOGLE_CALLBACK] Missing JWT_SECRET");
+      return res.status(503).json({
+        error: "Server configuration error",
+        message: "JWT_SECRET not configured",
+      });
+    }
 
-    // Exchange authorization code for tokens
-    const { tokens } = await oauth2Client.getToken(code);
+    console.log("[GOOGLE_CALLBACK] Processing OAuth callback");
+    console.log("[GOOGLE_CALLBACK] Intent:", intent);
+
+    // Exchange code for tokens
+    let tokens;
+    try {
+      const response = await oauth2Client.getToken(code);
+      tokens = response.tokens;
+      console.log("[GOOGLE_CALLBACK] ✓ Tokens obtained from Google");
+    } catch (tokenErr) {
+      console.error("[GOOGLE_CALLBACK] Failed to exchange code:", tokenErr.message);
+      capturedError = "Failed to verify Google authentication code";
+      throw tokenErr;
+    }
+
     oauth2Client.setCredentials(tokens);
 
     // Get user info from Google
-    console.log("[GOOGLE_CALLBACK] Fetching user info from Google...");
-    const oauth2 = google.oauth2("v2");
-    const userInfo = await oauth2.userinfo.get({
-      auth: oauth2Client,
-    });
+    let userInfo;
+    try {
+      const oauth2 = google.oauth2("v2");
+      const response = await oauth2.userinfo.get({ auth: oauth2Client });
+      userInfo = response.data;
+      console.log("[GOOGLE_CALLBACK] ✓ User info retrieved:", userInfo.email);
+    } catch (userErr) {
+      console.error("[GOOGLE_CALLBACK] Failed to fetch user info:", userErr.message);
+      capturedError = "Failed to retrieve Google user information";
+      throw userErr;
+    }
 
-    const { email, name, picture, given_name, family_name } = userInfo.data;
+    const { email, name, picture, given_name, family_name } = userInfo;
 
-    console.log("[GOOGLE_CALLBACK] User info received:", email);
+    if (!email) {
+      console.error("[GOOGLE_CALLBACK] No email in Google response");
+      capturedError = "No email address found in Google account";
+      throw new Error(capturedError);
+    }
 
-    // Check if user already exists
-    let user = await prisma.user.findUnique({
-      where: { email },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        fullName: true,
-        role: true,
-        verified: true,
-      },
-    });
+    // Check if user exists
+    let user;
+    try {
+      user = await prisma.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          fullName: true,
+          role: true,
+          verified: true,
+        },
+      });
+      console.log("[GOOGLE_CALLBACK] ✓ User lookup complete");
+    } catch (dbErr) {
+      console.error("[GOOGLE_CALLBACK] Database error (user lookup):", dbErr.message);
+      capturedError = "Database error while checking user";
+      throw dbErr;
+    }
 
-    // If user exists and intent is "signup", return error
+    // If user exists and intent is "signup", show error
     if (user && intent === "signup") {
-      console.log(
-        "[GOOGLE_CALLBACK] User already exists, signup attempt blocked",
-      );
-
+      console.log("[GOOGLE_CALLBACK] User exists + signup intent = blocked");
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
       const errorUrl = new URL(`${frontendUrl}/auth/register`);
       errorUrl.searchParams.set("error", "account_exists");
       errorUrl.searchParams.set(
         "message",
-        `An account with ${email} already exists. Please sign in with your email instead, or link this Google account after logging in.`,
+        `Account with ${email} already exists. Please sign in instead.`
       );
-
       return res.redirect(errorUrl.toString());
     }
 
+    // Create or update user
     if (!user) {
-      console.log("[GOOGLE_CALLBACK] Creating new user from Google...");
-
-      // Create new user from Google info
-      user = await prisma.user.create({
-        data: {
-          email,
-          name: given_name || name?.split(" ")[0] || "User",
-          fullName: family_name || name?.split(" ").slice(1).join(" ") || "",
-          password: "", // OAuth users don't have password (empty string, not null)
-          role: "CONSUMER", // Default role
-          verified: true, // Google accounts are pre-verified
-          profilePicture: picture || null,
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          fullName: true,
-          role: true,
-          verified: true,
-        },
-      });
-
-      console.log("[GOOGLE_CALLBACK] New user created:", user.id);
+      try {
+        user = await prisma.user.create({
+          data: {
+            email,
+            name: given_name || name?.split(" ")[0] || "User",
+            fullName: family_name || name?.split(" ").slice(1).join(" ") || "",
+            password: "",
+            role: "CONSUMER",
+            verified: true,
+            profilePicture: picture || null,
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            fullName: true,
+            role: true,
+            verified: true,
+          },
+        });
+        console.log("[GOOGLE_CALLBACK] ✓ New user created:", user.id);
+      } catch (createErr) {
+        console.error("[GOOGLE_CALLBACK] Failed to create user:", createErr.message);
+        capturedError = "Failed to create user account";
+        throw createErr;
+      }
     } else {
-      console.log("[GOOGLE_CALLBACK] User found, updating profile...");
-
-      // Update user with latest Google info
-      user = await prisma.user.update({
-        where: { email },
-        data: {
-          name: given_name || name?.split(" ")[0] || user.name,
-          fullName:
-            family_name || name?.split(" ").slice(1).join(" ") || user.fullName,
-          profilePicture: picture || user.profilePicture,
-          verified: true,
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          fullName: true,
-          role: true,
-          verified: true,
-        },
-      });
+      try {
+        user = await prisma.user.update({
+          where: { email },
+          data: {
+            name: given_name || name?.split(" ")[0] || user.name,
+            fullName:
+              family_name || name?.split(" ").slice(1).join(" ") || user.fullName,
+            profilePicture: picture || user.profilePicture,
+            verified: true,
+          },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            fullName: true,
+            role: true,
+            verified: true,
+          },
+        });
+        console.log("[GOOGLE_CALLBACK] ✓ Existing user updated:", user.id);
+      } catch (updateErr) {
+        console.error("[GOOGLE_CALLBACK] Failed to update user:", updateErr.message);
+        capturedError = "Failed to update user profile";
+        throw updateErr;
+      }
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
-    );
+    // Generate JWT
+    if (!user.id || !user.email || !user.role) {
+      console.error("[GOOGLE_CALLBACK] Invalid user data:", { id: user.id, email: user.email, role: user.role });
+      capturedError = "Invalid user data after creation/update";
+      throw new Error(capturedError);
+    }
 
-    console.log("[GOOGLE_CALLBACK] JWT token generated for:", user.email);
+    let token;
+    try {
+      token = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+      );
+      console.log("[GOOGLE_CALLBACK] ✓ JWT token generated");
+    } catch (jwtErr) {
+      console.error("[GOOGLE_CALLBACK] Failed to generate JWT:", jwtErr.message);
+      capturedError = "Failed to generate authentication token";
+      throw jwtErr;
+    }
 
-    // Redirect to frontend with token and minimal user data
-    // Keep URL short to avoid browser length limits
+    // Build redirect URL
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const redirectUrl = new URL(`${frontendUrl}/auth/callback`);
     redirectUrl.searchParams.set("token", token);
-    // Send only essential user data to keep URL short
-    const minimalUser = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      fullName: user.fullName,
-      role: user.role,
-    };
-    redirectUrl.searchParams.set("user", JSON.stringify(minimalUser));
+    redirectUrl.searchParams.set(
+      "user",
+      JSON.stringify({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        fullName: user.fullName,
+        role: user.role,
+      })
+    );
 
     const finalUrl = redirectUrl.toString();
-    console.log(
-      "[GOOGLE_CALLBACK] Redirect URL length:",
-      finalUrl.length,
-      "chars",
-    );
-    console.log("[GOOGLE_CALLBACK] Redirecting to:", finalUrl);
+    console.log("[GOOGLE_CALLBACK] ✓ Redirect URL size:", finalUrl.length, "chars");
+    console.log("[GOOGLE_CALLBACK] ✓ Redirecting to dashboard callback");
 
     res.redirect(finalUrl);
   } catch (err) {
-    console.error("[GOOGLE_CALLBACK] Error:", err.message);
+    console.error("[GOOGLE_CALLBACK] ❌ Error:", err.message);
     console.error("[GOOGLE_CALLBACK] Stack:", err.stack);
 
-    // Redirect to frontend with error
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const errorUrl = new URL(`${frontendUrl}/auth/login`);
     errorUrl.searchParams.set("error", "google_auth_failed");
-    errorUrl.searchParams.set("message", err.message);
+    errorUrl.searchParams.set(
+      "message",
+      capturedError || err.message || "Authentication failed"
+    );
 
+    console.log("[GOOGLE_CALLBACK] Redirecting to error page:", errorUrl.toString());
     res.redirect(errorUrl.toString());
   }
 }
@@ -303,8 +355,8 @@ export async function verifyGoogleToken(req, res) {
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
+        fullName: true,
         role: true,
         verified: true,
       },
@@ -314,18 +366,18 @@ export async function verifyGoogleToken(req, res) {
       user = await prisma.user.create({
         data: {
           email,
-          firstName: given_name || name?.split(" ")[0] || "User",
-          lastName: family_name || name?.split(" ").slice(1).join(" ") || "",
-          password: null,
-          role: "user",
+          name: given_name || name?.split(" ")[0] || "User",
+          fullName: family_name || name?.split(" ").slice(1).join(" ") || "",
+          password: "",
+          role: "CONSUMER",
           verified: true,
           profilePicture: picture || null,
         },
         select: {
           id: true,
           email: true,
-          firstName: true,
-          lastName: true,
+          name: true,
+          fullName: true,
           role: true,
           verified: true,
         },

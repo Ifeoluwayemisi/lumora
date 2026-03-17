@@ -45,6 +45,13 @@ function validateEnvironment() {
     "DATABASE_URL",
   ];
 
+  const optionalEnvVars = [
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "FRONTEND_URL",
+    "BACKEND_URL",
+  ];
+
   const missing = requiredEnvVars.filter((v) => !process.env[v]);
   if (missing.length > 0) {
     console.error(
@@ -52,7 +59,30 @@ function validateEnvironment() {
     );
     process.exit(1);
   }
-  console.log("All required environment variables are configured");
+
+  // Warn about Google OAuth if not configured
+  const googleConfigured =
+    process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET;
+  if (!googleConfigured) {
+    console.warn(
+      "⚠️  WARNING: Google OAuth not fully configured (missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET)",
+    );
+    console.warn(
+      "        Google sign-in will not work until credentials are added to .env",
+    );
+  }
+
+  // Warn about missing frontend URL
+  if (!process.env.FRONTEND_URL) {
+    console.warn("⚠️  WARNING: FRONTEND_URL not set, defaulting to http://localhost:3000");
+  }
+
+  // Warn about missing backend URL
+  if (!process.env.BACKEND_URL) {
+    console.warn("⚠️  WARNING: BACKEND_URL not set, defaulting to http://localhost:5000");
+  }
+
+  console.log("✓ Core environment variables configured");
 }
 
 /**
