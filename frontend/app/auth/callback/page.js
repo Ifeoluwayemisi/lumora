@@ -63,11 +63,12 @@ export default function OAuthCallbackPage() {
         await login(user, token);
 
         // Redirect based on role
-        const role = user.role || "user";
+        const role = user.role || "CONSUMER";
         const dashboardMap = {
-          manufacturer: "/dashboard/manufacturer",
-          admin: "/dashboard/admin",
-          user: "/dashboard/user",
+          MANUFACTURER: "/dashboard/manufacturer",
+          ADMIN: "/dashboard/admin",
+          CONSUMER: "/dashboard/user",
+          NAFDAC: "/dashboard/admin",
         };
 
         const destination = dashboardMap[role] || "/dashboard/user";
