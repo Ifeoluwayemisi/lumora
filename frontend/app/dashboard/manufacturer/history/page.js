@@ -103,7 +103,7 @@ function ManufacturerHistoryContent() {
                     Status:{" "}
                     <span
                       className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(
-                        item.verificationState
+                        item.verificationState,
                       )}`}
                     >
                       {item.verificationState?.replace(/_/g, " ") || "Unknown"}
@@ -111,7 +111,7 @@ function ManufacturerHistoryContent() {
                   </p>
                   <p className="text-xs text-gray-400">
                     {new Date(
-                      item.createdAt || item.timestamp
+                      item.createdAt || item.timestamp,
                     ).toLocaleString()}
                   </p>
                   {item.location && (
@@ -166,7 +166,7 @@ function ManufacturerHistoryContent() {
                 </label>
                 <p
                   className={`inline-block px-3 py-1 rounded text-sm font-medium ${getStatusColor(
-                    selectedItem.verificationState
+                    selectedItem.verificationState,
                   )}`}
                 >
                   {selectedItem.verificationState?.replace(/_/g, " ")}
@@ -179,7 +179,7 @@ function ManufacturerHistoryContent() {
                 </label>
                 <p className="text-gray-900 dark:text-white">
                   {new Date(
-                    selectedItem.createdAt || selectedItem.timestamp
+                    selectedItem.createdAt || selectedItem.timestamp,
                   ).toLocaleString()}
                 </p>
               </div>

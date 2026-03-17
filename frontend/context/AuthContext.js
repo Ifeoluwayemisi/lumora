@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect } from "react";
 
 export const AuthContext = createContext();
 
@@ -10,23 +10,23 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('lumora_user');
+      const stored = localStorage.getItem("lumora_user");
       if (stored) {
         setUser(JSON.parse(stored));
       }
     } catch (error) {
-      console.error('Failed to load user from localStorage:', error);
+      console.error("Failed to load user from localStorage:", error);
     }
 
     const syncUser = (e) => {
-      if (e.key === 'lumora_user') {
+      if (e.key === "lumora_user") {
         setUser(e.newValue ? JSON.parse(e.newValue) : null);
       }
     };
 
-    window.addEventListener('storage', syncUser);
+    window.addEventListener("storage", syncUser);
     setIsHydrated(true);
-    return () => window.removeEventListener('storage', syncUser);
+    return () => window.removeEventListener("storage", syncUser);
   }, []);
 
   const login = (userData, token) => {
@@ -41,11 +41,11 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     try {
-      localStorage.removeItem('lumora_user');
-      localStorage.removeItem('lumora_token');
+      localStorage.removeItem("lumora_user");
+      localStorage.removeItem("lumora_token");
       setUser(null);
     } catch (error) {
-      console.error('Failed to clear localStorage:', error);
+      console.error("Failed to clear localStorage:", error);
     }
   };
 
