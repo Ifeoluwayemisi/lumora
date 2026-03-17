@@ -16,6 +16,7 @@
 import prisma from "../models/prismaClient.js";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
+import { google } from "googleapis";
 
 const oauth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -126,7 +127,7 @@ export async function googleCallback(req, res) {
 
     // Get user info from Google
     console.log("[GOOGLE_CALLBACK] Fetching user info from Google...");
-    const oauth2 = require("googleapis").google.oauth2("v2");
+    const oauth2 = google.oauth2("v2");
     const userInfo = await oauth2.userinfo.get({
       auth: oauth2Client,
     });

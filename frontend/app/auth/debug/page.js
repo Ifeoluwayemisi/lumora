@@ -22,7 +22,8 @@ export default function DebugPage() {
       const key = localStorage.key(i);
       try {
         const val = localStorage.getItem(key);
-        combined.localStorage[key] = val?.length > 200 ? val.substring(0, 200) + "..." : val;
+        combined.localStorage[key] =
+          val?.length > 200 ? val.substring(0, 200) + "..." : val;
       } catch (e) {
         combined.localStorage[key] = "[ERROR]";
       }
@@ -33,7 +34,8 @@ export default function DebugPage() {
       const key = sessionStorage.key(i);
       try {
         const val = sessionStorage.getItem(key);
-        combined.sessionStorage[key] = val?.length > 200 ? val.substring(0, 200) + "..." : val;
+        combined.sessionStorage[key] =
+          val?.length > 200 ? val.substring(0, 200) + "..." : val;
       } catch (e) {
         combined.sessionStorage[key] = "[ERROR]";
       }
@@ -75,13 +77,18 @@ export default function DebugPage() {
               <strong>Timestamp:</strong> {store.timestamp}
             </p>
             <p>
-              <strong>URL:</strong> <code className="bg-gray-100 dark:bg-gray-700 p-1 rounded">{store.url}</code>
+              <strong>URL:</strong>{" "}
+              <code className="bg-gray-100 dark:bg-gray-700 p-1 rounded">
+                {store.url}
+              </code>
             </p>
             <p>
-              <strong>Local Storage Items:</strong> {Object.keys(store.localStorage || {}).length}
+              <strong>Local Storage Items:</strong>{" "}
+              {Object.keys(store.localStorage || {}).length}
             </p>
             <p>
-              <strong>Session Storage Items:</strong> {Object.keys(store.sessionStorage || {}).length}
+              <strong>Session Storage Items:</strong>{" "}
+              {Object.keys(store.sessionStorage || {}).length}
             </p>
             <p>
               <strong>Cookies:</strong> {(store.cookies || []).length}
@@ -98,20 +105,57 @@ export default function DebugPage() {
             <div className="text-sm font-mono space-y-1">
               {(() => {
                 try {
-                  const info = JSON.parse(store.localStorage.oauth_callback_debug);
+                  const info = JSON.parse(
+                    store.localStorage.oauth_callback_debug,
+                  );
                   return (
                     <>
-                      <p><strong>Timestamp:</strong> {info.timestamp}</p>
-                      <p><strong>Has Token:</strong> <span className={info.hasToken ? "text-green-600" : "text-red-600"}>{info.hasToken ? "✓ YES" : "✗ NO"}</span></p>
-                      <p><strong>Has User:</strong> <span className={info.hasUser ? "text-green-600" : "text-red-600"}>{info.hasUser ? "✓ YES" : "✗ NO"}</span></p>
-                      <p><strong>Token Length:</strong> {info.tokenLength} chars</p>
-                      <p><strong>User Data Length:</strong> {info.userLength} chars</p>
-                      {info.error && <p className="text-red-600"><strong>Error:</strong> {info.error}</p>}
-                      {info.message && <p className="text-red-600"><strong>Message:</strong> {info.message}</p>}
+                      <p>
+                        <strong>Timestamp:</strong> {info.timestamp}
+                      </p>
+                      <p>
+                        <strong>Has Token:</strong>{" "}
+                        <span
+                          className={
+                            info.hasToken ? "text-green-600" : "text-red-600"
+                          }
+                        >
+                          {info.hasToken ? "✓ YES" : "✗ NO"}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>Has User:</strong>{" "}
+                        <span
+                          className={
+                            info.hasUser ? "text-green-600" : "text-red-600"
+                          }
+                        >
+                          {info.hasUser ? "✓ YES" : "✗ NO"}
+                        </span>
+                      </p>
+                      <p>
+                        <strong>Token Length:</strong> {info.tokenLength} chars
+                      </p>
+                      <p>
+                        <strong>User Data Length:</strong> {info.userLength}{" "}
+                        chars
+                      </p>
+                      {info.error && (
+                        <p className="text-red-600">
+                          <strong>Error:</strong> {info.error}
+                        </p>
+                      )}
+                      {info.message && (
+                        <p className="text-red-600">
+                          <strong>Message:</strong> {info.message}
+                        </p>
+                      )}
                     </>
                   );
                 } catch (e) {
-                  return <p className="text-red-600">Invalid JSON: {e.message}</p>;
+                  return (
+                    <p className="text-red-600">Invalid JSON: {e.message}</p>
+                  );
                 }
               })()}
             </div>
@@ -150,9 +194,14 @@ export default function DebugPage() {
             </h2>
             <div className="space-y-2 text-sm font-mono">
               {Object.entries(store.localStorage).map(([key, value]) => (
-                <div key={key} className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                <div
+                  key={key}
+                  className="border-b border-gray-200 dark:border-gray-700 pb-2"
+                >
                   <p className="text-gray-700 dark:text-gray-300">
-                    <strong className="text-blue-600 dark:text-blue-400">{key}:</strong>
+                    <strong className="text-blue-600 dark:text-blue-400">
+                      {key}:
+                    </strong>
                   </p>
                   <p className="text-gray-600 dark:text-gray-400 break-words ml-4">
                     {value}
@@ -171,9 +220,14 @@ export default function DebugPage() {
             </h2>
             <div className="space-y-2 text-sm font-mono">
               {Object.entries(store.sessionStorage).map(([key, value]) => (
-                <div key={key} className="border-b border-gray-200 dark:border-gray-700 pb-2">
+                <div
+                  key={key}
+                  className="border-b border-gray-200 dark:border-gray-700 pb-2"
+                >
                   <p className="text-gray-700 dark:text-gray-300">
-                    <strong className="text-purple-600 dark:text-purple-400">{key}:</strong>
+                    <strong className="text-purple-600 dark:text-purple-400">
+                      {key}:
+                    </strong>
                   </p>
                   <p className="text-gray-600 dark:text-gray-400 break-words ml-4">
                     {value}
@@ -185,17 +239,19 @@ export default function DebugPage() {
         )}
 
         {/* Cookies */}
-        {(store.cookies || []).filter(c => c).length > 0 && (
+        {(store.cookies || []).filter((c) => c).length > 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 mb-6 shadow">
             <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
               Cookies
             </h2>
             <div className="space-y-2 text-sm font-mono">
-              {store.cookies.filter(c => c).map((cookie, i) => (
-                <p key={i} className="text-gray-600 dark:text-gray-400">
-                  {cookie}
-                </p>
-              ))}
+              {store.cookies
+                .filter((c) => c)
+                .map((cookie, i) => (
+                  <p key={i} className="text-gray-600 dark:text-gray-400">
+                    {cookie}
+                  </p>
+                ))}
             </div>
           </div>
         )}
