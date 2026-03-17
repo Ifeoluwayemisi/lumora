@@ -142,8 +142,8 @@ export async function googleCallback(req, res) {
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
+        fullName: true,
         role: true,
         verified: true,
       },
@@ -173,9 +173,9 @@ export async function googleCallback(req, res) {
       user = await prisma.user.create({
         data: {
           email,
-          firstName: given_name || name?.split(" ")[0] || "User",
-          lastName: family_name || name?.split(" ").slice(1).join(" ") || "",
-          password: null, // OAuth users don't have password
+          name: given_name || name?.split(" ")[0] || "User",
+          fullName: family_name || name?.split(" ").slice(1).join(" ") || "",
+          password: "", // OAuth users don't have password (empty string, not null)
           role: "user", // Default role
           verified: true, // Google accounts are pre-verified
           profilePicture: picture || null,
@@ -183,8 +183,8 @@ export async function googleCallback(req, res) {
         select: {
           id: true,
           email: true,
-          firstName: true,
-          lastName: true,
+          name: true,
+          fullName: true,
           role: true,
           verified: true,
         },
@@ -198,17 +198,17 @@ export async function googleCallback(req, res) {
       user = await prisma.user.update({
         where: { email },
         data: {
-          firstName: given_name || name?.split(" ")[0] || user.firstName,
-          lastName:
-            family_name || name?.split(" ").slice(1).join(" ") || user.lastName,
+          name: given_name || name?.split(" ")[0] || user.name,
+          fullName:
+            family_name || name?.split(" ").slice(1).join(" ") || user.fullName,
           profilePicture: picture || user.profilePicture,
           verified: true,
         },
         select: {
           id: true,
           email: true,
-          firstName: true,
-          lastName: true,
+          name: true,
+          fullName: true,
           role: true,
           verified: true,
         },
@@ -237,8 +237,8 @@ export async function googleCallback(req, res) {
     const minimalUser = {
       id: user.id,
       email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      name: user.name,
+      fullName: user.fullName,
       role: user.role,
     };
     redirectUrl.searchParams.set("user", JSON.stringify(minimalUser));
