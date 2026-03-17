@@ -31,11 +31,11 @@ export function AuthProvider({ children }) {
 
   const login = (userData, token) => {
     try {
-      localStorage.setItem('lumora_user', JSON.stringify(userData));
-      localStorage.setItem('lumora_token', token);
+      localStorage.setItem("lumora_user", JSON.stringify(userData));
+      localStorage.setItem("lumora_token", token);
       setUser(userData);
     } catch (error) {
-      console.error('Failed to save user to localStorage:', error);
+      console.error("Failed to save user to localStorage:", error);
     }
   };
 

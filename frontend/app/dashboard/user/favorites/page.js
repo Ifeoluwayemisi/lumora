@@ -36,7 +36,7 @@ export default function FavoritesPage() {
     } catch (err) {
       console.error("Error removing favorite:", err);
       alert(
-        err.response?.data?.message || "Failed to remove favorite. Try again."
+        err.response?.data?.message || "Failed to remove favorite. Try again.",
       );
     } finally {
       setRemovingId(null);
@@ -170,8 +170,8 @@ export default function FavoritesPage() {
                     onClick={() =>
                       router.push(
                         `/verify/states/GENUINE?code=${encodeURIComponent(
-                          item.codeValue
-                        )}&reverify=true`
+                          item.codeValue,
+                        )}&reverify=true`,
                       )
                     }
                     className="w-full px-4 py-2 bg-genuine text-white rounded-lg text-sm hover:bg-green-600 transition font-medium"
@@ -182,10 +182,10 @@ export default function FavoritesPage() {
                     onClick={() =>
                       router.push(
                         `/report?code=${encodeURIComponent(
-                          item.codeValue
+                          item.codeValue,
                         )}&product=${encodeURIComponent(
-                          item.productName || "Unknown"
-                        )}`
+                          item.productName || "Unknown",
+                        )}`,
                       )
                     }
                     className="w-full px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg text-sm hover:bg-red-200 dark:hover:bg-red-900/50 transition font-medium"
