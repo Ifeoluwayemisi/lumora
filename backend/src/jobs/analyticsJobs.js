@@ -64,11 +64,21 @@ export async function createCategoryDistributionSnapshot() {
 
 /**
  * Create daily agency flag analytics
+ * NOTE: This function is currently disabled as RegulatoryAlert model doesn't exist
+ * It will be re-enabled once the proper data model is implemented
  */
 export async function createAgencyFlagAnalytics() {
   try {
     console.log("[ANALYTICS_JOB] Creating agency flag analytics...");
+    
+    // TODO: Implement agency flag analytics once RegulatoryAlert model is created
+    // For now, skip this as the model doesn't exist in the schema
+    
+    console.log("[ANALYTICS_JOB] Agency flag analytics skipped (model in development)");
+    return;
 
+    // Legacy code (commented out until RegulatoryAlert model is added):
+    /*
     const agencies = ["NAFDAC", "FIRS", "NAFDAC-COSMETICS"];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -140,6 +150,7 @@ export async function createAgencyFlagAnalytics() {
     }
 
     console.log("[ANALYTICS_JOB] Agency flag analytics created");
+    */
   } catch (error) {
     console.error(
       "[ANALYTICS_JOB] Error creating agency analytics:",
