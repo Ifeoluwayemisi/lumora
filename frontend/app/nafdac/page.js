@@ -19,4 +19,5 @@ export default function NAFDACRedirect() {
         <p className="text-gray-600 dark:text-gray-400 mt-2">Redirecting you to the dashboard...</p>
       </div>
     </div>
+  );
 }

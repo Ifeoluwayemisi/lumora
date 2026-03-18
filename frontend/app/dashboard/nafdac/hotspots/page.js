@@ -44,16 +44,6 @@ export default function HotspotIntelligencePage() {
 
     fetchHotspots();
   }, []);
-    },
-    {
-      id: 6,
-      name: "Enugu",
-      suspiciousScans: 54,
-      reportsCount: 14,
-      riskLevel: "Low",
-      riskColor: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
-    },
-  ];
 
   const selectedStateData = selectedState
     ? states.find((s) => s.id === selectedState)

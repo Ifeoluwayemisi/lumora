@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import api from "@/services/api";
-import { FiChevronRight, FiFlag, FiBan, FiSearch, FiFilter } from "react-icons/fi";
+import { FiChevronRight, FiFlag, FiSlash, FiSearch, FiFilter } from "react-icons/fi";
 
 export default function ProductMonitoringPage() {
   const [products, setProducts] = useState([]);
@@ -186,7 +186,7 @@ export default function ProductMonitoringPage() {
                               <FiFlag size={18} />
                             </button>
                             <button className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded">
-                              <FiBan size={18} />
+                              <FiSlash size={18} />
                             </button>
                           </div>
                         </td>
