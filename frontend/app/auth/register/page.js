@@ -121,9 +121,11 @@ function RegisterContent() {
     try {
       // Store role in sessionStorage so callback can retrieve it (fallback)
       sessionStorage.setItem("oauth_signup_role", form.role);
-      
+
       // Pass role to backend so it's included in OAuth state
-      const response = await api.get(`/auth/google/url?intent=signup&role=${form.role}`);
+      const response = await api.get(
+        `/auth/google/url?intent=signup&role=${form.role}`,
+      );
       const { authUrl } = response.data;
       window.location.href = authUrl;
     } catch (err) {
