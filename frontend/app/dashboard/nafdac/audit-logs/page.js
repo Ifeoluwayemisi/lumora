@@ -1,61 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import api from "@/services/api";
 import { FiSearch, FiFilter, FiClock } from "react-icons/fi";
 
 export default function AuditLogsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAction, setFilterAction] = useState("all");
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const auditLogs = [
-    {
-      id: 1,
-      timestamp: "2024-03-18 14:32:15",
-      user: "Olayode Racheal",
-      action: "Product Flagged",
-      target: "Product X - Batch 2024-001",
-      details: "Marked as high risk due to reused codes",
-      severity: "high",
-    },
-    {
-      id: 2,
-      timestamp: "2024-03-18 13:15:42",
-      user: "Ifeoluwa",
-      action: "Manufacturer Suspended",
-      target: "XYZ Pharma Ltd",
-      details: "Account suspended pending investigation",
-      severity: "critical",
-    },
-    {
-      id: 3,
-      timestamp: "2024-03-18 12:08:30",
-      user: "Olayode Racheal",
-      action: "Report Marked Reviewed",
-      target: "Report #542",
-      details: "User report verified and escalated",
-      severity: "medium",
-    },
-    {
-      id: 4,
-      timestamp: "2024-03-18 11:45:20",
-      user: "System",
-      action: "Alert Generated",
-      target: "Lagos - High Risk",
-      details: "Geographic hotspot alert triggered",
-      severity: "medium",
-    },
-    {
-      id: 5,
-      timestamp: "2024-03-18 10:22:05",
-      user: "Ifeoluwa",
-      action: "Dashboard Accessed",
-      target: "NAFDAC Dashboard",
-      details: "Login occurred",
-      severity: "low",
-    },
-  ];
+  useEffect(() => {
+    const fetchAuditLogs = async () => {
+      try {
+        const response = await api.get("/nafdac/audit-logs");
+        setAuditLogs(response.data || []);
+      } catch (error) {
+        console.error("[AUDIT LOGS] Error fetching logs:", error);
+        // Fallback data if API fails
+        setAuditLogs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAuditLogs();
+  }, []);
 
   const getActionColor = (action) => {
     if (action.includes("Suspended") || action.includes("Blocked"))

@@ -1,53 +1,49 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
+import api from "@/services/api";
 import { FiMapPin, FiTrendingUp, FiAlertCircle } from "react-icons/fi";
 
 export default function HotspotIntelligencePage() {
   const [selectedState, setSelectedState] = useState(null);
+  const [states, setStates] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const states = [
-    {
-      id: 1,
-      name: "Lagos",
-      suspiciousScans: 342,
-      reportsCount: 87,
-      riskLevel: "Critical",
-      riskColor: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
-    },
-    {
-      id: 2,
-      name: "Port Harcourt",
-      suspiciousScans: 156,
-      reportsCount: 42,
-      riskLevel: "High",
-      riskColor: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400",
-    },
-    {
-      id: 3,
-      name: "Abuja",
-      suspiciousScans: 98,
-      reportsCount: 28,
-      riskLevel: "Medium",
-      riskColor: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
-    },
-    {
-      id: 4,
-      name: "Kano",
-      suspiciousScans: 105,
-      reportsCount: 35,
-      riskLevel: "High",
-      riskColor: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400",
-    },
-    {
-      id: 5,
-      name: "Ibadan",
-      suspiciousScans: 67,
-      reportsCount: 18,
-      riskLevel: "Medium",
-      riskColor: "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400",
+  useEffect(() => {
+    const fetchHotspots = async () => {
+      try {
+        const response = await api.get("/nafdac/hotspots");
+        setStates(response.data || []);
+      } catch (error) {
+        console.error("[HOTSPOTS] Error fetching hotspots:", error);
+        // Fallback to default states
+        setStates([
+          {
+            id: 1,
+            name: "Lagos",
+            suspiciousScans: 342,
+            reportsCount: 87,
+            riskLevel: "Critical",
+            riskColor: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
+          },
+          {
+            id: 2,
+            name: "Port Harcourt",
+            suspiciousScans: 156,
+            reportsCount: 42,
+            riskLevel: "High",
+            riskColor: "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400",
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHotspots();
+  }, []);
     },
     {
       id: 6,
