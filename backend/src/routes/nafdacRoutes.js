@@ -1,6 +1,7 @@
 import express from 'express';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import { roleMiddleware } from '../middleware/roleMiddleware.js';
+import { nafdacAuthController } from '../controllers/nafdacAuthController.js';
 import { 
     listIncidents, 
     updateIncident, 
@@ -17,8 +18,35 @@ import {
 
 const router = express.Router();
 
+/**
+ * PUBLIC ROUTES (No authentication required)
+ */
+// Step 1: Email and password verification
+router.post('/auth/login/step1', nafdacAuthController.loginStep1);
+
+// Step 2: 2FA code verification
+router.post('/auth/login/step2', nafdacAuthController.loginStep2);
+
+/**
+ * PROTECTED ROUTES (Authentication required)
+ */
 router.use(authMiddleware);
 router.use(roleMiddleware('NAFDAC', 'ADMIN'));
+
+// Get current user profile
+router.get('/auth/profile', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      user: req.user
+    }
+  });
+});
+
+// Logout endpoint
+router.post('/auth/logout', (req, res) => {
+  res.json({ success: true, message: 'Logged out successfully' });
+});
 
 // Existing endpoints
 router.get('/incidents', listIncidents);

@@ -106,10 +106,6 @@ function LoginContent() {
           console.log("[LOGIN FRONTEND] Redirecting to admin dashboard");
           router.push("/dashboard/admin");
           break;
-        case "NAFDAC":
-          console.log("[LOGIN FRONTEND] Redirecting to NAFDAC dashboard");
-          router.push("/dashboard/nafdac");
-          break;
         default:
           console.log(
             "[LOGIN FRONTEND] Redirecting to user dashboard (default). Role was:",
