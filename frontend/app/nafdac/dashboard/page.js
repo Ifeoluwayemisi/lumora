@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function NAFDACRedirect() {
+export default function NAFDACDashboardRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirect to the new dashboard location
+    // Redirect from /nafdac/dashboard to /dashboard/nafdac
     router.push("/dashboard/nafdac");
   }, [router]);
 
@@ -19,4 +19,5 @@ export default function NAFDACRedirect() {
         <p className="text-gray-600 dark:text-gray-400 mt-2">Redirecting you to the dashboard...</p>
       </div>
     </div>
+  );
 }
