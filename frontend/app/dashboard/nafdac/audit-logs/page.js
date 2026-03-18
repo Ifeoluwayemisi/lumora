@@ -1,25 +1,46 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AuthContext } from "@/context/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import api from "@/services/api";
 import { FiSearch, FiFilter, FiClock } from "react-icons/fi";
 
+/**
+ * Audit Logs - Activity History Tracking
+ * Role-based access: NAFDAC only
+ */
 export default function AuditLogsPage() {
+  const router = useRouter();
+  const { user, isHydrated } = useContext(AuthContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAction, setFilterAction] = useState("all");
   const [auditLogs, setAuditLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Security: Verify role authorization
   useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!user || user.role !== "NAFDAC") {
+      router.replace("/auth/login");
+      return;
+    }
+  }, [isHydrated, user, router]);
+
+  // Fetch audit logs only after auth is confirmed
+  useEffect(() => {
+    if (!user || user.role !== "NAFDAC") return;
+
     const fetchAuditLogs = async () => {
       try {
         const response = await api.get("/nafdac/audit-logs");
-        setAuditLogs(response.data || []);
+        setAuditLogs(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
-        console.error("[AUDIT LOGS] Error fetching logs:", error);
-        // Fallback data if API fails
+        console.error("[NAFDAC_AUDIT_LOGS] Error fetching logs:", error);
         setAuditLogs([]);
       } finally {
         setLoading(false);
@@ -27,7 +48,7 @@ export default function AuditLogsPage() {
     };
 
     fetchAuditLogs();
-  }, []);
+  }, [user]);
 
   const getActionColor = (action) => {
     if (action.includes("Suspended") || action.includes("Blocked"))

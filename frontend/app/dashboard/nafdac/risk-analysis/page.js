@@ -1,11 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useContext, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { AuthContext } from "@/context/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import { FiAlertCircle, FiTrendingUp, FiBarChart2 } from "react-icons/fi";
 
+/**
+ * Risk Analysis Engine
+ * Role-based access: NAFDAC only
+ */
 export default function RiskAnalysisPage() {
+  const router = useRouter();
+  const { user, isHydrated } = useContext(AuthContext);
+
+  // Security: Verify role authorization
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!user || user.role !== "NAFDAC") {
+      router.replace("/auth/login");
+      return;
+    }
+  }, [isHydrated, user, router]);
+
   const riskFactors = [
     {
       name: "Code Reuse Frequency",

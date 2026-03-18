@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useContext, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AuthContext } from "@/context/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import api from "@/services/api";
@@ -13,19 +16,38 @@ import {
   FiMessageSquare,
 } from "react-icons/fi";
 
+/**
+ * Reports Management System
+ * Role-based access: NAFDAC only
+ */
 export default function ReportsManagementPage() {
+  const router = useRouter();
+  const { user, isHydrated } = useContext(AuthContext);
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
+  // Security: Verify role authorization
   useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!user || user.role !== "NAFDAC") {
+      router.replace("/auth/login");
+      return;
+    }
+  }, [isHydrated, user, router]);
+
+  // Fetch reports only after auth is confirmed
+  useEffect(() => {
+    if (!user || user.role !== "NAFDAC") return;
+
     const fetchReports = async () => {
       try {
         const response = await api.get("/nafdac/reports");
-        setReports(response.data);
+        setReports(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
-        console.error("[REPORTS] Error fetching reports:", error);
+        console.error("[NAFDAC_REPORTS] Error fetching reports:", error);
         setReports([]);
       } finally {
         setLoading(false);
@@ -33,7 +55,7 @@ export default function ReportsManagementPage() {
     };
 
     fetchReports();
-  }, []);
+  }, [user]);
 
   const getPriorityColor = (priority) => {
     if (priority === "critical") return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400";

@@ -1,24 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useContext, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AuthContext } from "@/context/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import api from "@/services/api";
 import { FiChevronRight, FiFlag, FiSlash, FiSearch, FiFilter } from "react-icons/fi";
 
+/**
+ * Product Monitoring System
+ * Role-based access: NAFDAC only
+ */
 export default function ProductMonitoringPage() {
+  const router = useRouter();
+  const { user, isHydrated } = useContext(AuthContext);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRisk, setFilterRisk] = useState("all");
 
+  // Security: Verify role authorization
   useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!user || user.role !== "NAFDAC") {
+      router.replace("/auth/login");
+      return;
+    }
+  }, [isHydrated, user, router]);
+
+  // Fetch products only after auth is confirmed
+  useEffect(() => {
+    if (!user || user.role !== "NAFDAC") return;
+
     const fetchProducts = async () => {
       try {
         const response = await api.get("/nafdac/products");
-        setProducts(response.data);
+        setProducts(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
-        console.error("[PRODUCTS] Error fetching products:", error);
+        console.error("[NAFDAC_PRODUCTS] Error fetching products:", error);
         setProducts([]);
       } finally {
         setLoading(false);
@@ -26,7 +48,7 @@ export default function ProductMonitoringPage() {
     };
 
     fetchProducts();
-  }, []);
+  }, [user]);
 
   const getRiskColor = (riskScore) => {
     if (riskScore >= 80) return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400";

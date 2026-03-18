@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useContext, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AuthContext } from "@/context/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import Link from "next/link";
@@ -17,7 +20,14 @@ import {
   FiRefreshCw,
 } from "react-icons/fi";
 
+/**
+ * NAFDAC Regulatory Intelligence Dashboard
+ * Role-based access: NAFDAC only
+ * Protected by AuthGuard + AuthContext
+ */
 export default function NAFDACDashboard() {
+  const router = useRouter();
+  const { user, isHydrated } = useContext(AuthContext);
   const [stats, setStats] = useState({
     totalVerifications: 0,
     suspiciousVerifications: 0,
@@ -35,22 +45,35 @@ export default function NAFDACDashboard() {
     "🔴 Critical: Reused code detected - 50 scans from same code",
   ]);
 
+  // Security: Verify role authorization before rendering
   useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!user || user.role !== "NAFDAC") {
+      router.replace("/auth/login");
+      return;
+    }
+  }, [isHydrated, user, router]);
+
+  // Fetch dashboard data only after auth is confirmed
+  useEffect(() => {
+    if (!user || user.role !== "NAFDAC") return;
+
     const fetchDashboardData = async () => {
       try {
-        // Fetch stats from backend
         const response = await api.get("/nafdac/dashboard");
-        setStats(response.data);
+        if (response.data) {
+          setStats(response.data.metrics || stats);
+        }
       } catch (error) {
-        console.error("[NAFDAC DASHBOARD] Error fetching data:", error);
-        // Use default stats if API fails
+        console.error("[NAFDAC] Error fetching dashboard metrics:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, []);
+  }, [user]);
 
   const navigationCards = [
     {

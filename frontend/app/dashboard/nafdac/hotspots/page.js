@@ -1,23 +1,45 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { AuthContext } from "@/context/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import api from "@/services/api";
 import { FiMapPin, FiTrendingUp, FiAlertCircle } from "react-icons/fi";
 
+/**
+ * Hotspot Intelligence System
+ * Role-based access: NAFDAC only
+ */
 export default function HotspotIntelligencePage() {
+  const router = useRouter();
+  const { user, isHydrated } = useContext(AuthContext);
   const [selectedState, setSelectedState] = useState(null);
   const [states, setStates] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Security: Verify role authorization
   useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!user || user.role !== "NAFDAC") {
+      router.replace("/auth/login");
+      return;
+    }
+  }, [isHydrated, user, router]);
+
+  // Fetch hotspots only after auth is confirmed
+  useEffect(() => {
+    if (!user || user.role !== "NAFDAC") return;
+
     const fetchHotspots = async () => {
       try {
         const response = await api.get("/nafdac/hotspots");
-        setStates(response.data || []);
+        setStates(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
-        console.error("[HOTSPOTS] Error fetching hotspots:", error);
+        console.error("[NAFDAC_HOTSPOTS] Error fetching hotspots:", error);
         // Fallback to default states
         setStates([
           {
