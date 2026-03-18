@@ -3,50 +3,57 @@
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import Link from "next/link";
-import { FiBarChart2, FiTrendingUp, FiSettings } from "react-icons/fi";
+import { FiBarChart2, FiTrendingUp, FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 
-export default function AdminDashboard() {
+export default function NAFDACDashboard() {
   const dashboards = [
     {
-      title: "Category Distribution",
-      description:
-        "Monitor manufacturer distribution across product categories",
-      href: "/dashboard/admin/analytics/category-distribution",
+      title: "Flagged Codes Monitoring",
+      description: "Real-time monitoring of flagged and suspicious product codes",
+      href: "/dashboard/nafdac/flagged-codes",
+      icon: FiAlertCircle,
+      color:
+        "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
+    },
+    {
+      title: "Manufacturer Verification",
+      description: "Review and verify manufacturer registrations and compliance",
+      href: "/dashboard/nafdac/manufacturers",
+      icon: FiCheckCircle,
+      color:
+        "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+    },
+    {
+      title: "Regulatory Analytics",
+      description: "Detailed analysis of counterfeit trends and risk patterns",
+      href: "/dashboard/nafdac/analytics",
       icon: FiBarChart2,
       color:
         "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
     },
     {
-      title: "Agency Reports",
-      description: "Detailed analysis of flagged codes by regulatory agency",
-      href: "/dashboard/admin/analytics/agencies",
+      title: "Verification Reports",
+      description: "Generate and download compliance and verification reports",
+      href: "/dashboard/nafdac/reports",
       icon: FiTrendingUp,
-      color:
-        "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
-    },
-    {
-      title: "Rate Limiting & Webhooks",
-      description: "Configure per-agency rate limits and webhook notifications",
-      href: "/dashboard/admin/analytics/rate-limiting",
-      icon: FiSettings,
       color:
         "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800",
     },
   ];
 
   return (
-    <AuthGuard allowedRoles={["ADMIN"]}>
-      <DashboardSidebar userRole="admin" />
+    <AuthGuard allowedRoles={["NAFDAC"]}>
+      <DashboardSidebar userRole="nafdac" />
 
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 md:ml-64">
         {/* Header */}
         <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30">
           <div className="px-4 sm:px-6 lg:px-8 py-6">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Lumora Intelligence Dashboard
+              NAFDAC Regulatory Dashboard
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Real-time analytics, agency monitoring, and system management
+              Pharmaceutical product verification, manufacturer oversight, and compliance monitoring
             </p>
           </div>
         </div>
@@ -54,7 +61,7 @@ export default function AdminDashboard() {
         {/* Main Content */}
         <div className="px-4 sm:px-6 lg:px-8 py-8">
           {/* Dashboard Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {dashboards.map((dashboard) => {
               const IconComponent = dashboard.icon;
               return (
@@ -90,11 +97,12 @@ export default function AdminDashboard() {
           {/* Quick Stats */}
           <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              System Overview
+              Regulatory Overview
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Navigate to any dashboard above to view detailed analytics, agency
-              reports, and system configuration.
+              As a NAFDAC regulatory agent, you have access to manufacturer verification tools, 
+              flagged product monitoring, and compliance analytics. Navigate to any section above 
+              to begin your regulatory oversight activities.
             </p>
           </div>
         </div>

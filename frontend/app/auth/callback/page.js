@@ -66,7 +66,7 @@ export default function OAuthCallbackPage() {
         MANUFACTURER: "/dashboard/manufacturer",
         ADMIN: "/dashboard/admin",
         CONSUMER: "/dashboard/user",
-        NAFDAC: "/dashboard/admin",
+        NAFDAC: "/dashboard/nafdac",
       };
 
       const destination = dashboardMap[role] || "/dashboard/user";
