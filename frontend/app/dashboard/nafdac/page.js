@@ -15,7 +15,6 @@ import {
   FiFileText,
   FiSettings,
   FiRefreshCw,
-  FiAlert,
 } from "react-icons/fi";
 
 export default function NAFDACDashboard() {
@@ -89,7 +88,7 @@ export default function NAFDACDashboard() {
       title: "Risk Analysis",
       description: "AI-powered risk scoring and threat detection insights",
       href: "/dashboard/nafdac/risk-analysis",
-      icon: FiAlert,
+      icon: FiAlertCircle,
       color: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
     },
     {
@@ -171,7 +170,7 @@ export default function NAFDACDashboard() {
                     {loading ? "-" : stats.reusedCodes}
                   </p>
                 </div>
-                <FiAlert size={32} className="text-amber-600" />
+                <FiAlertCircle size={32} className="text-amber-600" />
               </div>
             </div>
 
@@ -221,7 +220,7 @@ export default function NAFDACDashboard() {
           {/* Smart Insight Panel */}
           <div className="mb-8 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-lg border border-red-200 dark:border-red-800 p-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <FiAlert className="text-red-600" />
+              <FiAlertCircle className="text-red-600" />
               Smart Insight Panel - High Priority Alerts
             </h2>
             <div className="space-y-3">

@@ -3,7 +3,7 @@
 import React from "react";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
-import { FiAlert, FiTrendingUp, FiBarChart2 } from "react-icons/fi";
+import { FiAlertCircle, FiTrendingUp, FiBarChart2 } from "react-icons/fi";
 
 export default function RiskAnalysisPage() {
   const riskFactors = [
