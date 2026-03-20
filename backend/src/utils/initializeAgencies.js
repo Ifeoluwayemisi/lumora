@@ -41,8 +41,8 @@ export async function initializeAgencies() {
             agency: agency.name,
             alertsPerHour: agency.alertsPerHour,
             alertsPerDay: agency.alertsPerDay,
-            currentHourCount: 0,
-            currentDayCount: 0,
+            currentHourlyCount: 0,
+            currentDailyCount: 0,
             isThrottled: false,
             hourlyResetAt: getNextHourReset(),
             dailyResetAt: getNextDayReset(),
@@ -113,7 +113,7 @@ export async function resetHourlyCounters() {
       await prisma.agencyRateLimit.update({
         where: { agency: record.agency },
         data: {
-          currentHourCount: 0,
+          currentHourlyCount: 0,
           hourlyResetAt: getNextHourReset(),
         },
       });
@@ -150,7 +150,7 @@ export async function resetDailyCounters() {
       await prisma.agencyRateLimit.update({
         where: { agency: record.agency },
         data: {
-          currentDayCount: 0,
+          currentDailyCount: 0,
           dailyResetAt: getNextDayReset(),
         },
       });

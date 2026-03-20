@@ -289,7 +289,7 @@ export default function RateLimitingPage() {
                     <div className="mt-2">
                       <div className="flex justify-between mb-1">
                         <span className="text-sm font-medium">
-                          {agencyDetail.currentHourCount}/
+                          {agencyDetail.currentHourlyCount}/
                           {agencyDetail.alertsPerHour}
                         </span>
                         <span className="text-sm">
@@ -306,7 +306,7 @@ export default function RateLimitingPage() {
                           className="bg-amber-500 h-2 rounded-full"
                           style={{
                             width: `${
-                              (agencyDetail.currentHourCount /
+                              (agencyDetail.currentHourlyCount /
                                 agencyDetail.alertsPerHour) *
                               100
                             }%`,
@@ -323,7 +323,7 @@ export default function RateLimitingPage() {
                     <div className="mt-2">
                       <div className="flex justify-between mb-1">
                         <span className="text-sm font-medium">
-                          {agencyDetail.currentDayCount}/
+                          {agencyDetail.currentDailyCount}/
                           {agencyDetail.alertsPerDay}
                         </span>
                         <span className="text-sm">
@@ -340,7 +340,7 @@ export default function RateLimitingPage() {
                           className="bg-indigo-500 h-2 rounded-full"
                           style={{
                             width: `${
-                              (agencyDetail.currentDayCount /
+                              (agencyDetail.currentDailyCount /
                                 agencyDetail.alertsPerDay) *
                               100
                             }%`,
@@ -533,8 +533,8 @@ export default function RateLimitingPage() {
                         {agency}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Hourly: {status.currentHourCount}/{status.alertsPerHour}{" "}
-                        • Daily: {status.currentDayCount}/{status.alertsPerDay}
+                        Hourly: {status.currentHourlyCount}/{status.alertsPerHour}{" "}
+                        • Daily: {status.currentDailyCount}/{status.alertsPerDay}
                       </p>
                     </div>
                     {status.isThrottled && (
@@ -549,7 +549,7 @@ export default function RateLimitingPage() {
                         <span className="text-xs font-medium">Hour</span>
                         <span className="text-xs">
                           {(
-                            (status.currentHourCount / status.alertsPerHour) *
+                            (status.currentHourlyCount / status.alertsPerHour) *
                             100
                           ).toFixed(0)}
                           %
@@ -560,7 +560,7 @@ export default function RateLimitingPage() {
                           className="bg-blue-500 h-1.5 rounded-full"
                           style={{
                             width: `${
-                              (status.currentHourCount / status.alertsPerHour) *
+                              (status.currentHourlyCount / status.alertsPerHour) *
                               100
                             }%`,
                           }}
@@ -572,7 +572,7 @@ export default function RateLimitingPage() {
                         <span className="text-xs font-medium">Day</span>
                         <span className="text-xs">
                           {(
-                            (status.currentDayCount / status.alertsPerDay) *
+                            (status.currentDailyCount / status.alertsPerDay) *
                             100
                           ).toFixed(0)}
                           %
@@ -583,7 +583,7 @@ export default function RateLimitingPage() {
                           className="bg-green-500 h-1.5 rounded-full"
                           style={{
                             width: `${
-                              (status.currentDayCount / status.alertsPerDay) *
+                              (status.currentDailyCount / status.alertsPerDay) *
                               100
                             }%`,
                           }}

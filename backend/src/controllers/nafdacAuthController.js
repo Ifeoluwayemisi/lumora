@@ -1,5 +1,5 @@
 import prisma from "../models/prismaClient.js";
-import { hashPassword, comparePassword } from "../utils/passwordUtils.js";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 
@@ -52,7 +52,7 @@ export const nafdacAuthController = {
       }
 
       // Verify password
-      const isPasswordValid = await comparePassword(password, user.password);
+      const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         return res.status(401).json({
           success: false,
