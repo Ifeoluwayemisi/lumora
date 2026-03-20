@@ -1,4 +1,4 @@
-import prisma from '../config/database.js';
+import prisma from "../models/prismaClient.js";
 import { hashPassword, comparePassword } from '../utils/passwordUtils.js';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
