@@ -133,7 +133,10 @@ export default function LandingPage() {
       setContactForm({ name: "", email: "", message: "" });
     } catch (err) {
       console.error("[CONTACT] Submission error:", err);
-      toast.error(err.response?.data?.error || "Failed to send message. Please try again.");
+      toast.error(
+        err.response?.data?.error ||
+          "Failed to send message. Please try again.",
+      );
     } finally {
       setContactLoading(false);
     }
@@ -453,12 +456,17 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <form onSubmit={handleContactSubmit} className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg flex flex-col gap-4">
+              <form
+                onSubmit={handleContactSubmit}
+                className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg flex flex-col gap-4"
+              >
                 <input
                   type="text"
                   placeholder="Your Name"
                   value={contactForm.name}
-                  onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                  onChange={(e) =>
+                    setContactForm({ ...contactForm, name: e.target.value })
+                  }
                   disabled={contactLoading}
                   className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all disabled:opacity-50"
                   aria-label="Name"
@@ -467,7 +475,9 @@ export default function LandingPage() {
                   type="email"
                   placeholder="Your Email"
                   value={contactForm.email}
-                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                  onChange={(e) =>
+                    setContactForm({ ...contactForm, email: e.target.value })
+                  }
                   disabled={contactLoading}
                   className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all disabled:opacity-50"
                   aria-label="Email"
@@ -476,7 +486,9 @@ export default function LandingPage() {
                   placeholder="Message (tell us how we can help)"
                   rows="5"
                   value={contactForm.message}
-                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                  onChange={(e) =>
+                    setContactForm({ ...contactForm, message: e.target.value })
+                  }
                   disabled={contactLoading}
                   className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all resize-none disabled:opacity-50"
                   aria-label="Message"

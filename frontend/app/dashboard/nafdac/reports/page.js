@@ -58,14 +58,18 @@ export default function ReportsManagementPage() {
   }, [user]);
 
   const getPriorityColor = (priority) => {
-    if (priority === "critical") return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400";
-    if (priority === "high") return "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400";
+    if (priority === "critical")
+      return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400";
+    if (priority === "high")
+      return "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400";
     return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400";
   };
 
   const getStatusColor = (status) => {
-    if (status === "resolved") return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400";
-    if (status === "investigated") return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400";
+    if (status === "resolved")
+      return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400";
+    if (status === "investigated")
+      return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400";
     return "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400";
   };
 
@@ -75,7 +79,8 @@ export default function ReportsManagementPage() {
       report.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       report.location?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = filterStatus === "all" || report.status === filterStatus;
+    const matchesStatus =
+      filterStatus === "all" || report.status === filterStatus;
 
     return matchesSearch && matchesStatus;
   });
@@ -92,7 +97,8 @@ export default function ReportsManagementPage() {
               Reports Management
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Review user-submitted reports of suspicious products and take regulatory action
+              Review user-submitted reports of suspicious products and take
+              regulatory action
             </p>
           </div>
         </div>
@@ -103,7 +109,10 @@ export default function ReportsManagementPage() {
           <div className="mb-6 space-y-4">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
-                <FiSearch className="absolute left-3 top-3 text-gray-400" size={20} />
+                <FiSearch
+                  className="absolute left-3 top-3 text-gray-400"
+                  size={20}
+                />
                 <input
                   type="text"
                   placeholder="Search by product, code, or location..."
@@ -147,14 +156,20 @@ export default function ReportsManagementPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4 flex-1">
                       <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                        <FiFileText className="text-amber-600 dark:text-amber-400" size={24} />
+                        <FiFileText
+                          className="text-amber-600 dark:text-amber-400"
+                          size={24}
+                        />
                       </div>
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                           {report.productName || "Unknown Product"}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          Code: <span className="font-mono">{report.code || "-"}</span>
+                          Code:{" "}
+                          <span className="font-mono">
+                            {report.code || "-"}
+                          </span>
                         </p>
                         {report.location && (
                           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -213,8 +228,12 @@ export default function ReportsManagementPage() {
           {/* Stats */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Total Reports</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{filteredReports.length}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Total Reports
+              </p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                {filteredReports.length}
+              </p>
             </div>
             <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 p-4">
               <p className="text-amber-700 dark:text-amber-400 text-sm">New</p>
@@ -223,13 +242,20 @@ export default function ReportsManagementPage() {
               </p>
             </div>
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
-              <p className="text-blue-700 dark:text-blue-400 text-sm">Investigated</p>
+              <p className="text-blue-700 dark:text-blue-400 text-sm">
+                Investigated
+              </p>
               <p className="text-3xl font-bold text-blue-600">
-                {filteredReports.filter((r) => r.status === "investigated").length}
+                {
+                  filteredReports.filter((r) => r.status === "investigated")
+                    .length
+                }
               </p>
             </div>
             <div className="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 p-4">
-              <p className="text-green-700 dark:text-green-400 text-sm">Resolved</p>
+              <p className="text-green-700 dark:text-green-400 text-sm">
+                Resolved
+              </p>
               <p className="text-3xl font-bold text-green-600">
                 {filteredReports.filter((r) => r.status === "resolved").length}
               </p>

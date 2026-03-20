@@ -7,7 +7,13 @@ import { AuthContext } from "@/context/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import api from "@/services/api";
-import { FiChevronRight, FiFlag, FiSlash, FiSearch, FiFilter } from "react-icons/fi";
+import {
+  FiChevronRight,
+  FiFlag,
+  FiSlash,
+  FiSearch,
+  FiFilter,
+} from "react-icons/fi";
 
 /**
  * Product Monitoring System
@@ -51,8 +57,10 @@ export default function ProductMonitoringPage() {
   }, [user]);
 
   const getRiskColor = (riskScore) => {
-    if (riskScore >= 80) return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400";
-    if (riskScore >= 50) return "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400";
+    if (riskScore >= 80)
+      return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400";
+    if (riskScore >= 50)
+      return "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400";
     return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400";
   };
 
@@ -71,7 +79,9 @@ export default function ProductMonitoringPage() {
     const matchesRisk =
       filterRisk === "all" ||
       (filterRisk === "high" && product.riskScore >= 80) ||
-      (filterRisk === "suspicious" && product.riskScore >= 50 && product.riskScore < 80) ||
+      (filterRisk === "suspicious" &&
+        product.riskScore >= 50 &&
+        product.riskScore < 80) ||
       (filterRisk === "safe" && product.riskScore < 50);
 
     return matchesSearch && matchesRisk;
@@ -89,7 +99,8 @@ export default function ProductMonitoringPage() {
               Product Monitoring System
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              View all products across the system with risk assessments and regulatory actions
+              View all products across the system with risk assessments and
+              regulatory actions
             </p>
           </div>
         </div>
@@ -100,7 +111,10 @@ export default function ProductMonitoringPage() {
           <div className="mb-6 space-y-4">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
-                <FiSearch className="absolute left-3 top-3 text-gray-400" size={20} />
+                <FiSearch
+                  className="absolute left-3 top-3 text-gray-400"
+                  size={20}
+                />
                 <input
                   type="text"
                   placeholder="Search by product name, manufacturer, or batch ID..."
@@ -165,7 +179,10 @@ export default function ProductMonitoringPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {filteredProducts.map((product) => (
-                      <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <tr
+                        key={product.id}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      >
                         <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">
                           {product.name || "Unknown"}
                         </td>
@@ -223,19 +240,34 @@ export default function ProductMonitoringPage() {
           {/* Stats Footer */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Total Products</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{filteredProducts.length}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Total Products
+              </p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                {filteredProducts.length}
+              </p>
             </div>
             <div className="bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 p-4">
-              <p className="text-red-700 dark:text-red-400 text-sm">High Risk</p>
+              <p className="text-red-700 dark:text-red-400 text-sm">
+                High Risk
+              </p>
               <p className="text-3xl font-bold text-red-600">
-                {filteredProducts.filter((p) => (p.riskScore || 0) >= 80).length}
+                {
+                  filteredProducts.filter((p) => (p.riskScore || 0) >= 80)
+                    .length
+                }
               </p>
             </div>
             <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800 p-4">
-              <p className="text-amber-700 dark:text-amber-400 text-sm">Suspicious</p>
+              <p className="text-amber-700 dark:text-amber-400 text-sm">
+                Suspicious
+              </p>
               <p className="text-3xl font-bold text-amber-600">
-                {filteredProducts.filter((p) => (p.riskScore || 0) >= 50 && (p.riskScore || 0) < 80).length}
+                {
+                  filteredProducts.filter(
+                    (p) => (p.riskScore || 0) >= 50 && (p.riskScore || 0) < 80,
+                  ).length
+                }
               </p>
             </div>
             <div className="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 p-4">

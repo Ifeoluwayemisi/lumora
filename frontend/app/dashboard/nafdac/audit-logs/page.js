@@ -96,7 +96,8 @@ export default function AuditLogsPage() {
               Audit Logs & History
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Complete historical record of all regulatory actions and system changes
+              Complete historical record of all regulatory actions and system
+              changes
             </p>
           </div>
         </div>
@@ -106,7 +107,10 @@ export default function AuditLogsPage() {
           {/* Search and Filter */}
           <div className="mb-6 flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <FiSearch className="absolute left-3 top-3 text-gray-400" size={20} />
+              <FiSearch
+                className="absolute left-3 top-3 text-gray-400"
+                size={20}
+              />
               <input
                 type="text"
                 placeholder="Search by user, action, or target..."
@@ -201,8 +205,12 @@ export default function AuditLogsPage() {
           {/* Stats */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Total Actions</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{filteredLogs.length}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Total Actions
+              </p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                {filteredLogs.length}
+              </p>
             </div>
             <div className="bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 p-4">
               <p className="text-red-700 dark:text-red-400 text-sm">Critical</p>
@@ -211,7 +219,9 @@ export default function AuditLogsPage() {
               </p>
             </div>
             <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 p-4">
-              <p className="text-orange-700 dark:text-orange-400 text-sm">High</p>
+              <p className="text-orange-700 dark:text-orange-400 text-sm">
+                High
+              </p>
               <p className="text-3xl font-bold text-orange-600">
                 {filteredLogs.filter((l) => l.severity === "high").length}
               </p>

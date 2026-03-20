@@ -1,7 +1,7 @@
 import prisma from "../models/prismaClient.js";
-import { hashPassword, comparePassword } from '../utils/passwordUtils.js';
-import jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
+import { hashPassword, comparePassword } from "../utils/passwordUtils.js";
+import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * NAFDAC Authentication Controller
@@ -23,7 +23,7 @@ export const nafdacAuthController = {
       if (!email || !password) {
         return res.status(400).json({
           success: false,
-          message: 'Email and password are required',
+          message: "Email and password are required",
         });
       }
 
@@ -35,15 +35,19 @@ export const nafdacAuthController = {
       if (!user) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid email or password',
+          message: "Invalid email or password",
         });
       }
 
       // Check if user has NAFDAC or ADMIN role
-      if (user.role !== 'NAFDAC' && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
+      if (
+        user.role !== "NAFDAC" &&
+        user.role !== "ADMIN" &&
+        user.role !== "SUPER_ADMIN"
+      ) {
         return res.status(403).json({
           success: false,
-          message: 'Unauthorized: This portal is for NAFDAC staff only',
+          message: "Unauthorized: This portal is for NAFDAC staff only",
         });
       }
 
@@ -52,7 +56,7 @@ export const nafdacAuthController = {
       if (!isPasswordValid) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid email or password',
+          message: "Invalid email or password",
         });
       }
 
@@ -68,23 +72,25 @@ export const nafdacAuthController = {
 
       // In production: Send 2FA code via email
       // For now: Generate a test code (in real scenario, send via email)
-      const twoFactorCode = '000000'; // Changed from Math.random() for testing
+      const twoFactorCode = "000000"; // Changed from Math.random() for testing
 
-      console.log(`[NAFDAC_AUTH] Step 1 Success - temp token generated for ${email}`);
+      console.log(
+        `[NAFDAC_AUTH] Step 1 Success - temp token generated for ${email}`,
+      );
       console.log(`[NAFDAC_AUTH] 2FA Code (test): ${twoFactorCode}`);
 
       return res.json({
         success: true,
         data: {
           tempToken,
-          message: 'Check your email for the verification code',
+          message: "Check your email for the verification code",
         },
       });
     } catch (error) {
-      console.error('[NAFDAC_AUTH] Step 1 Error:', error);
+      console.error("[NAFDAC_AUTH] Step 1 Error:", error);
       return res.status(500).json({
         success: false,
-        message: 'Authentication failed. Please try again.',
+        message: "Authentication failed. Please try again.",
       });
     }
   },
@@ -100,7 +106,7 @@ export const nafdacAuthController = {
       if (!tempToken || !twoFactorCode) {
         return res.status(400).json({
           success: false,
-          message: 'Temporary token and 2FA code are required',
+          message: "Temporary token and 2FA code are required",
         });
       }
 
@@ -109,7 +115,7 @@ export const nafdacAuthController = {
       if (!tempTokenData) {
         return res.status(401).json({
           success: false,
-          message: 'Invalid or expired temporary token',
+          message: "Invalid or expired temporary token",
         });
       }
 
@@ -117,16 +123,16 @@ export const nafdacAuthController = {
         tempTokens.delete(tempToken);
         return res.status(401).json({
           success: false,
-          message: 'Temporary token expired. Please login again.',
+          message: "Temporary token expired. Please login again.",
         });
       }
 
       // In production: Verify actual 2FA code
       // For now: Accept test code '000000'
-      if (twoFactorCode !== '000000' && twoFactorCode !== '123456') {
+      if (twoFactorCode !== "000000" && twoFactorCode !== "123456") {
         return res.status(401).json({
           success: false,
-          message: '2FA verification failed. Invalid code.',
+          message: "2FA verification failed. Invalid code.",
         });
       }
 
@@ -146,7 +152,7 @@ export const nafdacAuthController = {
       if (!user) {
         return res.status(404).json({
           success: false,
-          message: 'User not found',
+          message: "User not found",
         });
       }
 
@@ -159,7 +165,7 @@ export const nafdacAuthController = {
         },
         process.env.JWT_SECRET,
         {
-          expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+          expiresIn: process.env.JWT_EXPIRES_IN || "7d",
         },
       );
 
@@ -183,10 +189,10 @@ export const nafdacAuthController = {
         },
       });
     } catch (error) {
-      console.error('[NAFDAC_AUTH] Step 2 Error:', error);
+      console.error("[NAFDAC_AUTH] Step 2 Error:", error);
       return res.status(500).json({
         success: false,
-        message: '2FA verification failed. Please try again.',
+        message: "2FA verification failed. Please try again.",
       });
     }
   },

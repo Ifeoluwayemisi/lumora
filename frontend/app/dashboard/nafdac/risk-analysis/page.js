@@ -91,9 +91,7 @@ export default function RiskAnalysisPage() {
     {
       product: "Product Z - Batch 2024-089",
       riskScore: 35,
-      factors: [
-        { name: "Unusual Pattern", severity: "low" },
-      ],
+      factors: [{ name: "Unusual Pattern", severity: "low" }],
     },
   ];
 
@@ -110,7 +108,8 @@ export default function RiskAnalysisPage() {
               AI Risk Analysis Engine
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Advanced threat detection using machine learning and pattern analysis
+              Advanced threat detection using machine learning and pattern
+              analysis
             </p>
           </div>
         </div>
@@ -123,25 +122,32 @@ export default function RiskAnalysisPage() {
               How Risk Scoring Works
             </h2>
             <p className="text-gray-700 dark:text-gray-300 mb-4">
-              Our AI engine analyzes multiple factors in real-time to assign a risk score (0-100%)
-              to each product. The system learns from historical patterns and regulatory actions
-              to continuously improve accuracy.
+              Our AI engine analyzes multiple factors in real-time to assign a
+              risk score (0-100%) to each product. The system learns from
+              historical patterns and regulatory actions to continuously improve
+              accuracy.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white dark:bg-gray-800 rounded p-4">
-                <p className="font-semibold text-gray-900 dark:text-white mb-2">🔴 Critical (80-100%)</p>
+                <p className="font-semibold text-gray-900 dark:text-white mb-2">
+                  🔴 Critical (80-100%)
+                </p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
                   Immediate action required. High confidence of counterfeit
                 </p>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded p-4">
-                <p className="font-semibold text-gray-900 dark:text-white mb-2">🟠 High (50-79%)</p>
+                <p className="font-semibold text-gray-900 dark:text-white mb-2">
+                  🟠 High (50-79%)
+                </p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
                   Strong suspicion. Requires investigation
                 </p>
               </div>
               <div className="bg-white dark:bg-gray-800 rounded p-4">
-                <p className="font-semibold text-gray-900 dark:text-white mb-2">🟢 Low (0-49%)</p>
+                <p className="font-semibold text-gray-900 dark:text-white mb-2">
+                  🟢 Low (0-49%)
+                </p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
                   Normal behavior. Routine monitoring
                 </p>
@@ -162,7 +168,9 @@ export default function RiskAnalysisPage() {
                   className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{factor.name}</h3>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">
+                      {factor.name}
+                    </h3>
                     <span
                       className={`px-2 py-1 rounded text-xs font-bold ${
                         factor.weight === "High"
@@ -209,13 +217,15 @@ export default function RiskAnalysisPage() {
                           analysis.riskScore >= 80
                             ? "text-red-600"
                             : analysis.riskScore >= 50
-                            ? "text-orange-600"
-                            : "text-green-600"
+                              ? "text-orange-600"
+                              : "text-green-600"
                         }`}
                       >
                         {analysis.riskScore}%
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Risk Score</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Risk Score
+                      </p>
                     </div>
                   </div>
 
@@ -224,8 +234,8 @@ export default function RiskAnalysisPage() {
                       analysis.riskScore >= 80
                         ? "bg-red-200"
                         : analysis.riskScore >= 50
-                        ? "bg-orange-200"
-                        : "bg-green-200"
+                          ? "bg-orange-200"
+                          : "bg-green-200"
                     }`}
                   >
                     <div
@@ -233,8 +243,8 @@ export default function RiskAnalysisPage() {
                         analysis.riskScore >= 80
                           ? "bg-red-600"
                           : analysis.riskScore >= 50
-                          ? "bg-orange-600"
-                          : "bg-green-600"
+                            ? "bg-orange-600"
+                            : "bg-green-600"
                       }`}
                       style={{ width: `${analysis.riskScore}%` }}
                     />
@@ -252,8 +262,8 @@ export default function RiskAnalysisPage() {
                             factor.severity === "critical"
                               ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                               : factor.severity === "high"
-                              ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
-                              : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
+                                ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
+                                : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400"
                           }`}
                         >
                           {factor.name}

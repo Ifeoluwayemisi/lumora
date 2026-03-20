@@ -7,7 +7,13 @@ import { AuthContext } from "@/context/AuthContext";
 import AuthGuard from "@/components/AuthGuard";
 import DashboardSidebar from "@/components/DashboardSidebar";
 import api from "@/services/api";
-import { FiSearch, FiFilter, FiAlertCircle, FiCheckCircle, FiFlag } from "react-icons/fi";
+import {
+  FiSearch,
+  FiFilter,
+  FiAlertCircle,
+  FiCheckCircle,
+  FiFlag,
+} from "react-icons/fi";
 
 /**
  * Manufacturer Compliance Tracking
@@ -51,8 +57,10 @@ export default function ManufacturerCompliancePage() {
   }, [user]);
 
   const getComplianceColor = (status) => {
-    if (status === "compliant") return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400";
-    if (status === "warning") return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400";
+    if (status === "compliant")
+      return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400";
+    if (status === "warning")
+      return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400";
     return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400";
   };
 
@@ -61,7 +69,8 @@ export default function ManufacturerCompliancePage() {
       mfg.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       mfg.email?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesCompliance = filterCompliance === "all" || mfg.complianceStatus === filterCompliance;
+    const matchesCompliance =
+      filterCompliance === "all" || mfg.complianceStatus === filterCompliance;
 
     return matchesSearch && matchesCompliance;
   });
@@ -78,7 +87,8 @@ export default function ManufacturerCompliancePage() {
               Manufacturer Compliance Monitoring
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Monitor manufacturers for suspicious behavior, compliance status, and risk patterns
+              Monitor manufacturers for suspicious behavior, compliance status,
+              and risk patterns
             </p>
           </div>
         </div>
@@ -88,7 +98,10 @@ export default function ManufacturerCompliancePage() {
           {/* Search and Filter */}
           <div className="mb-6 flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <FiSearch className="absolute left-3 top-3 text-gray-400" size={20} />
+              <FiSearch
+                className="absolute left-3 top-3 text-gray-400"
+                size={20}
+              />
               <input
                 type="text"
                 placeholder="Search by manufacturer name or email..."
@@ -133,22 +146,30 @@ export default function ManufacturerCompliancePage() {
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {mfg.name}
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">{mfg.email}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {mfg.email}
+                      </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${getComplianceColor(mfg.complianceStatus || "warning")}`}>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-bold ${getComplianceColor(mfg.complianceStatus || "warning")}`}
+                    >
                       {mfg.complianceStatus?.toUpperCase() || "UNKNOWN"}
                     </span>
                   </div>
 
                   <div className="space-y-3 mb-4">
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Codes Generated</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Codes Generated
+                      </p>
                       <p className="text-2xl font-bold text-gray-900 dark:text-white">
                         {mfg.codesGenerated || 0}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Risk Score</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Risk Score
+                      </p>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded h-2">
                           <div
@@ -188,27 +209,47 @@ export default function ManufacturerCompliancePage() {
           {/* Stats */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-              <p className="text-gray-600 dark:text-gray-400 text-sm">Total Manufacturers</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
+                Total Manufacturers
+              </p>
               <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {filteredManufacturers.length}
               </p>
             </div>
             <div className="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 p-4">
-              <p className="text-green-700 dark:text-green-400 text-sm">Compliant</p>
+              <p className="text-green-700 dark:text-green-400 text-sm">
+                Compliant
+              </p>
               <p className="text-3xl font-bold text-green-600">
-                {filteredManufacturers.filter((m) => m.complianceStatus === "compliant").length}
+                {
+                  filteredManufacturers.filter(
+                    (m) => m.complianceStatus === "compliant",
+                  ).length
+                }
               </p>
             </div>
             <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 p-4">
-              <p className="text-yellow-700 dark:text-yellow-400 text-sm">Warning</p>
+              <p className="text-yellow-700 dark:text-yellow-400 text-sm">
+                Warning
+              </p>
               <p className="text-3xl font-bold text-yellow-600">
-                {filteredManufacturers.filter((m) => m.complianceStatus === "warning").length}
+                {
+                  filteredManufacturers.filter(
+                    (m) => m.complianceStatus === "warning",
+                  ).length
+                }
               </p>
             </div>
             <div className="bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 p-4">
-              <p className="text-red-700 dark:text-red-400 text-sm">Suspended</p>
+              <p className="text-red-700 dark:text-red-400 text-sm">
+                Suspended
+              </p>
               <p className="text-3xl font-bold text-red-600">
-                {filteredManufacturers.filter((m) => m.complianceStatus === "suspended").length}
+                {
+                  filteredManufacturers.filter(
+                    (m) => m.complianceStatus === "suspended",
+                  ).length
+                }
               </p>
             </div>
           </div>

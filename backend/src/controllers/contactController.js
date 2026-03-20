@@ -1,5 +1,5 @@
-import nodemailer from 'nodemailer';
-import prisma from '../models/prismaClient.js';
+import nodemailer from "nodemailer";
+import prisma from "../models/prismaClient.js";
 
 /**
  * Contact Form Controller
@@ -30,7 +30,7 @@ export const contactController = {
       // Validation
       if (!name || !email || !message) {
         return res.status(400).json({
-          error: 'Name, email, and message are required',
+          error: "Name, email, and message are required",
         });
       }
 
@@ -38,7 +38,7 @@ export const contactController = {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(email)) {
         return res.status(400).json({
-          error: 'Invalid email format',
+          error: "Invalid email format",
         });
       }
 
@@ -48,14 +48,14 @@ export const contactController = {
           name,
           email,
           message,
-          status: 'RECEIVED',
+          status: "RECEIVED",
         },
       });
 
       // Array of recipient emails
       const recipientEmails = [
-        'destinifeoluwa@gmail.com',
-        'ruqayatfashina414@gmail.com'
+        "destinifeoluwa@gmail.com",
+        "ruqayatfashina414@gmail.com",
       ];
 
       // Send emails to both recipients
@@ -88,7 +88,10 @@ export const contactController = {
 
           console.log(`[CONTACT] Email sent to ${recipientEmail}`);
         } catch (emailError) {
-          console.error(`[CONTACT] Error sending email to ${recipientEmail}:`, emailError);
+          console.error(
+            `[CONTACT] Error sending email to ${recipientEmail}:`,
+            emailError,
+          );
           // Continue sending to other recipients even if one fails
         }
       }
@@ -98,7 +101,7 @@ export const contactController = {
         await transporter.sendMail({
           from: process.env.EMAIL_USER,
           to: email,
-          subject: 'We Received Your Message - Lumora',
+          subject: "We Received Your Message - Lumora",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px;">
@@ -130,19 +133,22 @@ export const contactController = {
 
         console.log(`[CONTACT] Confirmation email sent to ${email}`);
       } catch (confirmationError) {
-        console.error('[CONTACT] Error sending confirmation email:', confirmationError);
+        console.error(
+          "[CONTACT] Error sending confirmation email:",
+          confirmationError,
+        );
         // Don't fail the request if confirmation email fails
       }
 
       return res.status(200).json({
         success: true,
-        message: 'Thank you for your message. We will get back to you soon.',
+        message: "Thank you for your message. We will get back to you soon.",
         contactId: contact.id,
       });
     } catch (error) {
-      console.error('[CONTACT] Submission error:', error);
+      console.error("[CONTACT] Submission error:", error);
       return res.status(500).json({
-        error: 'Failed to submit contact form. Please try again later.',
+        error: "Failed to submit contact form. Please try again later.",
       });
     }
   },

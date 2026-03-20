@@ -70,11 +70,13 @@ export async function createCategoryDistributionSnapshot() {
 export async function createAgencyFlagAnalytics() {
   try {
     console.log("[ANALYTICS_JOB] Creating agency flag analytics...");
-    
+
     // TODO: Implement agency flag analytics once RegulatoryAlert model is created
     // For now, skip this as the model doesn't exist in the schema
-    
-    console.log("[ANALYTICS_JOB] Agency flag analytics skipped (model in development)");
+
+    console.log(
+      "[ANALYTICS_JOB] Agency flag analytics skipped (model in development)",
+    );
     return;
 
     // Legacy code (commented out until RegulatoryAlert model is added):

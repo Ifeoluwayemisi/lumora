@@ -154,7 +154,8 @@ export default function NAFDACLoginPage() {
             <div className="mt-4 p-3 bg-slate-900 border border-emerald-800 rounded-lg flex items-start gap-2">
               <FiShield className="text-emerald-500 flex-shrink-0 mt-0.5" />
               <p className="text-slate-300 text-xs">
-                This is a secure portal for NAFDAC regulatory staff only. All access is logged.
+                This is a secure portal for NAFDAC regulatory staff only. All
+                access is logged.
               </p>
             </div>
           </form>
@@ -178,13 +179,19 @@ export default function NAFDACLoginPage() {
                 type="text"
                 placeholder="000000"
                 value={twoFactorCode}
-                onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(e) =>
+                  setTwoFactorCode(
+                    e.target.value.replace(/\D/g, "").slice(0, 6),
+                  )
+                }
                 maxLength="6"
                 required
                 disabled={isLoading}
                 className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white text-center text-2xl tracking-widest placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed transition"
               />
-              <p className="text-slate-400 text-xs mt-2">6-digit code from your email</p>
+              <p className="text-slate-400 text-xs mt-2">
+                6-digit code from your email
+              </p>
             </div>
 
             {/* Submit Button */}
@@ -214,7 +221,8 @@ export default function NAFDACLoginPage() {
             <div className="mt-4 p-3 bg-slate-900 border border-emerald-800 rounded-lg flex items-start gap-2">
               <FiShield className="text-emerald-500 flex-shrink-0 mt-0.5" />
               <p className="text-slate-300 text-xs">
-                Two-factor authentication protects your account from unauthorized access.
+                Two-factor authentication protects your account from
+                unauthorized access.
               </p>
             </div>
           </form>
@@ -223,7 +231,8 @@ export default function NAFDACLoginPage() {
         {/* Footer */}
         <div className="mt-8 text-center text-slate-400 text-xs">
           <p>
-            Authorized personnel only. Unauthorized access is prohibited and will be reported.
+            Authorized personnel only. Unauthorized access is prohibited and
+            will be reported.
           </p>
         </div>
       </div>

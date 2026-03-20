@@ -223,7 +223,7 @@ export async function approveManufacturer(req, res) {
       await import("../services/dynamicTrustScoreService.js");
     const { recalculateManufacturerRiskScore } =
       await import("../services/aiRiskService.js");
-    const { sendAccountApprovalEmail } =
+    const { sendAccountApprovalEmail, createNotification } =
       await import("../services/notificationService.js");
 
     // Calculate dynamic trust score on approval (based on documents verified)
@@ -282,10 +282,22 @@ export async function approveManufacturer(req, res) {
       },
     );
 
-    // Send approval email asynchronously (don't block response)
-    sendAccountApprovalEmail(manufacturerId).catch((err) => {
-      console.error("[APPROVAL] Failed to send email:", err.message);
-    });
+    // Send approval email and notification asynchronously (non-blocking)
+    (async () => {
+      try {
+        // Send email
+        await sendAccountApprovalEmail(manufacturerId);
+        
+        // Create in-app dashboard notification
+        await createNotification(
+          manufacturer.userId,
+          "approval",
+          `🎉 Your Lumora manufacturer account has been approved! You can now generate product codes. Trust Score: ${manufacturer.trustScore}%`
+        );
+      } catch (err) {
+        console.error("[APPROVAL] Failed to send notifications:", err.message);
+      }
+    })();
 
     res.status(200).json({
       message: "Manufacturer approved successfully",

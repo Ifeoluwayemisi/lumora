@@ -78,10 +78,12 @@ export default function NAFDACDashboard() {
   const navigationCards = [
     {
       title: "Product Monitoring",
-      description: "Monitor all products across system, view risks, and take action",
+      description:
+        "Monitor all products across system, view risks, and take action",
       href: "/dashboard/nafdac/products",
       icon: FiBarChart2,
-      color: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
+      color:
+        "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
       count: stats.totalVerifications,
     },
     {
@@ -89,22 +91,26 @@ export default function NAFDACDashboard() {
       description: "Review user-submitted reports of suspicious products",
       href: "/dashboard/nafdac/reports",
       icon: FiFileText,
-      color: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800",
+      color:
+        "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800",
       count: stats.userReports,
     },
     {
       title: "Hotspot Intelligence",
-      description: "Geographic analysis of suspicious scans and fake drug reports",
+      description:
+        "Geographic analysis of suspicious scans and fake drug reports",
       href: "/dashboard/nafdac/hotspots",
       icon: FiMapPin,
       color: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
     },
     {
       title: "Manufacturer Compliance",
-      description: "Monitor manufacturers for suspicious behavior and compliance",
+      description:
+        "Monitor manufacturers for suspicious behavior and compliance",
       href: "/dashboard/nafdac/manufacturers",
       icon: FiShield,
-      color: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+      color:
+        "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
       count: stats.flaggedManufacturers,
     },
     {
@@ -112,14 +118,16 @@ export default function NAFDACDashboard() {
       description: "AI-powered risk scoring and threat detection insights",
       href: "/dashboard/nafdac/risk-analysis",
       icon: FiAlertCircle,
-      color: "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
+      color:
+        "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800",
     },
     {
       title: "Audit Logs",
       description: "Complete history of regulatory actions and system changes",
       href: "/dashboard/nafdac/audit-logs",
       icon: FiTrendingUp,
-      color: "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800",
+      color:
+        "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800",
     },
   ];
 
@@ -137,7 +145,8 @@ export default function NAFDACDashboard() {
                   NAFDAC Regulatory Dashboard
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
-                  Pharmaceutical product verification, threat detection, and compliance oversight
+                  Pharmaceutical product verification, threat detection, and
+                  compliance oversight
                 </p>
               </div>
               <button
@@ -271,7 +280,10 @@ export default function NAFDACDashboard() {
                     className={`${card.color} border rounded-lg p-6 hover:shadow-lg transition cursor-pointer h-full`}
                   >
                     <div className="flex items-start justify-between mb-4">
-                      <IconComponent size={32} className="text-gray-900 dark:text-white" />
+                      <IconComponent
+                        size={32}
+                        className="text-gray-900 dark:text-white"
+                      />
                       {card.count !== undefined && (
                         <span className="bg-gray-900 dark:bg-white text-white dark:text-gray-900 text-sm font-bold px-3 py-1 rounded-full">
                           {card.count}
@@ -296,14 +308,16 @@ export default function NAFDACDashboard() {
               About Your Regulatory Dashboard
             </h3>
             <p className="text-gray-700 dark:text-gray-300 mb-3">
-              This dashboard gives you complete oversight of pharmaceutical products across Nigeria.
-              Monitor products in real-time, analyze geographic hotspots of counterfeit activity,
-              track manufacturer compliance, and generate reports for regulatory action.
+              This dashboard gives you complete oversight of pharmaceutical
+              products across Nigeria. Monitor products in real-time, analyze
+              geographic hotspots of counterfeit activity, track manufacturer
+              compliance, and generate reports for regulatory action.
             </p>
             <p className="text-gray-700 dark:text-gray-300">
-              <strong>Key Functions:</strong> Detect counterfeit drugs, identify suspicious patterns,
-              flag risky manufacturers, manage user reports, and maintain a complete audit trail of
-              all regulatory decisions.
+              <strong>Key Functions:</strong> Detect counterfeit drugs, identify
+              suspicious patterns, flag risky manufacturers, manage user
+              reports, and maintain a complete audit trail of all regulatory
+              decisions.
             </p>
           </div>
         </div>
@@ -311,4 +325,3 @@ export default function NAFDACDashboard() {
     </AuthGuard>
   );
 }
-

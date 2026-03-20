@@ -1,5 +1,5 @@
-import express from 'express';
-import { contactController } from '../controllers/contactController.js';
+import express from "express";
+import { contactController } from "../controllers/contactController.js";
 
 const router = express.Router();
 
@@ -9,6 +9,6 @@ const router = express.Router();
  */
 
 // Submit contact form
-router.post('/contact', contactController.submitContact);
+router.post("/contact", contactController.submitContact);
 
 export default router;

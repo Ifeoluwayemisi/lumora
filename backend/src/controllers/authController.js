@@ -307,40 +307,16 @@ export const forgotPassword = async (req, res) => {
     });
 
     console.log("[FORGOT_PASSWORD] Reset token generated for:", email);
+
+    // Send email in background (non-blocking)
     const frontendUrl =
       process.env.FRONTEND_URL || "https://lumora-gold.vercel.app";
     const resetUrl = `${frontendUrl}/auth/reset-password?token=${resetToken}`;
-    console.log("[FORGOT_PASSWORD] Reset URL:", resetUrl);
-
-    // Try to send email if configured
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-      try {
-        await transporter.sendMail({
-          from: `"Lumora Support" <${process.env.EMAIL_USER}>`,
-          to: email,
-          subject: "Reset Your Lumora Password",
-          html: `
-            <p>You requested a password reset. Click the link below to continue:</p>
-            <a href="${resetUrl}" style="padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">
-              Reset Password
-            </a>
-            <p>This link will expire in 1 hour.</p>
-            <p>If you didn't request this, please ignore this email.</p>
-          `,
-        });
-        console.log("[FORGOT_PASSWORD] Email sent successfully to:", email);
-      } catch (emailError) {
-        console.error(
-          "[FORGOT_PASSWORD] Email send failed:",
-          emailError.message,
-        );
-        // Continue anyway - token is still valid in database
-      }
-    } else {
-      console.warn(
-        "[FORGOT_PASSWORD] Email service not configured - reset link must be provided to user through other means",
-      );
-    }
+    
+    // Send email asynchronously without awaiting
+    sendPasswordResetEmail(email, resetUrl).catch((err) => {
+      console.error("[FORGOT_PASSWORD] Background email send failed:", err.message);
+    });
 
     return res.status(200).json({
       message:
@@ -355,6 +331,42 @@ export const forgotPassword = async (req, res) => {
           ? error.message
           : "Please try again later",
     });
+  }
+};
+
+/**
+ * Send password reset email asynchronously
+ */
+const sendPasswordResetEmail = async (email, resetUrl) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn("[FORGOT_PASSWORD] Email service not configured");
+    return;
+  }
+
+  try {
+    await transporter.sendMail({
+      from: `"Lumora Support" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Reset Your Lumora Password",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Password Reset Request</h2>
+          <p>You requested a password reset for your Lumora account.</p>
+          <p>Click the button below to reset your password:</p>
+          <a href="${resetUrl}" style="display: inline-block; padding: 12px 24px; background: #27ae60; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Reset Password
+          </a>
+          <p style="margin-top: 20px; color: #666; font-size: 14px;">
+            This link will expire in 1 hour.<br/>
+            If you didn't request this, please ignore this email.
+          </p>
+        </div>
+      `,
+    });
+    console.log("[FORGOT_PASSWORD] Email sent successfully to:", email);
+  } catch (error) {
+    console.error("[FORGOT_PASSWORD] Email send error:", error.message);
+    // Silently fail - user can still use the reset token if they find it
   }
 };
 
