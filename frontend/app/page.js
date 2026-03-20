@@ -29,10 +29,18 @@ export default function LandingPage() {
   const router = useRouter();
   const { width, height } = useWindowSize();
 
-  // Form state
+  // Form state - Verification
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
+
+  // Form state - Contact
+  const [contactForm, setContactForm] = useState({
+    name: "",
+    email: "",
+    message: "",
+  });
+  const [contactLoading, setContactLoading] = useState(false);
 
   /**
    * Handle product code verification
@@ -89,6 +97,45 @@ export default function LandingPage() {
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !loading) {
       handleVerify();
+    }
+  };
+
+  /**
+   * Handle contact form submission
+   */
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+
+    // Validate form
+    if (!contactForm.name.trim()) {
+      toast.error("Please enter your name");
+      return;
+    }
+    if (!contactForm.email.trim()) {
+      toast.error("Please enter your email");
+      return;
+    }
+    if (!contactForm.message.trim()) {
+      toast.error("Please enter a message");
+      return;
+    }
+
+    try {
+      setContactLoading(true);
+
+      const response = await api.post("/contact", {
+        name: contactForm.name.trim(),
+        email: contactForm.email.trim(),
+        message: contactForm.message.trim(),
+      });
+
+      toast.success("Message sent successfully! We'll get back to you soon.");
+      setContactForm({ name: "", email: "", message: "" });
+    } catch (err) {
+      console.error("[CONTACT] Submission error:", err);
+      toast.error(err.response?.data?.error || "Failed to send message. Please try again.");
+    } finally {
+      setContactLoading(false);
     }
   };
 
@@ -406,30 +453,40 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <form className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg flex flex-col gap-4">
+              <form onSubmit={handleContactSubmit} className="bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg flex flex-col gap-4">
                 <input
                   type="text"
                   placeholder="Your Name"
-                  className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all"
+                  value={contactForm.name}
+                  onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                  disabled={contactLoading}
+                  className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all disabled:opacity-50"
                   aria-label="Name"
                 />
                 <input
                   type="email"
                   placeholder="Your Email"
-                  className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all"
+                  value={contactForm.email}
+                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                  disabled={contactLoading}
+                  className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all disabled:opacity-50"
                   aria-label="Email"
                 />
                 <textarea
                   placeholder="Message (tell us how we can help)"
                   rows="5"
-                  className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all resize-none"
+                  value={contactForm.message}
+                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                  disabled={contactLoading}
+                  className="p-4 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-genuine transition-all resize-none disabled:opacity-50"
                   aria-label="Message"
                 ></textarea>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-genuine text-white rounded-md font-semibold hover:bg-green-600 active:bg-green-700 transition-colors"
+                  disabled={contactLoading}
+                  className="px-6 py-3 bg-genuine text-white rounded-md font-semibold hover:bg-green-600 active:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Send Message
+                  {contactLoading ? "Sending..." : "Send Message"}
                 </button>
               </form>
             </motion.div>

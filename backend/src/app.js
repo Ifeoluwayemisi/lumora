@@ -17,6 +17,7 @@ import analyticsRoutes from "./routes/analyticsRoutes.js";
 import userRoute from "./routes/userRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import reputationRoutes from "./routes/reputationRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 import "dotenv/config";
 
 const app = express();
@@ -186,6 +187,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/user", userRoute);
 app.use("/api/reports", reportRoutes);
 app.use("/api/reputation", reputationRoutes);
+app.use("/api", contactRoutes);
 
 app.get("/", (req, res) => {
   res.json({
