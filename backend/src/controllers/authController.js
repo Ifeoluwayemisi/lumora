@@ -234,14 +234,20 @@ export const login = async (req, res) => {
       !!user,
       "Role:",
       user?.role,
+      "AccountStatus:",
+      user?.accountStatus,
     );
     if (!user) {
+      console.log("[LOGIN] Email not found in database:", email);
       // Don't reveal if email exists
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
+    console.log("[LOGIN] Attempting password comparison for user:", user.id);
     const match = await bcrypt.compare(password, user.password);
+    console.log("[LOGIN] Password match result:", match);
     if (!match) {
+      console.log("[LOGIN] Password mismatch for user:", user.id);
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
