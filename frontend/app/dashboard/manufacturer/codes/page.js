@@ -32,8 +32,10 @@ export default function CodesPage() {
   const [pageSize] = useState(50);
   const [showFlagModal, setShowFlagModal] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedCode, setSelectedCode] = useState(null);
+  const [selectedQRCode, setSelectedQRCode] = useState(null);
   const [manufacturer, setManufacturer] = useState(null);
   const [flagFormData, setFlagFormData] = useState({
     reason: "suspicious_pattern",
@@ -375,33 +377,48 @@ export default function CodesPage() {
                             )}
                           </td>
                           <td className="px-6 py-4">
-                            <button
-                              onClick={() => {
-                                if (!isPremium) {
-                                  toast.error(
-                                    "Upgrade to Premium to flag codes",
-                                  );
-                                  return;
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedQRCode({
+                                    code: log.code,
+                                    productName: log.product?.name || "Product",
+                                  });
+                                  setShowQRModal(true);
+                                }}
+                                className="px-3 py-1 text-xs font-medium rounded-lg transition-colors bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 flex items-center gap-1"
+                                title="View the QR code image"
+                              >
+                                📱 QR Code
+                              </button>
+                              <button
+                                onClick={() => {
+                                  if (!isPremium) {
+                                    toast.error(
+                                      "Upgrade to Premium to flag codes",
+                                    );
+                                    return;
+                                  }
+                                  handleFlagCode(log);
+                                }}
+                                disabled={!isPremium}
+                                className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 ${
+                                  isPremium
+                                    ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 cursor-pointer"
+                                    : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50"
+                                }`}
+                                title={
+                                  isPremium
+                                    ? "Flag code as suspicious, counterfeit, or blacklisted to alert the system"
+                                    : "Upgrade to Premium to flag suspicious/counterfeit codes and protect your brand"
                                 }
-                                handleFlagCode(log);
-                              }}
-                              disabled={!isPremium}
-                              className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors flex items-center gap-1 ${
-                                isPremium
-                                  ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 cursor-pointer"
-                                  : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-50"
-                              }`}
-                              title={
-                                isPremium
-                                  ? "Flag code as suspicious, counterfeit, or blacklisted to alert the system"
-                                  : "Upgrade to Premium to flag suspicious/counterfeit codes and protect your brand"
-                              }
-                            >
-                              🚩 Flag{" "}
-                              {!isPremium && (
-                                <span className="text-xs">🔒</span>
-                              )}
-                            </button>
+                              >
+                                🚩 Flag{" "}
+                                {!isPremium && (
+                                  <span className="text-xs">🔒</span>
+                                )}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -585,6 +602,59 @@ export default function CodesPage() {
                 setSelectedLocation(null);
               }}
             />
+          )}
+
+          {/* QR Code Modal */}
+          {showQRModal && selectedQRCode && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full">
+                <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    📱 Product QR Code
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Product:{" "}
+                    <span className="font-medium">
+                      {selectedQRCode.productName}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="p-6 flex flex-col items-center justify-center">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
+                      selectedQRCode.code,
+                    )}`}
+                    alt="QR Code"
+                    className="border-4 border-gray-200 dark:border-gray-700 rounded-lg"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center break-all">
+                    {selectedQRCode.code}
+                  </p>
+                </div>
+
+                <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+                  <a
+                    href={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
+                      selectedQRCode.code,
+                    )}`}
+                    download={`qrcode-${selectedQRCode.code.substring(0, 10)}.png`}
+                    className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-medium text-center"
+                  >
+                    📥 Download
+                  </a>
+                  <button
+                    onClick={() => {
+                      setShowQRModal(false);
+                      setSelectedQRCode(null);
+                    }}
+                    className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

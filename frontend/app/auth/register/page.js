@@ -553,14 +553,18 @@ function RegisterContent() {
                   >
                     I agree to the{" "}
                     <a
-                      href="#"
+                      href="/legal/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-genuine hover:underline font-medium"
                     >
                       Terms of Service
                     </a>{" "}
                     and{" "}
                     <a
-                      href="#"
+                      href="/legal/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-genuine hover:underline font-medium"
                     >
                       Privacy Policy

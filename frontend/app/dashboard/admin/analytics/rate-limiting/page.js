@@ -533,8 +533,9 @@ export default function RateLimitingPage() {
                         {agency}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Hourly: {status.currentHourlyCount}/{status.alertsPerHour}{" "}
-                        • Daily: {status.currentDailyCount}/{status.alertsPerDay}
+                        Hourly: {status.currentHourlyCount}/
+                        {status.alertsPerHour} • Daily:{" "}
+                        {status.currentDailyCount}/{status.alertsPerDay}
                       </p>
                     </div>
                     {status.isThrottled && (
@@ -560,7 +561,8 @@ export default function RateLimitingPage() {
                           className="bg-blue-500 h-1.5 rounded-full"
                           style={{
                             width: `${
-                              (status.currentHourlyCount / status.alertsPerHour) *
+                              (status.currentHourlyCount /
+                                status.alertsPerHour) *
                               100
                             }%`,
                           }}

@@ -287,12 +287,12 @@ export async function approveManufacturer(req, res) {
       try {
         // Send email
         await sendAccountApprovalEmail(manufacturerId);
-        
+
         // Create in-app dashboard notification
         await createNotification(
           manufacturer.userId,
           "approval",
-          `🎉 Your Lumora manufacturer account has been approved! You can now generate product codes. Trust Score: ${manufacturer.trustScore}%`
+          `🎉 Your Lumora manufacturer account has been approved! You can now generate product codes. Trust Score: ${manufacturer.trustScore}%`,
         );
       } catch (err) {
         console.error("[APPROVAL] Failed to send notifications:", err.message);

@@ -34,7 +34,16 @@ const BCRYPT_SALT = parseInt(process.env.BCRYPT_SALT || "10");
  * - Sets accountStatus to 'pending_verification'
  */
 export const signup = async (req, res) => {
-  const { name, email, password, role, companyName, country, phone } = req.body;
+  const {
+    name,
+    email,
+    password,
+    role,
+    companyName,
+    country,
+    phone,
+    agreeToTerms,
+  } = req.body;
 
   console.log(
     "[SIGNUP] Received payload - role:",
@@ -98,6 +107,7 @@ export const signup = async (req, res) => {
         email,
         password: hashedPassword,
         role: normalizedRole,
+        termsAcceptedAt: agreeToTerms ? new Date() : null,
       },
     });
 
@@ -312,10 +322,13 @@ export const forgotPassword = async (req, res) => {
     const frontendUrl =
       process.env.FRONTEND_URL || "https://lumora-gold.vercel.app";
     const resetUrl = `${frontendUrl}/auth/reset-password?token=${resetToken}`;
-    
+
     // Send email asynchronously without awaiting
     sendPasswordResetEmail(email, resetUrl).catch((err) => {
-      console.error("[FORGOT_PASSWORD] Background email send failed:", err.message);
+      console.error(
+        "[FORGOT_PASSWORD] Background email send failed:",
+        err.message,
+      );
     });
 
     return res.status(200).json({

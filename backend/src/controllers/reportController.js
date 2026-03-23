@@ -113,8 +113,8 @@ export async function submitReport(req, res) {
     ]);
 
     // Send confirmation email if contact provided
-    if (contact || reporterEmail) {
-      const emailAddr = contact || reporterEmail;
+    if (contact) {
+      const emailAddr = contact;
       const caseName = `CASE-${userReport.id.substring(0, 8).toUpperCase()}`;
 
       emailService
@@ -144,10 +144,10 @@ export async function submitReport(req, res) {
         });
 
       // Also email reporter about health escalation
-      if (contact || reporterEmail) {
+      if (contact) {
         emailService
           .sendHealthAlertEmail(
-            contact || reporterEmail,
+            contact,
             reporterName,
             codeValue,
             healthSymptoms,

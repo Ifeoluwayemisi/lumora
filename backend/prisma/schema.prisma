@@ -20,6 +20,8 @@ model User {
   passwordResetExpiry DateTime? // Expiration time for reset token
   accountStatus       String              @default("active") // active, suspended
   isFlagged           Boolean             @default(false)
+  termsAcceptedAt     DateTime? // When user accepted T&C
+  privacyAcceptedAt   DateTime? // When user accepted Privacy Policy
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   verified            Boolean             @default(false)

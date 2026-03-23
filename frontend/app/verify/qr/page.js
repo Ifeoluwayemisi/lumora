@@ -23,8 +23,9 @@ function QRVerifyPageContent() {
 
   const playBeep = () => {
     try {
-      const audioContext = new (window.AudioContext ||
-        window.webkitAudioContext)();
+      const audioContext = new (
+        window.AudioContext || window.webkitAudioContext
+      )();
       const oscillator = audioContext.createOscillator();
       const gain = audioContext.createGain();
 
@@ -37,7 +38,7 @@ function QRVerifyPageContent() {
       gain.gain.setValueAtTime(0.3, audioContext.currentTime);
       gain.gain.exponentialRampToValueAtTime(
         0.01,
-        audioContext.currentTime + 0.1
+        audioContext.currentTime + 0.1,
       );
 
       oscillator.start(audioContext.currentTime);
@@ -112,7 +113,7 @@ function QRVerifyPageContent() {
                 if (response.data) {
                   localStorage.setItem(
                     "verificationResult",
-                    JSON.stringify(response.data)
+                    JSON.stringify(response.data),
                   );
                 }
 
@@ -122,8 +123,8 @@ function QRVerifyPageContent() {
                 setTimeout(() => {
                   router.push(
                     `/verify/states/${encodeURIComponent(
-                      status
-                    )}?code=${encodeURIComponent(code.data.trim())}`
+                      status,
+                    )}?code=${encodeURIComponent(code.data.trim())}`,
                   );
                 }, 100);
               } catch (apiErr) {
@@ -137,16 +138,15 @@ function QRVerifyPageContent() {
                 setLoading(false);
               }
             } catch (err) {
-              const errorMsg = "Failed to process image";
+              const errorMsg = `Failed to process image: ${err.message}`;
               setError(errorMsg);
-              toast.error(errorMsg);
-              setError(`Verification error: ${errorMsg}`);
+              toast.error("Failed to process image. Please try another image.");
               setLoading(false);
             }
           };
           img.onerror = () => {
             setError(
-              "Failed to load image. Make sure it's a valid image file."
+              "Failed to load image. Make sure it's a valid image file.",
             );
             setLoading(false);
           };
@@ -170,19 +170,47 @@ function QRVerifyPageContent() {
   const toggleTorch = async () => {
     if (!scannerInstanceRef.current) return;
     try {
+      // Get the media stream from the scanner
+      const getMediaStreamCallback = scannerInstanceRef.current.getMediaStream;
+      if (!getMediaStreamCallback) {
+        throw new Error("Media stream not available from scanner");
+      }
+
+      const stream = getMediaStreamCallback();
+      const videoTrack = stream?.getVideoTracks()[0];
+
+      if (!videoTrack) {
+        console.error("Video track not available");
+        toast.error("Torch not available on this device");
+        return;
+      }
+
       if (!torchActive) {
-        await scannerInstanceRef.current.applyConstraints({
-          advanced: [{ torch: true }],
+        await videoTrack.applyConstraints({
+          advanced: [
+            {
+              torch: true,
+            },
+          ],
         });
         setTorchActive(true);
+        toast.success("Torch enabled");
       } else {
-        await scannerInstanceRef.current.applyConstraints({
-          advanced: [{ torch: false }],
+        await videoTrack.applyConstraints({
+          advanced: [
+            {
+              torch: false,
+            },
+          ],
         });
         setTorchActive(false);
+        toast.info("Torch disabled");
       }
     } catch (err) {
-      console.error("Torch not supported:", err);
+      console.error("Torch error:", err);
+      toast.error(
+        "Torch not supported on this device or torch is already active",
+      );
     }
   };
 
@@ -220,7 +248,7 @@ function QRVerifyPageContent() {
             if (response.data) {
               localStorage.setItem(
                 "verificationResult",
-                JSON.stringify(response.data)
+                JSON.stringify(response.data),
               );
             }
 
@@ -230,8 +258,8 @@ function QRVerifyPageContent() {
               setTimeout(() => {
                 router.push(
                   `/verify/states/${encodeURIComponent(
-                    status
-                  )}?code=${encodeURIComponent(decodedText.trim())}`
+                    status,
+                  )}?code=${encodeURIComponent(decodedText.trim())}`,
                 );
               }, 100);
             }, 500);
@@ -240,7 +268,7 @@ function QRVerifyPageContent() {
             setError(
               err.response?.data?.message ||
                 err.message ||
-                "Verification failed"
+                "Verification failed",
             );
             setLoading(false);
             setScanActive(true);
@@ -255,12 +283,12 @@ function QRVerifyPageContent() {
           { facingMode: "environment" },
           { fps: 10, qrbox: { width: 250, height: 250 } },
           onScanSuccess,
-          onScanFailure
+          onScanFailure,
         );
       } catch (err) {
         console.error("Failed to start QR scanner:", err);
         setError(
-          `Unable to access camera: ${err.message || "Permission denied"}`
+          `Unable to access camera: ${err.message || "Permission denied"}`,
         );
         setLoading(false);
       }
